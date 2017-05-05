@@ -6,11 +6,11 @@ function Get-AppSettings(){
 		 {
             $configObj = "" |  select ResourceURL,ClientId,redirectUrl,ClientSecret,x5t,TenantId,ValidateForMinutes
             $configObj.ResourceURL = "outlook.office.com"
-            $configObj.ClientId = "1bdbfb41-f690-4f93-b0bb-002004bbca79"
-            $configObj.redirectUrl = "http://localhost:8000/authorize"
-            $configObj.TenantId = ""
+            $configObj.ClientId = "" # eg 1bdbfb41-f690-4f93-b0bb-002004bbca79
+            $configObj.redirectUrl = "" # http://localhost:8000/authorize
+            $configObj.TenantId = "" # eg 1c3a18bf-da31-4f6c-a404-2c06c9cf5ae4
             $configObj.ClientSecret = ""
-            $configObj.x5t = "VS/H6cNa/3gc9FrSxGs9jOOZP3o="
+            $configObj.x5t = "" # eg VS/H6cNa/3gc9FrSxGs9jOOZP3o=
             $configObj.ValidateForMinutes = 60
             return $configObj            
          }    
@@ -81,13 +81,17 @@ function Decode-Token {
 function New-JWTToken{
         param( 
         [Parameter(Position=1, Mandatory=$true)] [string]$CertFileName,
+        [Parameter(Position=2, Mandatory=$true)] [string]$TenantId,
+        [Parameter(Position=3, Mandatory=$true)] [string]$ClientId,
+        [Parameter(Position=4, Mandatory=$true)] [string]$x5t,
+        [Parameter(Position=4, Mandatory=$true)] [Int32]$ValidateForMinutes,
         [Parameter(Mandatory=$True)][Security.SecureString]$password        
     )  
  	Begin
 		 {
-            $configObj = Get-AppSettings 
+           
             $date1 = Get-Date -Date "01/01/1970"
-            $date2 = (Get-Date).ToUniversalTime().AddMinutes($configObj.ValidateForMinutes)           
+            $date2 = (Get-Date).ToUniversalTime().AddMinutes($ValidateForMinutes)           
             $date3 = (Get-Date).ToUniversalTime().AddMinutes(-5)      
             $exp = [Math]::Round((New-TimeSpan -Start $date1 -End $date2).TotalSeconds,0) 
             $nbf = [Math]::Round((New-TimeSpan -Start $date1 -End $date3).TotalSeconds,0) 
@@ -96,15 +100,15 @@ function New-JWTToken{
             $jti = [System.Guid]::NewGuid().ToString()
             $Headerassertaion =  "{" 
             $Headerassertaion += "     `"alg`": `"RS256`"," 
-            $Headerassertaion += "     `"x5t`": `""+ $configObj.x5t + "`""
+            $Headerassertaion += "     `"x5t`": `""+ $x5t + "`""
             $Headerassertaion += "}"
             $PayLoadassertaion += "{"
-            $PayLoadassertaion += "    `"aud`": `"https://login.windows.net/" + $configObj.TenantId +"/oauth2/token`"," 
+            $PayLoadassertaion += "    `"aud`": `"https://login.windows.net/" + $TenantId +"/oauth2/token`"," 
             $PayLoadassertaion += "    `"exp`": $exp,"            
-            $PayLoadassertaion += "    `"iss`": `""+ $configObj.ClientId + "`"," 
+            $PayLoadassertaion += "    `"iss`": `""+ $ClientId + "`"," 
             $PayLoadassertaion += "    `"jti`": `"" + $jti + "`","
             $PayLoadassertaion += "    `"nbf`": $nbf,"       
-            $PayLoadassertaion += "    `"sub`": `"" + $configObj.ClientId + "`""              
+            $PayLoadassertaion += "    `"sub`": `"" + $ClientId + "`""              
             $PayLoadassertaion += "} " 
             $encodedHeader = [System.Convert]::ToBase64String([System.Text.UTF8Encoding]::UTF8.GetBytes($Headerassertaion)).Replace('=','').Replace('+', '-').Replace('/', '_')
             $encodedPayLoadassertaion = [System.Convert]::ToBase64String([System.Text.UTF8Encoding]::UTF8.GetBytes($PayLoadassertaion)).Replace('=','').Replace('+', '-').Replace('/', '_')
@@ -182,7 +186,10 @@ Function Show-OAuthWindow
 
 function Get-AccessToken{ 
     param( 
-        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [string]$ClientId,
+        [Parameter(Position=2, Mandatory=$false)] [string]$redirectUrl,
+        [Parameter(Position=3, Mandatory=$false)] [string]$ClientSecret
     )  
  	Begin
 		 {
@@ -190,9 +197,18 @@ function Get-AccessToken{
             $HttpClient =  Get-HTTPClient($MailboxName)
             $AppSetting = Get-AppSettings 
             $ResourceURL = $AppSetting.ResourceURL
-            $ClientId = $AppSetting.ClientId
-            $ClientSecret = $AppSetting.ClientSecret
-            $redirectUrl = [System.Web.HttpUtility]::UrlEncode($AppSetting.redirectUrl)
+            if($ClientId -eq $null){
+                 $ClientId = $AppSetting.ClientId
+            }
+            if($ClientSecret -eq $null){
+                 $ClientSecret =  $AppSetting.ClientSecret
+            }           
+            if($redirectUrl -eq $null){
+                $redirectUrl = [System.Web.HttpUtility]::UrlEncode($AppSetting.redirectUrl)
+            }
+            else{
+                $redirectUrl = [System.Web.HttpUtility]::UrlEncode($redirectUrl)
+            }
             $Phase1auth = Show-OAuthWindow -Url "https://login.microsoftonline.com/common/oauth2/authorize?resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&response_type=code&redirect_uri=$redirectUrl&prompt=login"
             $code = $Phase1auth["code"]
             $AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&grant_type=authorization_code&code=$code&redirect_uri=$redirectUrl"
@@ -210,19 +226,39 @@ function Get-AppOnlyToken{
     param( 
        
         [Parameter(Position=1, Mandatory=$true)] [string]$CertFileName,
-        [Parameter(Mandatory=$True)][Security.SecureString]$password   
+        [Parameter(Position=2, Mandatory=$false)] [string]$TenantId,
+        [Parameter(Position=3, Mandatory=$false)] [string]$ClientId,
+        [Parameter(Position=4, Mandatory=$false)] [string]$redirectUrl,     
+        [Parameter(Position=5, Mandatory=$false)] [string]$x5t,
+        [Parameter(Position=6, Mandatory=$false)] [Int32]$ValidateForMinutes,
+        [Parameter(Mandatory=$true)] [Security.SecureString]$password
+        
     )  
  	Begin
 		 {
-            $JWTToken = New-JWTToken -CertFileName $CertFileName -password $password
+             $AppSetting = Get-AppSettings 
+            if($TenantId -eq $null){
+                $AppSetting.TenantId
+            }
+            if($ClientId -eq $null){
+                 $ClientId = $AppSetting.ClientId
+            }
+            if($x5t -eq $null){
+                 $x5t = $AppSetting.x5t
+            }
+            if($redirectUrl -eq $null){
+                $redirectUrl = $AppSetting.redirectUrl
+            }
+            if($ValidateForMinutes -eq 0){
+                $ValidateForMinutes = $AppSetting.ValidateForMinutes               
+            }
+            $JWTToken = New-JWTToken -CertFileName $CertFileName -password $password -TenantId $TenantId -ClientId $ClientId -x5t $x5t -ValidateForMinutes $ValidateForMinutes
             Add-Type -AssemblyName System.Web
-            $HttpClient =  Get-HTTPClient(" ")
-            $AppSetting = Get-AppSettings 
+            $HttpClient =  Get-HTTPClient(" ")          
             $ResourceURL = $AppSetting.ResourceURL
-            $ClientId = $AppSetting.ClientId
             $AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&client_assertion=$JWTToken&grant_type=client_credentials&redirect_uri=$redirectUrl"
             $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
-            $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/" + $AppSetting.TenantId + "/oauth2/token"),$content)
+            $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/" + $TenantId + "/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
             return $JsonObject
          }
@@ -277,9 +313,15 @@ function Invoke-RestGet
              $minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0,[System.DateTimeKind]::Utc);
              $expiry =  $minTime.AddSeconds($AccessToken.expires_on)
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
-                write-host "Refresh Token"
-                $AccessToken = Refresh-AccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
-                Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
+                if([bool]($AccessToken.PSobject.Properties.name -match "refresh_token")){
+                    write-host "Refresh Token"
+                    $AccessToken = Refresh-AccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                    Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
+                }
+                else{
+                    throw "App Token has expired"
+                }
+
              }
              $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
              $ClientResult = $HttpClient.GetAsync($RequestURL)
@@ -315,9 +357,14 @@ function Invoke-RestPOST
              $minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0,[System.DateTimeKind]::Utc);
              $expiry =  $minTime.AddSeconds($AccessToken.expires_on)
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
-                write-host "Refresh Token"
-                $AccessToken = Refresh-AccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
-                Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
+                if([bool]($AccessToken.PSobject.Properties.name -match "refresh_token")){
+                    write-host "Refresh Token"
+                    $AccessToken = Refresh-AccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                    Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
+                }
+                else{
+                    throw "App Token has expired a new access token is required rerun get-apptoken"
+                }
              }
              $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
              $PostContent = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
@@ -454,8 +501,6 @@ function Get-AutomaticRepliesSettings{
     }
 }
 
-
-
 function Get-MailboxTimeZone{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
@@ -471,7 +516,6 @@ function Get-MailboxTimeZone{
         return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
     }
 }
-
 
 function Get-FolderFromPath{
 	param (
@@ -515,7 +559,6 @@ function Get-FolderFromPath{
 		}
 	}
 }
-
 
 function Get-Inbox{
     param( 
@@ -782,6 +825,49 @@ function Update-Folder{
    
 
     }
+}
+
+function GetFolderRetentionTags(){
+        #PR_POLICY_TAG 0x3019
+    $PR_POLICY_TAG = Get-TaggedProperty -DataType "Binary" -Id "0x3019"  
+    #PR_RETENTION_FLAGS 0x301D   
+    $PR_RETENTION_FLAGS =  Get-TaggedProperty -DataType "Integer" -Id "0x301D" 
+    #PR_RETENTION_PERIOD 0x301A
+    $PR_RETENTION_PERIOD = Get-TaggedProperty -DataType "Integer" -Id "0x301A"    
+}
+function Set-FolderRetentionTag {
+        param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$true)] [string]$FolderPath,
+      	[Parameter(Position=3, Mandatory=$true)] [String]$PolicyTagValue,
+		[Parameter(Position=4, Mandatory=$true)] [Int32]$RetentionFlagsValue,		
+		[Parameter(Position=5, Mandatory=$true)] [Int32]$RetentionPeriodValue
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }  
+        $Folder = Get-FolderFromPath -FolderPath $FolderPath -AccessToken $AccessToken -MailboxName $MailboxName            
+        if($Folder  -ne $null)
+        {    
+ 
+            $retentionTagGUID = "{$($PolicyTagValue)}"
+		    $policyTagGUID = new-Object Guid($retentionTagGUID) 
+            $PolicyTagBase64 = [System.Convert]::ToBase64String($PolicyTagGUID.ToByteArray()) 
+            $HttpClient =  Get-HTTPClient($MailboxName)
+            $RequestURL =  $Folder.'@odata.id'
+            $FolderPostValue = "{`"SingleValueExtendedProperties`": [`r`n"
+            $FolderPostValue += "`t{`"PropertyId`":`"Binary 0x3019`",`"Value`":`"" + $PolicyTagBase64 + "`"},`r`n"
+            $FolderPostValue += "`t{`"PropertyId`":`"Integer 0x301D`",`"Value`":`"" + $RetentionFlagsValue + "`"},`r`n"
+            $FolderPostValue += "`t{`"PropertyId`":`"Integer 0x301A`",`"Value`":`"" + $RetentionPeriodValue+ "`"}`r`n"
+            $FolderPostValue += "]}"
+            Write-Host $FolderPostValue
+            return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $FolderPostValue
+       } 
+    }
+    
 }
 function Delete-Folder{
     param( 
