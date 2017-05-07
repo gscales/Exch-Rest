@@ -6,11 +6,11 @@ function Get-AppSettings(){
 		 {
             $configObj = "" |  select ResourceURL,ClientId,redirectUrl,ClientSecret,x5t,TenantId,ValidateForMinutes
             $configObj.ResourceURL = "outlook.office.com"
-            $configObj.ClientId = "" # eg 1bdbfb41-f690-4f93-b0bb-002004bbca79
+            $configObj.ClientId = "" # 1bdbfb41-f690-4f93-b0bb-002004bbca79
             $configObj.redirectUrl = "" # http://localhost:8000/authorize
-            $configObj.TenantId = "" # eg 1c3a18bf-da31-4f6c-a404-2c06c9cf5ae4
+            $configObj.TenantId = "" # 1c3a18bf-da31-4f6c-a404-2c06c9cf5ae4
             $configObj.ClientSecret = ""
-            $configObj.x5t = "" # eg VS/H6cNa/3gc9FrSxGs9jOOZP3o=
+            $configObj.x5t = "" # VS/H6cNa/3gc9FrSxGs9jOOZP3o=
             $configObj.ValidateForMinutes = 60
             return $configObj            
          }    
@@ -54,7 +54,7 @@ function Convert-FromBase64StringWithNoPadding([string]$data)
     return [System.Convert]::FromBase64String($data)
 }
 
-function Decode-Token { 
+function Invoke-DecodeToken { 
         param( 
         [Parameter(Position=1, Mandatory=$true)] [String]$Token
     )  
@@ -266,7 +266,7 @@ function Get-AppOnlyToken{
 
 
 
-function Refresh-AccessToken{ 
+function Invoke-RefreshAccessToken{ 
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$true)] [string]$RefreshToken
@@ -315,7 +315,7 @@ function Invoke-RestGet
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 if([bool]($AccessToken.PSobject.Properties.name -match "refresh_token")){
                     write-host "Refresh Token"
-                    $AccessToken = Refresh-AccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
                     Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
                 }
                 else{
@@ -359,7 +359,7 @@ function Invoke-RestPOST
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 if([bool]($AccessToken.PSobject.Properties.name -match "refresh_token")){
                     write-host "Refresh Token"
-                    $AccessToken = Refresh-AccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
                     Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
                 }
                 else{
@@ -403,7 +403,7 @@ function Invoke-RestPatch
              $expiry =  $minTime.AddSeconds($AccessToken.expires_on)
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 write-host "Refresh Token"
-                $AccessToken = Refresh-AccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
                 Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
              }
              $method =  New-Object System.Net.Http.HttpMethod("PATCH")
@@ -444,7 +444,7 @@ function Invoke-RestDELETE
              $expiry =  $minTime.AddSeconds($AccessToken.expires_on)
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 write-host "Refresh Token"
-                $AccessToken = Refresh-AccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
                 Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
              }
              $method =  New-Object System.Net.Http.HttpMethod("DELETE")
@@ -869,7 +869,7 @@ function Set-FolderRetentionTag {
     }
     
 }
-function Delete-Folder{
+function Invoke-DeleteFolder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
@@ -1268,7 +1268,7 @@ function  Get-CalendarGroups {
     }
 }
 
-function  Enum-CalendarGroups {
+function  Invoke-EnumCalendarGroups {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken   
@@ -1302,3 +1302,4 @@ function  Enum-CalendarGroups {
         
     }
 }
+export-modulemember -function *
