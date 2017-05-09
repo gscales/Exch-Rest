@@ -82,8 +82,7 @@ function New-JWTToken{
         param( 
         [Parameter(Position=1, Mandatory=$true)] [string]$CertFileName,
         [Parameter(Position=2, Mandatory=$true)] [string]$TenantId,
-        [Parameter(Position=3, Mandatory=$true)] [string]$ClientId,
-        [Parameter(Position=4, Mandatory=$true)] [string]$x5t,
+        [Parameter(Position=3, Mandatory=$true)] [string]$ClientId,        
         [Parameter(Position=4, Mandatory=$true)] [Int32]$ValidateForMinutes,
         [Parameter(Mandatory=$True)][Security.SecureString]$password        
     )  
@@ -97,6 +96,7 @@ function New-JWTToken{
             $nbf = [Math]::Round((New-TimeSpan -Start $date1 -End $date3).TotalSeconds,0) 
             $exVal = [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable
             $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList $CertFileName,$password,$exVal
+            $x5t = [System.Convert]::ToBase64String($cert.GetCertHash())
             $jti = [System.Guid]::NewGuid().ToString()
             $Headerassertaion =  "{" 
             $Headerassertaion += "     `"alg`": `"RS256`"," 
@@ -229,7 +229,6 @@ function Get-AppOnlyToken{
         [Parameter(Position=2, Mandatory=$false)] [string]$TenantId,
         [Parameter(Position=3, Mandatory=$false)] [string]$ClientId,
         [Parameter(Position=4, Mandatory=$false)] [string]$redirectUrl,     
-        [Parameter(Position=5, Mandatory=$false)] [string]$x5t,
         [Parameter(Position=6, Mandatory=$false)] [Int32]$ValidateForMinutes,
         [Parameter(Mandatory=$true)] [Security.SecureString]$password
         
@@ -243,16 +242,13 @@ function Get-AppOnlyToken{
             if($ClientId -eq $null){
                  $ClientId = $AppSetting.ClientId
             }
-            if($x5t -eq $null){
-                 $x5t = $AppSetting.x5t
-            }
             if($redirectUrl -eq $null){
                 $redirectUrl = $AppSetting.redirectUrl
             }
             if($ValidateForMinutes -eq 0){
                 $ValidateForMinutes = $AppSetting.ValidateForMinutes               
             }
-            $JWTToken = New-JWTToken -CertFileName $CertFileName -password $password -TenantId $TenantId -ClientId $ClientId -x5t $x5t -ValidateForMinutes $ValidateForMinutes
+            $JWTToken = New-JWTToken -CertFileName $CertFileName -password $password -TenantId $TenantId -ClientId $ClientId  -ValidateForMinutes $ValidateForMinutes
             Add-Type -AssemblyName System.Web
             $HttpClient =  Get-HTTPClient(" ")          
             $ResourceURL = $AppSetting.ResourceURL
@@ -305,7 +301,8 @@ function Invoke-RestGet
         [Parameter(Position=0, Mandatory=$true)] [string]$RequestURL,
         [Parameter(Position=1, Mandatory=$true)] [String]$MailboxName,
         [Parameter(Position=2, Mandatory=$true)] [System.Net.Http.HttpClient]$HttpClient,
-        [Parameter(Position=3, Mandatory=$true)] [PSCustomObject]$AccessToken
+        [Parameter(Position=3, Mandatory=$true)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=4, Mandatory=$false)] [switch]$NoJSON
     )  
  	Begin
 		 {
@@ -335,8 +332,14 @@ function Invoke-RestGet
              }
             else
              {
-               $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
-               return $JsonObject
+               if($NoJSON){
+                    return  $ClientResult.Result.Content  
+               }
+               else{
+                    $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+                    return $JsonObject
+               }  
+
              }
   
          }    
@@ -1231,7 +1234,42 @@ function  Get-People {
     }
 }
 
+function  Get-UserPhotoMetaData {
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken   
+    )
+    Begin{
+        
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }        
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        $RequestURL =  "https://outlook.office.com/api/v2.0/users/" + $MailboxName + "/photo"
+        $JsonObject =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+        Write-Output $JsonObject 
+    }
+}
 
+function  Get-UserPhoto {
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+ 
+    )
+    Begin{
+        
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }        
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        $RequestURL =  "https://outlook.office.com/api/v2.0/users/" + $MailboxName + "/photo/`$value"
+        $Result =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
+        Write-Output $Result.ReadAsByteArrayAsync().Result  
+    }
+}
 function  Get-MailboxUser {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
@@ -1302,4 +1340,3 @@ function  Invoke-EnumCalendarGroups {
         
     }
 }
-export-modulemember -function *
