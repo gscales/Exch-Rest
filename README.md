@@ -24,3 +24,7 @@ To Authenticate as an Application see http://gsexdev.blogspot.com.au/2017/03/usi
 To create an App Only Token using a certificate file created above use
 
 $Token = Get-AppOnlyToken -CertFile "c:\temp\drCert.pfx" -ClientId 1bdbfb41-f690-4f93-b0bb-002004bbca79 -redirectUrl 'http://localhost:8000/authorize' -TenantId cbdbfb41-f690-4f93-b0bb-002004bbca79 
+
+Once you have an AccessToken you can the call the function you want to access eg to get information about a Mailboxes Inbox use
+
+Get-Inbox -MailboxName mailbox@domain.com -AccessToken $Token
