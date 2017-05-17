@@ -21,7 +21,13 @@ The following is an overview of the steps you can take to create an application 
   * Click `Done`
 
 #### Module installation
-This module has not yet been published to the PowerShell gallery. The following steps can be used to install the module:
+
+The Module is availble from the Powershell Gallery and can be installed on Windows 10 using 
+
+Install-Module Exch-Rest
+Import-Module Exch-Rest
+
+Or you can use the following to download and use the following steps can be used to install the module from the GitHub repo
 ```
 # Set constants
 $SourceCodeURL = "https://codeload.github.com/gscales/Exch-Rest/zip/master"
