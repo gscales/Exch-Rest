@@ -22,7 +22,7 @@ The following is an overview of the steps you can take to create an application 
 
 #### Module installation
 
-The Module is availble from the Powershell Gallery and can be installed on Windows 10 using 
+The Module is availble from the PowerShell Gallery at https://www.powershellgallery.com/packages/Exch-Rest and can be installed on Windows 10 using 
 
 Install-Module Exch-Rest
 Import-Module Exch-Rest
