@@ -1,3 +1,27 @@
+##  A PowerShell module for the Office 365 and Exchange 2016 REST API
+##  for documenation please refer to https://github.com/gscales/Exch-Rest
+##
+## The MIT License (MIT)
+##
+## Copyright (c) 2017 Glen Scales
+##
+## Permission is hereby granted, free of charge, to any person obtaining a copy
+## of this software and associated documentation files (the "Software"), to deal
+## in the Software without restriction, including without limitation the rights
+## to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+## copies of the Software, and to permit persons to whom the Software is
+## furnished to do so, subject to the following conditions:
+
+## The above copyright notice and this permission notice shall be included in all
+## copies or substantial portions of the Software.
+
+## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+## SOFTWARE.
 function Get-AppSettings(){
         param( 
         
@@ -183,21 +207,20 @@ Function Show-OAuthWindow
     }
     return $output 
 }
-
 function Get-AccessToken{ 
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [string]$ClientId,
         [Parameter(Position=2, Mandatory=$false)] [string]$redirectUrl,
-        [Parameter(Position=3, Mandatory=$false)] [string]$ClientSecret
+        [Parameter(Position=3, Mandatory=$false)] [string]$ClientSecret,
+        [Parameter(Position=4, Mandatory=$false)] [string]$ResourceURL
     )  
  	Begin
 		 {
             Add-Type -AssemblyName System.Web
             $HttpClient =  Get-HTTPClient($MailboxName)
             $AppSetting = Get-AppSettings 
-            $ResourceURL = $AppSetting.ResourceURL
-            if($ClientId -eq $null){
+           if($ClientId -eq $null){
                  $ClientId = $AppSetting.ClientId
             }
             if($ClientSecret -eq $null){
@@ -209,6 +232,9 @@ function Get-AccessToken{
             else{
                 $redirectUrl = [System.Web.HttpUtility]::UrlEncode($redirectUrl)
             }
+            if([String]::IsNullOrEmpty($ResourceURL)){
+                $ResourceURL = $AppSetting.ResourceURL
+            }      
             $Phase1auth = Show-OAuthWindow -Url "https://login.microsoftonline.com/common/oauth2/authorize?resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&response_type=code&redirect_uri=$redirectUrl&prompt=login"
             $code = $Phase1auth["code"]
             $AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&grant_type=authorization_code&code=$code&redirect_uri=$redirectUrl"
@@ -222,6 +248,37 @@ function Get-AccessToken{
          }
 }
 
+function Get-AccessTokenUserAndPass{ 
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [string]$ClientId,
+        [Parameter(Position=2, Mandatory=$false)] [string]$ResourceURL,
+        [Parameter(Position=3, Mandatory=$true)] [System.Management.Automation.PSCredential]$Credentials
+    )  
+ 	Begin
+		 {
+            Add-Type -AssemblyName System.Web
+            $HttpClient =  Get-HTTPClient($MailboxName)
+            $AppSetting = Get-AppSettings 
+           if($ClientId -eq $null){
+                 $ClientId = $AppSetting.ClientId
+            }      
+
+            if([String]::IsNullOrEmpty($ResourceURL)){
+                $ResourceURL = $AppSetting.ResourceURL
+            }  
+            $UserName = $Credentials.UserName.ToString()
+            $password = $Credentials.GetNetworkCredential().password.ToString()    
+            $AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&grant_type=password&username=$username&password=$password"
+            $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
+            $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"),$content)
+            $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
+            return $JsonObject
+         }
+}
+
+
+
 function Get-AppOnlyToken{ 
     param( 
        
@@ -230,6 +287,7 @@ function Get-AppOnlyToken{
         [Parameter(Position=3, Mandatory=$false)] [string]$ClientId,
         [Parameter(Position=4, Mandatory=$false)] [string]$redirectUrl,     
         [Parameter(Position=6, Mandatory=$false)] [Int32]$ValidateForMinutes,
+        [Parameter(Position=7, Mandatory=$false)] [string]$ResourceURL,
         [Parameter(Mandatory=$true)] [Security.SecureString]$password
         
     )  
@@ -248,14 +306,17 @@ function Get-AppOnlyToken{
             if($ValidateForMinutes -eq 0){
                 $ValidateForMinutes = $AppSetting.ValidateForMinutes               
             }
+            if([String]::IsNullOrEmpty($ResourceURL)){
+                $ResourceURL = $AppSetting.ResourceURL
+            }        
             $JWTToken = New-JWTToken -CertFileName $CertFileName -password $password -TenantId $TenantId -ClientId $ClientId  -ValidateForMinutes $ValidateForMinutes
             Add-Type -AssemblyName System.Web
             $HttpClient =  Get-HTTPClient(" ")          
-            $ResourceURL = $AppSetting.ResourceURL
             $AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&client_assertion=$JWTToken&grant_type=client_credentials&redirect_uri=$redirectUrl"
             $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
             $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/" + $TenantId + "/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
+            Add-Member -InputObject $JsonObject -NotePropertyName tenantid -NotePropertyValue $TenantId
             return $JsonObject
          }
 }
@@ -321,7 +382,13 @@ function Invoke-RestGet
 
              }
              $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
+             $HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`"")) 
              $ClientResult = $HttpClient.GetAsync($RequestURL)
+             if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
+                 if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
+                     write-Host ($ClientResult.Result)
+                 }
+             }             
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
                      Write-Output ("Error making REST Get " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
@@ -336,8 +403,14 @@ function Invoke-RestGet
                     return  $ClientResult.Result.Content  
                }
                else{
-                    $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
-                    return $JsonObject
+                   $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+                   if([String]::IsNullOrEmpty($ClientResult)){
+                        write-host "No Value returned"
+                   }
+                   else{
+                       return $JsonObject
+                   }
+
                }  
 
              }
@@ -371,10 +444,15 @@ function Invoke-RestPOST
              }
              $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
              $PostContent = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
+             $HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`"")) 
              $ClientResult = $HttpClient.PostAsync([Uri]($RequestURL),$PostContent)
+             if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
+                 if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
+                     write-Host ($ClientResult.Result)
+                 }
+             }   
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
-                     Write-Output $ClientResult
                      Write-Output ("Error making REST POST " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
                      Write-Output $ClientResult.Result
                      if($ClientResult.Content -ne $null){
@@ -384,7 +462,13 @@ function Invoke-RestPOST
             else
              {
                $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
-               return $JsonObject
+               if([String]::IsNullOrEmpty($JsonObject)){
+                   Write-Output $ClientResult.Result
+               }
+               else{
+                   return $JsonObject
+               }
+               
              }
   
          }    
@@ -414,10 +498,14 @@ function Invoke-RestPatch
              $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
              $HttpRequestMessage.Content = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
              $ClientResult = $HttpClient.SendAsync($HttpRequestMessage)
+             if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
+                 if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
+                     write-Host ($ClientResult.Result)
+                 }
+             }   
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
-                     Write-Output $ClientResult
-                     Write-Output ("Error making REST PATCH " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
+                     Write-Output ("Error making REST Patch " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
                      Write-Output $ClientResult.Result
                      if($ClientResult.Content -ne $null){
                          Write-Output ($ClientResult.Content.ReadAsStringAsync().Result);   
@@ -426,7 +514,13 @@ function Invoke-RestPatch
             else
              {
                $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
-               return $JsonObject
+               if([String]::IsNullOrEmpty($JsonObject)){
+                   Write-Output $ClientResult.Result
+               }
+               else{
+                   return $JsonObject
+               }
+               
              }
   
          }    
@@ -454,10 +548,14 @@ function Invoke-RestDELETE
              $HttpRequestMessage =  New-Object System.Net.Http.HttpRequestMessage($method,[Uri]$RequestURL)
              $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
              $ClientResult = $HttpClient.SendAsync($HttpRequestMessage)
+             if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
+                 if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::NoContent){
+                     write-Host ($ClientResult.Result)
+                 }
+             }   
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
-                     Write-Output $ClientResult
-                     Write-Output ("Error making REST DELETE " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
+                     Write-Output ("Error making REST Delete " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
                      Write-Output $ClientResult.Result
                      if($ClientResult.Content -ne $null){
                          Write-Output ($ClientResult.Content.ReadAsStringAsync().Result);   
@@ -465,8 +563,14 @@ function Invoke-RestDELETE
              }
             else
              {
+               $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+               if([String]::IsNullOrEmpty($JsonObject)){
+                   Write-Output $ClientResult.Result
+               }
+               else{
+                   return $JsonObject
+               }
                
-               return $ClientResult.Result
              }
   
          }    
@@ -482,7 +586,8 @@ function Get-MailboxSettings{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailboxSettings"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "('$MailboxName')/MailboxSettings"
         return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
     }
 }
@@ -499,7 +604,8 @@ function Get-AutomaticRepliesSettings{
                     
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailboxSettings/AutomaticRepliesSetting"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL = $EndPoint + "('$MailboxName')/MailboxSettings/AutomaticRepliesSetting"
        return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
     }
 }
@@ -515,7 +621,8 @@ function Get-MailboxTimeZone{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailboxSettings/TimeZone"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "('$MailboxName')/MailboxSettings/TimeZone"
         return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
     }
 }
@@ -535,7 +642,8 @@ function Get-FolderFromPath{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailFolders/msgfolderroot/childfolders?"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "('$MailboxName')/MailFolders/msgfolderroot/childfolders?"
       #  $RootFolder = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		#Split the Search path into an array  
         $tfTargetFolder = $RootFolder
@@ -548,13 +656,15 @@ function Get-FolderFromPath{
             $tfTargetFolder = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             if($tfTargetFolder.Value.Count -eq 1){
                 $folderId = $tfTargetFolder.Value[0].Id.ToString()
-                $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailFolders('$folderId')/childfolders?"
+                $RequestURL =  $EndPoint + "('$MailboxName')/MailFolders('$folderId')/childfolders?"
             }
             else{
 			    throw ("Folder Not found")
 		    }
 	    }  
 		if($tfTargetFolder.Value.Count -gt 0){
+            $folderId = $tfTargetFolder.Value[0].Id.ToString()
+            Add-Member -InputObject $tfTargetFolder.Value[0] -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
             return ,$tfTargetFolder.Value[0]
 		}
 		else{
@@ -574,7 +684,8 @@ function Get-Inbox{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailFolders/Inbox"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =   $EndPoint + "('$MailboxName')/MailFolders/Inbox"
         return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
     }
 }
@@ -590,7 +701,8 @@ function Get-InboxItems{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailFolders/Inbox/messages/?`$select=ReceivedDateTime,Sender,Subject,IsRead,InferenceClassification`&`$Top=1000"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL = $EndPoint + "('$MailboxName')/MailFolders/Inbox/messages/?`$select=ReceivedDateTime,Sender,Subject,IsRead,InferenceClassification`&`$Top=1000"
         do{
             $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {
@@ -613,7 +725,8 @@ function Get-FocusedInboxItems{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailFolders/Inbox/messages/?`$select=ReceivedDateTime,Sender,Subject,IsRead,InferenceClassification`&`$Top=1000`&`$filter=InferenceClassification eq 'Focused'"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "('$MailboxName')/MailFolders/Inbox/messages/?`$select=ReceivedDateTime,Sender,Subject,IsRead,InferenceClassification`&`$Top=1000`&`$filter=InferenceClassification eq 'Focused'"
         do{
             $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {
@@ -636,7 +749,8 @@ function Get-CalendarItems{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/events/?`$select=Start,End,Subject,Organizer`&`$Top=1000"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "('$MailboxName')/events/?`$select=Start,End,Subject,Organizer`&`$Top=1000"
         do{
             $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {
@@ -653,7 +767,10 @@ function Get-FolderItems{
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [string]$FolderPath,
-        [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$Folder
+        [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Folder,
+        [Parameter(Position=4, Mandatory=$false)] [switch]$ReturnSize,
+        [Parameter(Position=5, Mandatory=$false)] [string]$SelectProperties,
+        [Parameter(Position=6, Mandatory=$false)] [string]$Filter
     )
     Begin{
         if($AccessToken -eq $null)
@@ -663,14 +780,29 @@ function Get-FolderItems{
         if($FolderPath -ne $null)
         {
             $Folder = Get-FolderFromPath -FolderPath $FolderPath -AccessToken $AccessToken -MailboxName $MailboxName         
+        }
+        if(![String]::IsNullorEmpty($Filter)){
+            $Filter = "`&`$filter=" + $Filter
         }        
+        if([String]::IsNullorEmpty($SelectProperties)){
+            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead"
+        }
+        else{
+            $SelectProperties = "`$select=" + $SelectProperties
+        }
         if($Folder -ne $null)
         {
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  $Folder.'@odata.id' + "/messages/?`$select=ReceivedDateTime,Sender,Subject,IsRead`&`$Top=1000"
+            $RequestURL =  $Folder.FolderRestURI + "/messages/?" +  $SelectProperties + "`&`$Top=1000" + $Filter
+            write-host $RequestURL
+            if($ReturnSize.IsPresent){
+                $RequestURL =  $Folder.FolderRestURI + "/messages/?`$select=ReceivedDateTime,Sender,Subject,IsRead`&`$Top=1000`&`$expand=SingleValueExtendedProperties(`$filter=PropertyId%20eq%20'Integer%200x0E08')" + $Filter
+            }
+           
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
+                    Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($Folder.FolderRestURI + "/messages('" + $Message.Id + "')")
                     Write-Output $Message
                 }           
                 $RequestURL = $JSONOutput.'@odata.nextLink'
@@ -680,6 +812,92 @@ function Get-FolderItems{
 
     }
 }
+
+function Move-Message{
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$true)] [string]$ItemURI,
+        [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=3, Mandatory=$false)] [string]$TargetFolderPath
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }    
+        if($TargetFolderPath -ne $null)
+        {
+            $Folder = Get-FolderFromPath -FolderPath $TargetFolderPath -AccessToken $AccessToken -MailboxName $MailboxName         
+        }
+        if($Folder -ne $null){
+            $HttpClient =  Get-HTTPClient($MailboxName)
+            $RequestURL =  $ItemURI + "/move"
+            $MoveItemPost = "{`"DestinationId`": `"" + $Folder.Id + "`"}"
+            write-host $MoveItemPost
+            return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $MoveItemPost
+        } 
+    }
+}
+function Update-Message{
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$true)] [string]$ItemURI,
+        [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=3, Mandatory=$false)] [String]$Subject,
+        [Parameter(Position=4, Mandatory=$false)] [String]$Body,
+        [Parameter(Position=5, Mandatory=$false)] [psobject]$Attachments,
+        [Parameter(Position=6, Mandatory=$false)] [psobject]$ToRecipients,
+        [Parameter(Position=7, Mandatory=$false)] [psobject]$StandardPropList,
+        [Parameter(Position=8, Mandatory=$false)] [psobject]$ExPropList
+
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }    
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        $RequestURL =  $ItemURI
+        $UpdateItemPatch =   Get-MessageJSONFormat -Subject $Subject -Body $Body -Attachments $Attachments -ExPropList $ExPropList -StandardPropList $StandardPropList  
+        Write-host $UpdateItemPatch
+        return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $UpdateItemPatch
+    }
+}
+
+
+function Get-Attachments{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$true)] [string]$ItemURI,
+        [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=3, Mandatory=$false)] [switch]$MetaData,
+        [Parameter(Position=4, Mandatory=$false)] [string]$SelectProperties
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }    
+        if([String]::IsNullorEmpty($SelectProperties)){
+            $SelectProperties = "`$select=Name,ContentType,Size,isInline,ContentType"
+        }
+        else{
+            $SelectProperties = "`$select=" + $SelectProperties
+        }
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        $RequestURL =  $ItemURI + "/Attachments?" +  $SelectProperties   
+        do{
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+            foreach ($Message in $JSONOutput.Value) {
+                  Write-Output $Message
+             }           
+             $RequestURL = $JSONOutput.'@odata.nextLink'
+         }while(![String]::IsNullOrEmpty($RequestURL))     
+   
+
+    }
+}
+
 
 function New-Folder{
     param( 
@@ -698,7 +916,7 @@ function New-Folder{
         if($ParentFolder  -ne $null)
         {
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  $ParentFolder.'@odata.id' + "/childfolders"
+            $RequestURL =  $ParentFolder.FolderRestURI + "/childfolders"
             $NewFolderPost = "{`"DisplayName`": `"" + $DisplayName + "`"}"
             write-host $NewFolderPost
             return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewFolderPost
@@ -721,7 +939,8 @@ function New-ContactFolder{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }  
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/ContactFolders"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "('$MailboxName')/ContactFolders"
         $NewFolderPost = "{`"DisplayName`": `"" + $DisplayName + "`"}"
         write-host $NewFolderPost
         return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewFolderPost
@@ -742,7 +961,8 @@ function New-CalendarFolder{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }  
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/calendars"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "('$MailboxName')/calendars"
         $NewFolderPost = "{`"Name`": `"" + $DisplayName + "`"}"
         write-host $NewFolderPost
         return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewFolderPost
@@ -768,7 +988,7 @@ function Rename-Folder{
         if($Folder  -ne $null)
         {
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  $Folder.'@odata.id'
+            $RequestURL =  $Folder.FolderRestURI
             $RenameFolderPost = "{`"DisplayName`": `"" + $NewDisplayName + "`"}"
             return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $RenameFolderPost
 
@@ -794,7 +1014,7 @@ function Update-FolderClass{
         if($Folder  -ne $null)
         {
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  $Folder.'@odata.id'
+            $RequestURL =  $Folder.FolderRestURI
             $UpdateFolderPost = "{`"SingleValueExtendedProperties`": [{`"PropertyId`":`"String 0x3613`",`"Value`":`"" + $FolderClass + "`"}]}"
             return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $UpdateFolderPost
 
@@ -820,7 +1040,7 @@ function Update-Folder{
         if($Folder  -ne $null)
         {
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  $Folder.'@odata.id'
+            $RequestURL =  $Folder.FolderRestURI
             $FolderPostValue = $FolderPost
             return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $FolderPostValue
 
@@ -860,7 +1080,7 @@ function Set-FolderRetentionTag {
 		    $policyTagGUID = new-Object Guid($retentionTagGUID) 
             $PolicyTagBase64 = [System.Convert]::ToBase64String($PolicyTagGUID.ToByteArray()) 
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  $Folder.'@odata.id'
+            $RequestURL =  $Folder.FolderRestURI
             $FolderPostValue = "{`"SingleValueExtendedProperties`": [`r`n"
             $FolderPostValue += "`t{`"PropertyId`":`"Binary 0x3019`",`"Value`":`"" + $PolicyTagBase64 + "`"},`r`n"
             $FolderPostValue += "`t{`"PropertyId`":`"Integer 0x301D`",`"Value`":`"" + $RetentionFlagsValue + "`"},`r`n"
@@ -872,6 +1092,33 @@ function Set-FolderRetentionTag {
     }
     
 }
+
+function Invoke-DeleteItem{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$true)] [string]$ItemURI
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }  
+        $confirmation = Read-Host "Are you Sure You Want To proceed with deleting the Item"
+        if ($confirmation -eq 'y') {
+             $HttpClient =  Get-HTTPClient($MailboxName)
+             $RequestURL =  $ItemURI
+             return Invoke-RestDELETE -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+        }
+        else
+        {
+             Write-Host "skipped deletion"                
+        }
+   
+
+    }
+}
+
 function Invoke-DeleteFolder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
@@ -889,7 +1136,7 @@ function Invoke-DeleteFolder{
             $confirmation = Read-Host "Are you Sure You Want To proceed with deleting Folder"
             if ($confirmation -eq 'y') {
                 $HttpClient =  Get-HTTPClient($MailboxName)
-                $RequestURL =  $Folder.'@odata.id'
+                $RequestURL =  $Folder.FolderRestURI
                 return Invoke-RestDELETE -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             }
             else
@@ -913,7 +1160,8 @@ function Get-AllMailboxItems{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }  
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailFolders/AllItems/messages/?`$select=ReceivedDateTime,Sender,Subject,IsRead,ParentFolderId`&`$Top=1000"
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =  $EndPoint + "('$MailboxName')/MailFolders/AllItems/messages/?`$select=ReceivedDateTime,Sender,Subject,IsRead,ParentFolderId`&`$Top=1000"
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
@@ -969,13 +1217,17 @@ function GetExtendedPropList{
 function Get-TaggedProperty{
      param( 
         [Parameter(Position=0, Mandatory=$true)] [String]$DataType,
-        [Parameter(Position=1, Mandatory=$true)] [String]$Id
+        [Parameter(Position=1, Mandatory=$true)] [String]$Id,
+        [Parameter(Position=2, Mandatory=$false)] [String]$Value
     )
     Begin{
-        $Property = "" | Select Id,DataType,PropertyType
+        $Property = "" | Select Id,DataType,PropertyType,Value
         $Property.Id = $Id
         $Property.DataType = $DataType   
         $Property.PropertyType = "Tagged"
+        if(![String]::IsNullOrEmpty($Value)){
+             $Property.Value = $Value
+        }       
         return ,$Property
     }
 }
@@ -985,19 +1237,24 @@ function Get-NamedProperty{
         [Parameter(Position=0, Mandatory=$true)] [String]$DataType,
         [Parameter(Position=1, Mandatory=$true)] [String]$Id,
         [Parameter(Position=1, Mandatory=$true)] [String]$Guid,
-        [Parameter(Position=1, Mandatory=$true)] [String]$Type
+        [Parameter(Position=1, Mandatory=$true)] [String]$Type,
+        [Parameter(Position=2, Mandatory=$false)] [String]$Value
     )
     Begin{
-        $Property = "" | Select Id,DataType,PropertyType,Guid,$Type
+        $Property = "" | Select Id,DataType,PropertyType,Type,Guid,Value
         $Property.Id = $Id
         $Property.DataType = $DataType   
         $Property.PropertyType = "Named"
+        $Property.Guid = $Guid
         if($Type = "String"){
             $Property.Type = "String"
         }
         else{
              $Property.Type = "Id"
         }
+         if(![String]::IsNullOrEmpty($Value)){
+             $Property.Value = $Value
+        }     
         return ,$Property
     }
 }
@@ -1031,7 +1288,8 @@ function Get-AllMailFolders{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }  
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailFolders/msgfolderroot/childfolders/?`$Top=1000"
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =  $EndPoint + "('$MailboxName')/MailFolders/msgfolderroot/childfolders/?`$Top=1000"
             if($PropList -ne $null){
                $Props = GetExtendedPropList -PropertyList $PropList
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
@@ -1041,6 +1299,8 @@ function Get-AllMailFolders{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Folder in $JSONOutput.Value) {
                     $Folder | Add-Member -NotePropertyName FolderPath -NotePropertyValue ("\\" + $Folder.DisplayName)
+                    $folderId = $Folder.Id.ToString()
+                    Add-Member -InputObject $Folder -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
                     Write-Output $Folder
                     if($Folder.ChildFolderCount -gt 0)
                     {
@@ -1070,7 +1330,8 @@ function Get-AllChildFolders{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }  
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =   $Folder.'@odata.id' + "/childfolders/?`$Top=1000"
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =   $Folder.FolderRestURI + "/childfolders/?`$Top=1000"
             if($PropList -ne $null){
                $Props = GetExtendedPropList -PropertyList $PropList
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
@@ -1079,6 +1340,8 @@ function Get-AllChildFolders{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($ChildFolder in $JSONOutput.Value) {
                     $ChildFolder | Add-Member -NotePropertyName FolderPath -NotePropertyValue ($Folder.FolderPath + "\" + $ChildFolder.DisplayName)
+                    $folderId = $ChildFolder.Id.ToString()
+                    Add-Member -InputObject $ChildFolder -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
                     Write-Output $ChildFolder
                     if($ChildFolder.ChildFolderCount -gt 0)
                     {
@@ -1100,7 +1363,8 @@ function Get-AllChildFolders{
 function Get-AllCalendarFolders{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [switch]$FolderClass
     )
     Begin{
         if($AccessToken -eq $null)
@@ -1108,7 +1372,17 @@ function Get-AllCalendarFolders{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }  
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/Calendars/?`$Top=1000`&`$expand=SingleValueExtendedProperties(`$filter=PropertyId%20eq%20'String%200x66B5')"
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            if($FolderClass.IsPresent){
+                $RequestURL =  $EndPoint + "('$MailboxName')/Calendars/?`$Top=1000`&`$expand=SingleValueExtendedProperties(`$filter=PropertyId%20eq%20'String%200x66B5')"
+                if($AccessToken.resource -eq "https://graph.microsoft.com"){
+                    $RequestURL =  $EndPoint + "('$MailboxName')/Calendars/?`$Top=1000`&`$expand=SingleValueExtendedProperties(`$filter=Id%20eq%20'String%200x66B5')"
+                }
+                
+            }
+            else{
+                 $RequestURL =  $EndPoint + "('$MailboxName')/Calendars/?`$Top=1000"
+            }
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Folder in $JSONOutput.Value) {
@@ -1131,7 +1405,9 @@ function Get-AllContactFolders{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }  
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/contactfolders/?`$Top=1000`&`$expand=SingleValueExtendedProperties(`$filter=PropertyId%20eq%20'String%200x66B5')"
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =  $EndPoint + "('$MailboxName')/contactfolders/?`$Top=1000"
+            Write-Host  $RequestURL
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Folder in $JSONOutput.Value) {
@@ -1154,7 +1430,8 @@ function Get-AllTaskfolders{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }  
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/taskfolders/?`$Top=1000"
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =  $EndPoint + "('$MailboxName')/taskfolders/?`$Top=1000"
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Folder in $JSONOutput.Value) {
@@ -1180,11 +1457,12 @@ function Get-ArchiveFolder{
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailboxSettings/ArchiveFolder"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL = $EndPoint + "('$MailboxName')/MailboxSettings/ArchiveFolder"
         $JsonObject =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
         $folderId = $JsonObject.value.ToString()
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailFolders('$folderId')"
+        $RequestURL = $EndPoint + "('$MailboxName')/MailFolders('$folderId')"
         return  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
     }
 }
@@ -1202,7 +1480,8 @@ function Get-MailboxSettingsReport{
         $HttpClient =  Get-HTTPClient($Mailboxes[0])
         foreach ($MailboxName in $Mailboxes) {
             $rptObj = "" | Select MailboxName,Language,Locale,TimeZone,AutomaticReplyStatus
-            $RequestURL =  "https://outlook.office.com/api/v2.0/Users('$MailboxName')/MailboxSettings"
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =  $EndPoint + "('$MailboxName')/MailboxSettings"
             $Results = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             $rptObj.MailboxName = $MailboxName
             $rptObj.Language = $Results.Language.DisplayName
@@ -1212,6 +1491,22 @@ function Get-MailboxSettingsReport{
             $rptCollection += $rptObj
         }
         Write-Output  $rptCollection
+        
+    }
+}
+
+function Get-EndPoint{
+        param(
+        [Parameter(Position=0, Mandatory=$true)] [psObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$true)] [psObject]$Segment
+    )
+    Begin{
+        $EndPoint = "https://outlook.office.com/api/v2.0"
+        switch($AccessToken.resource){
+            "https://outlook.office.com" {  $EndPoint = "https://outlook.office.com/api/v2.0/" + $Segment }     
+            "https://graph.microsoft.com" {  $EndPoint = "https://graph.microsoft.com/v1.0/" + $Segment  }     
+        }
+        return , $EndPoint
         
     }
 }
@@ -1246,7 +1541,8 @@ function  Get-UserPhotoMetaData {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/users/" + $MailboxName + "/photo"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "/" + $MailboxName + "/photo"
         $JsonObject =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
         Write-Output $JsonObject 
     }
@@ -1265,7 +1561,8 @@ function  Get-UserPhoto {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/users/" + $MailboxName + "/photo/`$value"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL = $EndPoint + "/" + $MailboxName + "/photo/`$value"
         $Result =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
         Write-Output $Result.ReadAsByteArrayAsync().Result  
     }
@@ -1282,7 +1579,8 @@ function  Get-MailboxUser {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/users/" + $MailboxName 
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "/" + $MailboxName 
         $JsonObject =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
         Write-Output $JsonObject 
     }
@@ -1300,7 +1598,8 @@ function  Get-CalendarGroups {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/users/" + $MailboxName + "/CalendarGroups"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "/" + $MailboxName + "/CalendarGroups"
         $JsonObject =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
         Write-Output $JsonObject 
     }
@@ -1318,18 +1617,19 @@ function  Invoke-EnumCalendarGroups {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  "https://outlook.office.com/api/v2.0/users/" + $MailboxName + "/CalendarGroups"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "/" + $MailboxName + "/CalendarGroups"
         $JsonObject =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
         foreach($Group in $JsonObject.Value)
         {
             Write-Host ("GroupName : " + $Group.Name) 
             $GroupId = $Group.Id.ToString()           
-            $RequestURL =  "https://outlook.office.com/api/v2.0/users/" + $MailboxName + "/CalendarGroups('$GroupId')/Calendars"
+            $RequestURL =  $EndPoint + "/" + $MailboxName + "/CalendarGroups('$GroupId')/Calendars"
             $JsonObjectSub =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Calendar in $JsonObjectSub.Value) {
                 Write-Host $Calendar.Name
             }
-            $RequestURL =  "https://outlook.office.com/api/v2.0/users/" + $MailboxName + "/CalendarGroups('$GroupId')/MailFolders"
+            $RequestURL =  $EndPoint + "/" + $MailboxName + "/CalendarGroups('$GroupId')/MailFolders"
             $JsonObjectSub =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Calendar in $JsonObjectSub.Value) {
                 Write-Host $Calendar.Name
@@ -1339,4 +1639,482 @@ function  Invoke-EnumCalendarGroups {
         
         
     }
+}
+
+function Get-ObjectProp{
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$Name,  
+        [Parameter(Position=1, Mandatory=$false)] [psObject]$PropList,
+        [Parameter(Position=2, Mandatory=$false)] [switch]$Array              
+    )
+    Begin{
+        $ObjectProp = "" | Select PropertyName,PropertyList,PropertyType,isArray
+        $ObjectProp.PropertyType = "Object"
+        $ObjectProp.isArray = $false
+        if($Array.IsPresent){  $ObjectProp.isArray = $true }
+        $ObjectProp.PropertyName = $Name
+        if($PropList -eq $null){
+            $ObjectProp.PropertyList = @()
+        }
+        else{
+            $ObjectProp.PropertyList = $PropList
+        }
+        return ,$ObjectProp
+        
+    }
+}
+
+function Get-ObjectCollectionProp{
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$Name,  
+        [Parameter(Position=1, Mandatory=$false)] [psObject]$PropList,
+        [Parameter(Position=2, Mandatory=$false)] [switch]$Array              
+    )
+    Begin{
+        $CollectionProp = "" | Select PropertyName,PropertyList,PropertyType,isArray
+        $CollectionProp.PropertyType = "ObjectCollection"
+        $CollectionProp.isArray = $false
+        if($Array.IsPresent){  $CollectionProp.isArray = $true }
+        $CollectionProp.PropertyName = $Name
+        if($PropList -eq $null){
+            $CollectionProp.PropertyList = @()
+        }
+        else{
+            $CollectionProp.PropertyList = $PropList
+        }
+        return ,$CollectionProp
+        
+    }
+}
+
+function Get-ItemProp{
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$Name,  
+        [Parameter(Position=1, Mandatory=$true)] [string]$Value,  
+        [Parameter(Position=2, Mandatory=$false)] [switch]$NoQuotes          
+    )
+    Begin{
+        $ItemProp = "" | Select Name,Value,PropertyType,QuoteValue
+        $ItemProp.PropertyType = "Single"
+        $ItemProp.Name = $Name
+        $ItemProp.Value = $Value  
+        if($NoQuotes.IsPresent){
+            $ItemProp.QuoteValue = $false  
+        }
+        else{
+            $ItemProp.QuoteValue = $true  
+        }
+        return ,$ItemProp
+        
+    }
+}
+
+function List-Groups {
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken   
+    )
+    Begin{
+        
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }        
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        $RequestURL =  Get-EndPoint -AccessToken $AccessToken -Segment "/groups"
+        $JsonObject =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+        return $JsonObject       
+        
+    }
+}
+
+function Get-MailAppProps(){
+        #Holder for Mail Apps
+        $cepPropdef = Get-NamedProperty -DataType "String" -Guid "00020329-0000-0000-C000-000000000046" -Id "cecp-propertyNames" -Value ($Guid + ";") -Type "String"
+        $cepPropValue = Get-NamedProperty -DataType "String" -Guid "00020329-0000-0000-C000-000000000046" -Id "cecp-" + $Guid -Value $value -Type "String"
+}
+
+function New-EmailAddress {
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$Name,
+        [Parameter(Position=1, Mandatory=$true)] [string]$Address
+    )
+    Begin{
+        $EmailAddress = "" | Select Name,Address
+        $EmailAddress.Name = $Name
+        $EmailAddress.Address = $Address
+        return, $EmailAddress
+    }
+}
+
+#region Sending_Email
+function  New-SentEmailMessage {
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [string]$FolderPath,
+        [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Folder,
+        [Parameter(Position=4, Mandatory=$true)] [String]$Subject,
+        [Parameter(Position=5, Mandatory=$false)] [String]$Body,
+        [Parameter(Position=6, Mandatory=$true)] [String]$SenderName,
+        [Parameter(Position=7, Mandatory=$true)] [String]$SenderAddress,
+        [Parameter(Position=8, Mandatory=$false)] [psobject]$Attachments,
+        [Parameter(Position=9, Mandatory=$false)] [psobject]$ToRecipients,
+        [Parameter(Position=10, Mandatory=$true)] [DateTime]$SentDate,
+        [Parameter(Position=11, Mandatory=$false)] [psobject]$ExPropList,
+        [Parameter(Position=12, Mandatory=$false)] [string]$ItemClass
+    )
+    Begin{
+        
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        } 
+        $SentFlag = Get-TaggedProperty -DataType "Integer" -Id "0x0E07"  -Value "1"
+        $SentTime = Get-TaggedProperty -DataType "SystemTime" -Id "0x0039"  -Value $SentDate.ToString("yyyy-MM-ddTHH:mm:ss.ffffzzz")
+        $RcvdTime = Get-TaggedProperty -DataType "SystemTime" -Id "0x0E06"  -Value $SentDate.ToString("yyyy-MM-ddTHH:mm:ss.ffffzzz")
+        if($ExPropList -eq $null){
+            $ExPropList = @()
+        }
+        if(![String]::IsNullOrEmpty($ItemClass)){
+            $ItemClassProp = Get-TaggedProperty -DataType "String" -Id "0x001A"  -Value $ItemClass
+            $ExPropList += $ItemClassProp
+        }        
+        $ExPropList += $SentFlag
+        $ExPropList += $SentTime
+        $ExPropList += $RcvdTime
+        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderName $SenderName -SenderAddress $SenderAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList
+        if($FolderPath -ne $null)
+        {
+            $Folder = Get-FolderFromPath -FolderPath $FolderPath -AccessToken $AccessToken -MailboxName $MailboxName    
+
+        }        
+        if($Folder -ne $null)
+        {
+            $RequestURL =  $Folder.FolderRestURI + "/messages"
+            $HttpClient =  Get-HTTPClient($MailboxName)
+            Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
+        }
+
+    }
+}
+
+function CreateFlatList{
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [psobject]$EmailAddress
+    )
+    Begin{
+         
+         $FlatListEntry = new-object System.IO.MemoryStream
+         $EntryOneOffid = "00000000812B1FA4BEA310199D6E00DD010F540200000190" + [BitConverter]::ToString([System.Text.UnicodeEncoding]::Unicode.GetBytes(($EmailAddress.Name + "`0"))).Replace("-","") + [BitConverter]::ToString([System.Text.UnicodeEncoding]::Unicode.GetBytes(("SMTP" + "`0"))).Replace("-","") + [BitConverter]::ToString([System.Text.UnicodeEncoding]::Unicode.GetBytes(($EmailAddress.Address + "`0"))).Replace("-","")
+         $FlatListEntryBytes = HexStringToByteArray($EntryOneOffid)
+         $FlatListEntry.Write([BitConverter]::GetBytes($FlatListEntryBytes.Length), 0, 4);
+         $FlatListEntry.Write($FlatListEntryBytes, 0, $FlatListEntryBytes.Length);
+         $InnerLength += $FlatListEntryBytes.Length
+         $Modulsval = $FlatListEntryBytes.Length % 4;
+         $PadingValue = 0;
+         if ($Modulsval -ne 0)
+         {
+              $PadingValue = 4 - $Modulsval;
+              for ($AddPading = 0; $AddPading -lt $PadingValue; $AddPading++)
+              {
+                   [Byte]$NullValue = 00;
+                   $FlatlistStream.Write($NullValue, 0, 1);
+              }
+         }         
+         $FlatListEntry.Position = 0
+         $FlatListEntryBytes = $FlatListEntry.ToArray()
+         $FlatList = new-object System.IO.MemoryStream
+         $FlatList.Write([BitConverter]::GetBytes(1), 0, 4);  
+         $FlatList.Write([BitConverter]::GetBytes($FlatListEntryBytes.Length), 0, 4); 
+         $FlatList.Write($FlatListEntryBytes, 0,  $FlatListEntryBytes.Length);
+         $FlatList.Position = 0
+         return ,$FlatList.ToArray()   
+     }
+}
+
+
+function Send-MessageREST{
+        param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [string]$FolderPath,
+        [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Folder,
+        [Parameter(Position=4, Mandatory=$true)] [String]$Subject,
+        [Parameter(Position=5, Mandatory=$false)] [String]$Body,
+        [Parameter(Position=6, Mandatory=$false)] [String]$SenderName,
+        [Parameter(Position=7, Mandatory=$false)] [String]$SenderAddress,
+        [Parameter(Position=8, Mandatory=$false)] [psobject]$Attachments,
+        [Parameter(Position=9, Mandatory=$false)] [psobject]$ToRecipients,
+        [Parameter(Position=10, Mandatory=$false)] [psobject]$CCRecipients,
+        [Parameter(Position=11, Mandatory=$false)] [psobject]$BCCRecipients,
+        [Parameter(Position=12, Mandatory=$false)] [psobject]$ExPropList,
+        [Parameter(Position=13, Mandatory=$false)] [psobject]$StandardPropList,
+        [Parameter(Position=14, Mandatory=$false)] [string]$ItemClass,
+        [Parameter(Position=15, Mandatory=$false)] [switch]$SaveToSentItems,
+        [Parameter(Position=16, Mandatory=$false)] [switch]$ShowRequest,
+        [Parameter(Position=17, Mandatory=$false)] [psobject]$ReplyTo
+    )
+    Begin{
+        
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        } 
+        if(![String]::IsNullOrEmpty($ItemClass)){
+            $ItemClassProp = Get-TaggedProperty -DataType "String" -Id "0x001A"  -Value $ItemClass
+            if($ExPropList -eq $null){
+               $ExPropList = @()
+            }
+            $ExPropList += $ItemClassProp
+        }
+        if($ReplyTo -ne $null){
+            $PidTagReplyRecipientNames = Get-TaggedProperty -DataType "String" -Id "0x0050"  -Value $ReplyTo.Name
+            $FlatListBytes = CreateFlatList -EmailAddress $ReplyTo
+            $PidTagReplyRecipientEntries = Get-TaggedProperty -DataType "Binary" -Id "0x004F" -Value ([System.Convert]::ToBase64String($FlatListBytes))
+            if($ExPropList -eq $null){
+               $ExPropList = @()
+            }
+            $ExPropList += $PidTagReplyRecipientNames
+            $ExPropList += $PidTagReplyRecipientEntries
+        }        
+        $SaveToSentFolder = "false"
+        if($SaveToSentItems.IsPresent){
+            $SaveToSentFolder = "true"
+        }
+        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderName $SenderName -SenderAddress $SenderAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList -CcRecipients $CCRecipients -bccRecipients $BCCRecipients -StandardPropList $StandardPropList -SaveToSentItems $SaveToSentFolder -SendMail 
+        if($ShowRequest.IsPresent){
+            write-host $NewMessage
+        }       
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =  $EndPoint + "/" + $MailboxName + "/sendmail"
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
+
+    }
+}
+
+function Get-MessageJSONFormat {
+    param(
+        [Parameter(Position=1, Mandatory=$false)] [String]$Subject,
+        [Parameter(Position=2, Mandatory=$false)] [String]$Body,
+        [Parameter(Position=3, Mandatory=$false)] [String]$SenderName,
+        [Parameter(Position=4, Mandatory=$false)] [String]$SenderAddress,
+        [Parameter(Position=5, Mandatory=$false)] [psobject]$Attachments,
+        [Parameter(Position=6, Mandatory=$false)] [psobject]$ToRecipients,
+        [Parameter(Position=7, Mandatory=$false)] [psobject]$CcRecipients,
+        [Parameter(Position=7, Mandatory=$false)] [psobject]$bccRecipients,
+        [Parameter(Position=8, Mandatory=$false)] [psobject]$SentDate,
+        [Parameter(Position=9, Mandatory=$false)] [psobject]$StandardPropList,
+        [Parameter(Position=10, Mandatory=$false)] [psobject]$ExPropList,
+        [Parameter(Position=11, Mandatory=$false)] [switch]$ShowRequest,
+        [Parameter(Position=12, Mandatory=$false)] [String]$SaveToSentItems,
+        [Parameter(Position=13, Mandatory=$false)] [switch]$SendMail
+    )
+    Begin{
+        $NewMessage = "{" + "`r`n"
+        if($SendMail.IsPresent){
+             $NewMessage += "  `"Message`" : {" + "`r`n"
+        }
+        if(![String]::IsNullOrEmpty($Subject)){
+            $NewMessage +=  "`"Subject`": `"" + $Subject + "`"" + "`r`n"
+        }
+        if(![String]::IsNullOrEmpty($SenderAddress)){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"Sender`":{" + "`r`n"
+            $NewMessage +=  " `"EmailAddress`":{" + "`r`n"
+            $NewMessage +=  "  `"Name`":`"" + $SenderName + "`"," + "`r`n"
+            $NewMessage +=  "  `"Address`":`"" + $SenderAddress + "`"" + "`r`n"
+            $NewMessage +=  "}}" + "`r`n"
+        }
+        if(![String]::IsNullOrEmpty($Body)){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"Body`": {"+ "`r`n"
+            $NewMessage +=  "`"ContentType`": `"HTML`"," + "`r`n"
+            $NewMessage +=  "`"Content`": `"" + $Body + "`"" + "`r`n"
+            $NewMessage +=  "}" + "`r`n"
+        }      
+        
+        $toRcpcnt = 0;
+        if($ToRecipients -ne $null){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"ToRecipients`": [ " + "`r`n"
+            foreach ($EmailAddress in $ToRecipients) {
+                if($toRcpcnt -gt 0){
+                    $NewMessage +=  "      ,{ "+ "`r`n"   
+                }
+                else{
+                    $NewMessage +=  "      { "+ "`r`n"
+                }           
+                $NewMessage +=  " `"EmailAddress`":{" + "`r`n"
+                $NewMessage +=  "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
+                $NewMessage +=  "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
+                $NewMessage +=  "}}" + "`r`n"
+                $toRcpcnt++
+            }
+            $NewMessage +=  "  ]" + "`r`n"  
+        }
+        if($CcRecipients -ne $null){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"CcRecipients`": [ " + "`r`n"
+            foreach ($EmailAddress in $CcRecipients) {
+                if($toRcpcnt -gt 0){
+                    $NewMessage +=  "      ,{ "+ "`r`n"   
+                }
+                else{
+                    $NewMessage +=  "      { "+ "`r`n"
+                }           
+                $NewMessage +=  " `"EmailAddress`":{" + "`r`n"
+                $NewMessage +=  "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
+                $NewMessage +=  "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
+                $NewMessage +=  "}}" + "`r`n"
+                $toRcpcnt++
+            }
+            $NewMessage +=  "  ]" + "`r`n"  
+        }
+        if($bccRecipients -ne $null){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"bccRecipients`": [ " + "`r`n"
+            foreach ($EmailAddress in $bccRecipients) {
+                if($toRcpcnt -gt 0){
+                    $NewMessage +=  "      ,{ "+ "`r`n"   
+                }
+                else{
+                    $NewMessage +=  "      { "+ "`r`n"
+                }           
+                $NewMessage +=  " `"EmailAddress`":{" + "`r`n"
+                $NewMessage +=  "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
+                $NewMessage +=  "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
+                $NewMessage +=  "}}" + "`r`n"
+                $toRcpcnt++
+            }
+            $NewMessage +=  "  ]" + "`r`n"  
+        }
+        if($StandardPropList -ne $null){
+            foreach ($StandardProp in $StandardPropList) {
+                if($NewMessage.Length -gt 5){$NewMessage += ","}
+                switch($StandardProp.PropertyType){
+                    "Single" {
+                        if($StandardProp.QuoteValue){
+                           $NewMessage +=  "`"" + $StandardProp.Name + "`": `"" + $StandardProp.Value + "`"" + "`r`n" 
+                        }
+                        else{
+                            $NewMessage +=  "`"" + $StandardProp.Name + "`": " + $StandardProp.Value +  "`r`n" 
+                        }
+                        
+                   
+                   }
+                    "Object"  {
+                              if($StandardProp.isArray){
+                                    $NewMessage +=  "`"" + $StandardProp.PropertyName + "`": [ {"+ "`r`n"
+                              }else{
+                                    $NewMessage +=  "`"" + $StandardProp.PropertyName + "`": {"+ "`r`n"
+                              }                              
+                              $acCount = 0
+                              foreach ($PropKeyValue in $StandardProp.PropertyList) {
+                                    if($acCount -gt 0){
+                                        $NewMessage += ","
+                                    }
+                                    $NewMessage +=  "`"" + $PropKeyValue.Name + "`": `"" + $PropKeyValue.Name + "`"" + "`r`n"
+                                    $acCount++
+                              }
+                               if($StandardProp.isArray){
+                                    $NewMessage +=  "}]" + "`r`n"
+                               }else{
+                                    $NewMessage +=  "}" + "`r`n"
+                               }
+                              
+                    }
+                    "ObjectCollection" {
+                              if($StandardProp.isArray){
+                                    $NewMessage +=  "`"" + $StandardProp.PropertyName + "`": ["+ "`r`n"
+                              }else{
+                                    $NewMessage +=  "`"" + $StandardProp.PropertyName + "`": {"+ "`r`n"
+                              }     
+                              foreach ($EnclosedStandardProp in $StandardProp.PropertyList) {
+                                  $NewMessage +=  "`"" + $EnclosedStandardProp.PropertyName + "`": {"+ "`r`n"
+                                   foreach ($PropKeyValue in $EnclosedStandardProp.PropertyList) {
+                                       $NewMessage +=  "`"" + $PropKeyValue.Name + "`": `"" + $PropKeyValue.Name + "`"," + "`r`n"
+                                  }
+                                  $NewMessage +=  "}" + "`r`n"
+                              }
+                               if($StandardProp.isArray){
+                                    $NewMessage +=  "]" + "`r`n"
+                               }else{
+                                    $NewMessage +=  "}" + "`r`n"
+                               }
+                    }
+                   
+                }
+            }
+        }                  
+        $atcnt = 0
+        if($Attachments -ne $null){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "  `"Attachments`": [ " + "`r`n"
+            foreach ($Attachment in $Attachments) {
+                $Item = Get-Item $Attachment
+                if($atcnt -gt 0)
+                {
+                     $NewMessage +=  "   ,{" + "`r`n"                       
+                }
+                else{
+                     $NewMessage +=  "    {" + "`r`n"
+                }               
+                $NewMessage +=  "     `"@odata.type`": `"#Microsoft.OutlookServices.FileAttachment`"," + "`r`n"
+                $NewMessage +=  "     `"Name`": `"" + $Item.Name + "`"," + "`r`n"
+                $NewMessage +=  "     `"ContentBytes`": `" " + [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($Attachment)) + "`"" + "`r`n"
+                $NewMessage +=  "    } " + "`r`n"
+                $atcnt++
+            }
+            $NewMessage +=  "  ]" + "`r`n"
+        }        
+        if($ExPropList -ne $null){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"SingleValueExtendedProperties`": ["+ "`r`n"
+            $propCount = 0
+            foreach($Property in $ExPropList){
+               if($propCount -eq 0){
+                   $NewMessage +=  "{"+ "`r`n"
+               }
+               else{
+                   $NewMessage +=  ",{"+ "`r`n"
+               }
+               if($Property.PropertyType -eq "Tagged"){
+                     $NewMessage +=  "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Id + "`", " + "`r`n"
+               }
+               else{
+                   if($Property.Type -eq "String"){
+                       $NewMessage +=  "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Name " + $Property.Id + "`", " + "`r`n"
+                   }
+                   else{
+                       $NewMessage +=  "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Id " + $Property.Id + "`", " + "`r`n"
+                   }
+               }
+               $NewMessage +=  "`"Value`":`"" + $Property.Value + "`""+ "`r`n"
+               $NewMessage +=  " } " + "`r`n"
+               $propCount++
+            }
+            $NewMessage +=  "]" + "`r`n"   
+        } 
+        if(![String]::IsNullOrEmpty($SaveToSentItems)){
+            $NewMessage += "}   ,`"SaveToSentItems`": `"" + $SaveToSentItems.ToLower() + "`""+ "`r`n"
+        }   
+        $NewMessage +=  "}"
+        if($ShowRequest.IsPresent){
+            Write-Host $NewMessage
+        }
+        return, $NewMessage
+    }
+}
+#endregion
+function HexStringToByteArray($HexString)
+{
+	$ByteArray =  New-Object Byte[] ($HexString.Length/2);
+  	for ($i = 0; $i -lt $HexString.Length; $i += 2)
+	{
+		 $ByteArray[$i/2] = [Convert]::ToByte($HexString.Substring($i, 2), 16)
+	} 
+ 	Return @(,$ByteArray)
+
 }
