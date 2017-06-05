@@ -54,7 +54,7 @@ Import-Module -Name Exch-Rest
 
 ## EndPoint
 
-The Module support either using the Microsoft Graph or Outlook REST EndPoints, by default the Outlook REST endpoing outlook.office.com will be used to specify the Microsoft Graph Endpoing use the 
+The Module support either usings the Microsoft Graph or Outlook REST EndPoints, by default the Outlook REST endpoint outlook.office.com will be used to specify the Microsoft Graph Endpoint use the 
 -ResourceURL when generating the Access Token. The endpoint will the be generated based on the URL that is stored in the Access Token 
 
 ## Authentication
