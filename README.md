@@ -65,7 +65,7 @@ You can either authenticate as a user or as an application.
 $Token = Get-AccessToken -MailboxName mailbox@domain.com `
                          -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 `
                          -redirectUrl urn:ietf:wg:oauth:2.0:oob
-
+```
 #### Example 1a: authenticating as a user (supplying the ClientId and redirectUrl you created during application registration) against the Microsoft Graph Endpoint
 ```
 $Token = Get-AccessToken -MailboxName mailbox@domain.com `
@@ -79,6 +79,7 @@ $Token = Get-AccessToken -MailboxName mailbox@domain.com `
                          -ClientId 1bdbfb41-f690-4f93-b0bb-002004bbca79 `
                          -redirectUrl 'http://localhost:8000/authorize' `
                          -ClientSecret 1rwq9MmrSMu4SGhMEfGb9ggktWjzPYtW5lcAxXLzEtU=
+
 ```
 #### Example 2a: authenticating as a user can and supplying a ClientSecret against the Microsoft Graph Endpoint
 ```
