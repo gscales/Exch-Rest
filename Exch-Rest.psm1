@@ -889,6 +889,7 @@ function Get-Attachments{
         do{
             $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {
+                  Add-Member -InputObject $Message -NotePropertyName AttachmentRESTURI -NotePropertyValue ($ItemURI + "/Attachments('" + $Message.Id + "')")
                   Write-Output $Message
              }           
              $RequestURL = $JSONOutput.'@odata.nextLink'
@@ -897,6 +898,25 @@ function Get-Attachments{
 
     }
 }
+
+function Invoke-DownloadAttachment{
+    param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$true)] [string]$AttachmentURI,
+        [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$AccessToken
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        } 
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        $AttachmentURI = $AttachmentURI + "?`$expand"
+        $AttachmentObj = Invoke-RestGet -RequestURL $AttachmentURI -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName   
+        return $AttachmentObj
+    }
+} 
+
 
 
 function New-Folder{
@@ -1736,12 +1756,17 @@ function Get-MailAppProps(){
 
 function New-EmailAddress {
     param(
-        [Parameter(Position=0, Mandatory=$true)] [string]$Name,
+        [Parameter(Position=0, Mandatory=$false)] [string]$Name,
         [Parameter(Position=1, Mandatory=$true)] [string]$Address
     )
     Begin{
         $EmailAddress = "" | Select Name,Address
-        $EmailAddress.Name = $Name
+        if([String]::IsNullOrEmpty($Name)){
+            $EmailAddress.Name = $Name
+        }
+        else{
+            $EmailAddress.Name = $Name
+        }        
         $EmailAddress.Address = $Address
         return, $EmailAddress
     }
@@ -1756,8 +1781,7 @@ function  New-SentEmailMessage {
         [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Folder,
         [Parameter(Position=4, Mandatory=$true)] [String]$Subject,
         [Parameter(Position=5, Mandatory=$false)] [String]$Body,
-        [Parameter(Position=6, Mandatory=$true)] [String]$SenderName,
-        [Parameter(Position=7, Mandatory=$true)] [String]$SenderAddress,
+        [Parameter(Position=7, Mandatory=$true)] [psobject]$SenderEmailAddress,
         [Parameter(Position=8, Mandatory=$false)] [psobject]$Attachments,
         [Parameter(Position=9, Mandatory=$false)] [psobject]$ToRecipients,
         [Parameter(Position=10, Mandatory=$true)] [DateTime]$SentDate,
@@ -1783,7 +1807,7 @@ function  New-SentEmailMessage {
         $ExPropList += $SentFlag
         $ExPropList += $SentTime
         $ExPropList += $RcvdTime
-        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderName $SenderName -SenderAddress $SenderAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList
+        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList
         if($FolderPath -ne $null)
         {
             $Folder = Get-FolderFromPath -FolderPath $FolderPath -AccessToken $AccessToken -MailboxName $MailboxName    
@@ -1842,8 +1866,7 @@ function Send-MessageREST{
         [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Folder,
         [Parameter(Position=4, Mandatory=$true)] [String]$Subject,
         [Parameter(Position=5, Mandatory=$false)] [String]$Body,
-        [Parameter(Position=6, Mandatory=$false)] [String]$SenderName,
-        [Parameter(Position=7, Mandatory=$false)] [String]$SenderAddress,
+        [Parameter(Position=7, Mandatory=$false)] [psobject]$SenderEmailAddress,
         [Parameter(Position=8, Mandatory=$false)] [psobject]$Attachments,
         [Parameter(Position=9, Mandatory=$false)] [psobject]$ToRecipients,
         [Parameter(Position=10, Mandatory=$false)] [psobject]$CCRecipients,
@@ -1882,7 +1905,7 @@ function Send-MessageREST{
         if($SaveToSentItems.IsPresent){
             $SaveToSentFolder = "true"
         }
-        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderName $SenderName -SenderAddress $SenderAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList -CcRecipients $CCRecipients -bccRecipients $BCCRecipients -StandardPropList $StandardPropList -SaveToSentItems $SaveToSentFolder -SendMail 
+        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList -CcRecipients $CCRecipients -bccRecipients $BCCRecipients -StandardPropList $StandardPropList -SaveToSentItems $SaveToSentFolder -SendMail 
         if($ShowRequest.IsPresent){
             write-host $NewMessage
         }       
@@ -1898,8 +1921,7 @@ function Get-MessageJSONFormat {
     param(
         [Parameter(Position=1, Mandatory=$false)] [String]$Subject,
         [Parameter(Position=2, Mandatory=$false)] [String]$Body,
-        [Parameter(Position=3, Mandatory=$false)] [String]$SenderName,
-        [Parameter(Position=4, Mandatory=$false)] [String]$SenderAddress,
+        [Parameter(Position=3, Mandatory=$false)] [psobject]$SenderEmailAddress,
         [Parameter(Position=5, Mandatory=$false)] [psobject]$Attachments,
         [Parameter(Position=6, Mandatory=$false)] [psobject]$ToRecipients,
         [Parameter(Position=7, Mandatory=$false)] [psobject]$CcRecipients,
@@ -1919,12 +1941,12 @@ function Get-MessageJSONFormat {
         if(![String]::IsNullOrEmpty($Subject)){
             $NewMessage +=  "`"Subject`": `"" + $Subject + "`"" + "`r`n"
         }
-        if(![String]::IsNullOrEmpty($SenderAddress)){
+        if($SenderEmailAddress -ne $null){
              if($NewMessage.Length -gt 5){$NewMessage += ","}
             $NewMessage +=  "`"Sender`":{" + "`r`n"
             $NewMessage +=  " `"EmailAddress`":{" + "`r`n"
-            $NewMessage +=  "  `"Name`":`"" + $SenderName + "`"," + "`r`n"
-            $NewMessage +=  "  `"Address`":`"" + $SenderAddress + "`"" + "`r`n"
+            $NewMessage +=  "  `"Name`":`"" + $SenderEmailAddress.Name + "`"," + "`r`n"
+            $NewMessage +=  "  `"Address`":`"" + $SenderEmailAddress.Address + "`"" + "`r`n"
             $NewMessage +=  "}}" + "`r`n"
         }
         if(![String]::IsNullOrEmpty($Body)){
