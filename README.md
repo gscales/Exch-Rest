@@ -52,6 +52,10 @@ Remove-Item "~\Exch-Rest-master.zip"
 Import-Module -Name Exch-Rest
 ```
 
+## EndPoint
+
+The Module support either using the Microsoft Graph or Outlook REST EndPoints, by default the Outlook REST endpoing outlook.office.com will be used to specify the Microsoft Graph Endpoing use the 
+-ResourceURL when generating the Access Token. The endpoint will the be generated based on the URL that is stored in the Access Token 
 
 ## Authentication
 You can either authenticate as a user or as an application.
@@ -61,6 +65,13 @@ You can either authenticate as a user or as an application.
 $Token = Get-AccessToken -MailboxName mailbox@domain.com `
                          -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 `
                          -redirectUrl urn:ietf:wg:oauth:2.0:oob
+
+#### Example 1a: authenticating as a user (supplying the ClientId and redirectUrl you created during application registration) against the Microsoft Graph Endpoint
+```
+$Token = Get-AccessToken -MailboxName mailbox@domain.com `
+                         -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 `
+                         -redirectUrl urn:ietf:wg:oauth:2.0:oob         
+                         -ResourceURL graph.microsoft.com             
 ```
 #### Example 2: authenticating as a user can and supplying a ClientSecret
 ```
@@ -69,12 +80,28 @@ $Token = Get-AccessToken -MailboxName mailbox@domain.com `
                          -redirectUrl 'http://localhost:8000/authorize' `
                          -ClientSecret 1rwq9MmrSMu4SGhMEfGb9ggktWjzPYtW5lcAxXLzEtU=
 ```
+#### Example 2a: authenticating as a user can and supplying a ClientSecret against the Microsoft Graph Endpoint
+```
+$Token = Get-AccessToken -MailboxName mailbox@domain.com `
+                         -ClientId 1bdbfb41-f690-4f93-b0bb-002004bbca79 `
+                         -redirectUrl 'http://localhost:8000/authorize' `
+                         -ClientSecret 1rwq9MmrSMu4SGhMEfGb9ggktWjzPYtW5lcAxXLzEtU=
+                         -ResourceURL graph.microsoft.com   
+```
 #### Example 3: authenticating as an application using a certificate
 ```
 $Token = Get-AppOnlyToken -CertFile "c:\temp\drCert.pfx" `
                           -ClientId 1bdbfb41-f690-4f93-b0bb-002004bbca79 `
                           -redirectUrl 'http://localhost:8000/authorize' `
                           -TenantId cbdbfb41-f690-4f93-b0bb-002004bbca79
+```
+#### Example 3a: authenticating as an application using a certificate  against the Microsoft Graph Endpoint
+```
+$Token = Get-AppOnlyToken -CertFile "c:\temp\drCert.pfx" `
+                          -ClientId 1bdbfb41-f690-4f93-b0bb-002004bbca79 `
+                          -redirectUrl 'http://localhost:8000/authorize' `
+                          -TenantId cbdbfb41-f690-4f93-b0bb-002004bbca79
+                          -ResourceURL graph.microsoft.com   
 ```
 Note that example 3 is typically used for administrative purposes to manage mulitple mailboxes. This type of authentication requires different steps to register an application. See [http://gsexdev.blogspot.com.au/2017/03/using-office365exchange-2016-rest-api.html](http://gsexdev.blogspot.com.au/2017/03/using-office365exchange-2016-rest-api.html) for more information.
 
@@ -125,6 +152,10 @@ Get-Inbox -MailboxName mailbox@domain.com -AccessToken $Token
   * Get-FolderClass
   * GetExtendedPropList
   * GetFolderRetentionTags
+  * Send-MessageREST
+  * Get-Attachments
+  * Invoke-DownloadAttachment
+  
 
 ## Internal functions
   * Get-AppSettings
