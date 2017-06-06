@@ -244,6 +244,8 @@ function Get-AccessToken{
             $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
             $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
+            Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
+            Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
             return $JsonObject
          }
 }
@@ -273,6 +275,8 @@ function Get-AccessTokenUserAndPass{
             $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
             $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
+            Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
+            Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
             return $JsonObject
          }
 }
@@ -317,6 +321,8 @@ function Get-AppOnlyToken{
             $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/" + $TenantId + "/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
             Add-Member -InputObject $JsonObject -NotePropertyName tenantid -NotePropertyValue $TenantId
+            Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
+            Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
             return $JsonObject
          }
 }
@@ -326,16 +332,16 @@ function Get-AppOnlyToken{
 function Invoke-RefreshAccessToken{ 
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$true)] [string]$RefreshToken
+        [Parameter(Position=1, Mandatory=$true)] [psobject]$AccessToken
     )  
  	Begin
 		 {
             Add-Type -AssemblyName System.Web
             $HttpClient =  Get-HTTPClient($MailboxName)
-            $AppSetting = Get-AppSettings 
-            $ResourceURL = $AppSetting.ResourceURL
-            $ClientId = $AppSetting.ClientId
-            $redirectUrl = [System.Web.HttpUtility]::UrlEncode($AppSetting.redirectUrl)
+            $ClientId = $AccessToken.clientid            
+           # $redirectUrl = [System.Web.HttpUtility]::UrlEncode($AccessToken.redirectUrl)
+            $redirectUrl = $AccessToken.redirectUrl
+            $RefreshToken = $AccessToken.refresh_token
             $AuthorizationPostRequest = "client_id=$ClientId&refresh_token=$RefreshToken&grant_type=refresh_token&redirect_uri=$redirectUrl"
             $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
             $ClientResult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"),$content)             
@@ -350,6 +356,8 @@ function Invoke-RefreshAccessToken{
             else
              {
                $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+               Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $AccessToken.clientid
+               Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $AccessToken.redirectUrl
                return $JsonObject
              }
 
@@ -362,7 +370,7 @@ function Invoke-RestGet
         [Parameter(Position=0, Mandatory=$true)] [string]$RequestURL,
         [Parameter(Position=1, Mandatory=$true)] [String]$MailboxName,
         [Parameter(Position=2, Mandatory=$true)] [System.Net.Http.HttpClient]$HttpClient,
-        [Parameter(Position=3, Mandatory=$true)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=3, Mandatory=$true)] [psobject]$AccessToken,
         [Parameter(Position=4, Mandatory=$false)] [switch]$NoJSON
     )  
  	Begin
@@ -373,7 +381,7 @@ function Invoke-RestGet
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 if([bool]($AccessToken.PSobject.Properties.name -match "refresh_token")){
                     write-host "Refresh Token"
-                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token -ClientId $AccessToken.clientId -redirectUrl $AccessToken.redirectUrl            
                     Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
                 }
                 else{
@@ -424,7 +432,7 @@ function Invoke-RestPOST
         [Parameter(Position=0, Mandatory=$true)] [string]$RequestURL,
         [Parameter(Position=1, Mandatory=$true)] [String]$MailboxName,
         [Parameter(Position=2, Mandatory=$true)] [System.Net.Http.HttpClient]$HttpClient,
-        [Parameter(Position=3, Mandatory=$true)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=3, Mandatory=$true)] [psobject]$AccessToken,
         [Parameter(Position=4, Mandatory=$true)] [PSCustomObject]$Content
     )  
  	Begin
@@ -435,7 +443,7 @@ function Invoke-RestPOST
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 if([bool]($AccessToken.PSobject.Properties.name -match "refresh_token")){
                     write-host "Refresh Token"
-                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token -ClientId $AccessToken.clientId -redirectUrl $AccessToken.redirectUrl               
                     Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
                 }
                 else{
@@ -480,7 +488,7 @@ function Invoke-RestPatch
         [Parameter(Position=0, Mandatory=$true)] [string]$RequestURL,
         [Parameter(Position=1, Mandatory=$true)] [String]$MailboxName,
         [Parameter(Position=2, Mandatory=$true)] [System.Net.Http.HttpClient]$HttpClient,
-        [Parameter(Position=3, Mandatory=$true)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=3, Mandatory=$true)] [psobject]$AccessToken,
         [Parameter(Position=4, Mandatory=$true)] [PSCustomObject]$Content
     )  
  	Begin
@@ -490,7 +498,7 @@ function Invoke-RestPatch
              $expiry =  $minTime.AddSeconds($AccessToken.expires_on)
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 write-host "Refresh Token"
-                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token -ClientId $AccessToken.clientId -redirectUrl $AccessToken.redirectUrl               
                 Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
              }
              $method =  New-Object System.Net.Http.HttpMethod("PATCH")
@@ -531,7 +539,7 @@ function Invoke-RestDELETE
         [Parameter(Position=0, Mandatory=$true)] [string]$RequestURL,
         [Parameter(Position=1, Mandatory=$true)] [String]$MailboxName,
         [Parameter(Position=2, Mandatory=$true)] [System.Net.Http.HttpClient]$HttpClient,
-        [Parameter(Position=3, Mandatory=$true)] [PSCustomObject]$AccessToken
+        [Parameter(Position=3, Mandatory=$true)] [psobject]$AccessToken
 
     )  
  	Begin
@@ -541,7 +549,7 @@ function Invoke-RestDELETE
              $expiry =  $minTime.AddSeconds($AccessToken.expires_on)
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 write-host "Refresh Token"
-                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token               
+                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token -ClientId $AccessToken.clientId -redirectUrl $AccessToken.redirectUrl               
                 Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
              }
              $method =  New-Object System.Net.Http.HttpMethod("DELETE")
@@ -578,7 +586,7 @@ function Invoke-RestDELETE
 function Get-MailboxSettings{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -595,7 +603,7 @@ function Get-MailboxSettings{
 function Get-AutomaticRepliesSettings{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -613,7 +621,7 @@ function Get-AutomaticRepliesSettings{
 function Get-MailboxTimeZone{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -631,7 +639,7 @@ function Get-FolderFromPath{
 	param (
 			[Parameter(Position=0, Mandatory=$true)] [string]$FolderPath,
 			[Parameter(Position=1, Mandatory=$true)] [string]$MailboxName,
-            [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$AccessToken
+            [Parameter(Position=2, Mandatory=$false)] [psobject]$AccessToken
 		  )
 	process{
 		## Find and Bind to Folder based on Path  
@@ -676,7 +684,7 @@ function Get-FolderFromPath{
 function Get-Inbox{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -693,7 +701,7 @@ function Get-Inbox{
 function Get-InboxItems{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -717,7 +725,7 @@ function Get-InboxItems{
 function Get-FocusedInboxItems{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -741,7 +749,7 @@ function Get-FocusedInboxItems{
 function Get-CalendarItems{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -765,7 +773,7 @@ function Get-CalendarItems{
 function Get-FolderItems{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [string]$FolderPath,
         [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Folder,
         [Parameter(Position=4, Mandatory=$false)] [switch]$ReturnSize,
@@ -817,7 +825,7 @@ function Move-Message{
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$true)] [string]$ItemURI,
-        [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=3, Mandatory=$false)] [string]$TargetFolderPath
     )
     Begin{
@@ -842,7 +850,7 @@ function Update-Message{
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$true)] [string]$ItemURI,
-        [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=3, Mandatory=$false)] [String]$Subject,
         [Parameter(Position=4, Mandatory=$false)] [String]$Body,
         [Parameter(Position=5, Mandatory=$false)] [psobject]$Attachments,
@@ -869,7 +877,7 @@ function Get-Attachments{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$true)] [string]$ItemURI,
-        [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=3, Mandatory=$false)] [switch]$MetaData,
         [Parameter(Position=4, Mandatory=$false)] [string]$SelectProperties
     )
@@ -903,7 +911,7 @@ function Invoke-DownloadAttachment{
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$true)] [string]$AttachmentURI,
-        [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=2, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -922,7 +930,7 @@ function Invoke-DownloadAttachment{
 function New-Folder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$true)] [string]$ParentFolderPath,
         [Parameter(Position=3, Mandatory=$true)] [string]$DisplayName
 
@@ -949,7 +957,7 @@ function New-Folder{
 function New-ContactFolder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=3, Mandatory=$true)] [string]$DisplayName
 
     )
@@ -971,7 +979,7 @@ function New-ContactFolder{
 function New-CalendarFolder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=3, Mandatory=$true)] [string]$DisplayName
 
     )
@@ -994,7 +1002,7 @@ function New-CalendarFolder{
 function Rename-Folder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$true)] [string]$FolderPath,
         [Parameter(Position=3, Mandatory=$true)] [string]$NewDisplayName
 
@@ -1020,7 +1028,7 @@ function Rename-Folder{
 function Update-FolderClass{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$true)] [string]$FolderPath,
         [Parameter(Position=3, Mandatory=$true)] [string]$FolderClass
 
@@ -1046,7 +1054,7 @@ function Update-FolderClass{
 function Update-Folder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$true)] [string]$FolderPath,
         [Parameter(Position=3, Mandatory=$true)] [string]$FolderPost
 
@@ -1081,7 +1089,7 @@ function GetFolderRetentionTags(){
 function Set-FolderRetentionTag {
         param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$true)] [string]$FolderPath,
       	[Parameter(Position=3, Mandatory=$true)] [String]$PolicyTagValue,
 		[Parameter(Position=4, Mandatory=$true)] [Int32]$RetentionFlagsValue,		
@@ -1116,7 +1124,7 @@ function Set-FolderRetentionTag {
 function Invoke-DeleteItem{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$true)] [string]$ItemURI
     )
     Begin{
@@ -1142,7 +1150,7 @@ function Invoke-DeleteItem{
 function Invoke-DeleteFolder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$true)] [string]$FolderPath
     )
     Begin{
@@ -1172,7 +1180,7 @@ function Invoke-DeleteFolder{
 function Get-AllMailboxItems{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -1299,7 +1307,7 @@ function Get-FolderPath()
 function Get-AllMailFolders{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$PropList
     )
     Begin{
@@ -1341,7 +1349,7 @@ function Get-AllMailFolders{
 function Get-AllChildFolders{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [PSCustomObject]$Folder,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [PSCustomObject]$PropList
     )
     Begin{
@@ -1383,7 +1391,7 @@ function Get-AllChildFolders{
 function Get-AllCalendarFolders{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [switch]$FolderClass
     )
     Begin{
@@ -1417,7 +1425,7 @@ function Get-AllCalendarFolders{
 function Get-AllContactFolders{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -1442,7 +1450,7 @@ function Get-AllContactFolders{
 function Get-AllTaskfolders{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -1469,7 +1477,7 @@ function Get-AllTaskfolders{
 function Get-ArchiveFolder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
         if($AccessToken -eq $null)
@@ -1534,7 +1542,7 @@ function Get-EndPoint{
 function  Get-People {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken   
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken   
     )
     Begin{
         
@@ -1552,7 +1560,7 @@ function  Get-People {
 function  Get-UserPhotoMetaData {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken   
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken   
     )
     Begin{
         
@@ -1571,7 +1579,7 @@ function  Get-UserPhotoMetaData {
 function  Get-UserPhoto {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
  
     )
     Begin{
@@ -1590,7 +1598,7 @@ function  Get-UserPhoto {
 function  Get-MailboxUser {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken   
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken   
     )
     Begin{
         
@@ -1609,7 +1617,7 @@ function  Get-MailboxUser {
 function  Get-CalendarGroups {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken   
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken   
     )
     Begin{
         
@@ -1628,7 +1636,7 @@ function  Get-CalendarGroups {
 function  Invoke-EnumCalendarGroups {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken   
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken   
     )
     Begin{
         
@@ -1732,7 +1740,7 @@ function Get-ItemProp{
 function List-Groups {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken   
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken   
     )
     Begin{
         
@@ -1776,7 +1784,7 @@ function New-EmailAddress {
 function  New-SentEmailMessage {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [string]$FolderPath,
         [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Folder,
         [Parameter(Position=4, Mandatory=$true)] [String]$Subject,
@@ -1861,7 +1869,7 @@ function CreateFlatList{
 function Send-MessageREST{
         param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [PSCustomObject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [string]$FolderPath,
         [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Folder,
         [Parameter(Position=4, Mandatory=$true)] [String]$Subject,
