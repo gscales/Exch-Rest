@@ -28,11 +28,11 @@ Send-MessageREST -MailboxName user@dmaildomain.com  -AccessToken $AccessToken -T
 ```
 
 Example 4 Send a Message to one recipient and one attachment
-````
+```
 Send-MessageREST -MailboxName user@demaildomain.com  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address user@ydomain.com) -Subject test123 -Body "test 123" -Attachments @("c:\temp\excelattachment.csv")
 ```
 
-Example 4 Send a Message with two recipients and two attachments
+Example 5 Send a Message with two recipients and two attachments
 ```
 $ToRecipients = @(New-EmailAddress -Address user1@ydomain.com)
 $ToRecipients += New-EmailAddress -Address user2@ydomain.com
@@ -41,12 +41,12 @@ $Attachments += "c:\temp\excelattachment2.csv"
 Send-MessageREST -MailboxName user@demaildomain.com  -AccessToken $AccessToken -ToRecipients $ToRecipients -Subject test123 -Body "test 123" -Attachments $Attachments
 ```
 
-Example 5 Send a Message to one recipient and save it to SentItems (default is not to save)
+Example 6 Send a Message to one recipient and save it to SentItems (default is not to save)
 ```
 Send-MessageREST -MailboxName user@demaildomain.com  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address user@ydomain.com) -Subject test123 -Body "test 123" -SaveToSentItems
 ```
 
-Example 6 Send a Message to one To recipient and one BCC recipient and save it to SentItems 
+Example 7 Send a Message to one To recipient and one BCC recipient and save it to SentItems 
 ```
 Send-MessageREST -MailboxName user@demaildomain.com  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address user@ydomain.com) -BCCRecipients @(New-EmailAddress -Address bccRecip@ydomain.com) -Subject test123 -Body "test 123" -SaveToSentItems
 ```
