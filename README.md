@@ -106,6 +106,23 @@ $Token = Get-AppOnlyToken -CertFile "c:\temp\drCert.pfx" `
 ```
 Note that example 3 is typically used for administrative purposes to manage mulitple mailboxes. This type of authentication requires different steps to register an application. See [http://gsexdev.blogspot.com.au/2017/03/using-office365exchange-2016-rest-api.html](http://gsexdev.blogspot.com.au/2017/03/using-office365exchange-2016-rest-api.html) for more information.
 
+#### Example 4: authenticating as a user with PSCredentials (supplying the ClientId and redirectUrl you created during application registration)
+```
+$Token = Get-AccessTokenUserAndPass -MailboxName mailbox@domain.com `
+                         -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 `
+                         -redirectUrl urn:ietf:wg:oauth:2.0:oob
+```
+#### Example 4a: authenticating as a user with hard coded PSCredentials(supplying the ClientId and redirectUrl you created during application registration) against the Microsoft Graph Endpoint (this method is not recommended because of potential security issues)
+```
+$secpasswd = ConvertTo-SecureString "PlainTextPassword" -AsPlainText -Force
+$mycreds = New-Object System.Management.Automation.PSCredential ("username", $secpasswd)
+$Token = Get-AccessTokenUserAndPass -MailboxName mailbox@domain.com `
+                         -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 `
+                         -redirectUrl urn:ietf:wg:oauth:2.0:oob         
+                         -ResourceURL graph.microsoft.com   
+                         -Credentials $mycreds 
+```                         
+
 ## Usage
 After you have authenticated and received a token you can use that token with the Exch-Rest functions to access the Office 365/Exchange REST API.
 #### Example 1: get information about the inbox of a mailbox
