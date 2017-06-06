@@ -1762,7 +1762,7 @@ function New-EmailAddress {
     Begin{
         $EmailAddress = "" | Select Name,Address
         if([String]::IsNullOrEmpty($Name)){
-            $EmailAddress.Name = $Name
+            $EmailAddress.Name = $Address
         }
         else{
             $EmailAddress.Name = $Name
@@ -1976,11 +1976,12 @@ function Get-MessageJSONFormat {
             }
             $NewMessage +=  "  ]" + "`r`n"  
         }
+        $ccRcpcnt = 0
         if($CcRecipients -ne $null){
              if($NewMessage.Length -gt 5){$NewMessage += ","}
             $NewMessage +=  "`"CcRecipients`": [ " + "`r`n"
             foreach ($EmailAddress in $CcRecipients) {
-                if($toRcpcnt -gt 0){
+                if($ccRcpcnt  -gt 0){
                     $NewMessage +=  "      ,{ "+ "`r`n"   
                 }
                 else{
@@ -1990,15 +1991,16 @@ function Get-MessageJSONFormat {
                 $NewMessage +=  "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
                 $NewMessage +=  "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
                 $NewMessage +=  "}}" + "`r`n"
-                $toRcpcnt++
+                $ccRcpcnt++
             }
             $NewMessage +=  "  ]" + "`r`n"  
         }
+        $bccRcpcnt = 0
         if($bccRecipients -ne $null){
              if($NewMessage.Length -gt 5){$NewMessage += ","}
-            $NewMessage +=  "`"bccRecipients`": [ " + "`r`n"
+            $NewMessage +=  "`"BccRecipients`": [ " + "`r`n"
             foreach ($EmailAddress in $bccRecipients) {
-                if($toRcpcnt -gt 0){
+                if($bccRcpcnt -gt 0){
                     $NewMessage +=  "      ,{ "+ "`r`n"   
                 }
                 else{
@@ -2008,7 +2010,7 @@ function Get-MessageJSONFormat {
                 $NewMessage +=  "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
                 $NewMessage +=  "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
                 $NewMessage +=  "}}" + "`r`n"
-                $toRcpcnt++
+                $bccRcpcnt++
             }
             $NewMessage +=  "  ]" + "`r`n"  
         }
