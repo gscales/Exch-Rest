@@ -1884,7 +1884,9 @@ function Send-MessageREST{
         [Parameter(Position=14, Mandatory=$false)] [string]$ItemClass,
         [Parameter(Position=15, Mandatory=$false)] [switch]$SaveToSentItems,
         [Parameter(Position=16, Mandatory=$false)] [switch]$ShowRequest,
-        [Parameter(Position=17, Mandatory=$false)] [psobject]$ReplyTo
+        [Parameter(Position=17, Mandatory=$false)] [switch]$RequestReadRecipient,
+        [Parameter(Position=18, Mandatory=$false)] [switch]$RequestDeliveryRecipient,
+        [Parameter(Position=19, Mandatory=$false)] [psobject]$ReplyTo
     )
     Begin{
         
@@ -1898,22 +1900,12 @@ function Send-MessageREST{
                $ExPropList = @()
             }
             $ExPropList += $ItemClassProp
-        }
-        if($ReplyTo -ne $null){
-            $PidTagReplyRecipientNames = Get-TaggedProperty -DataType "String" -Id "0x0050"  -Value $ReplyTo.Name
-            $FlatListBytes = CreateFlatList -EmailAddress $ReplyTo
-            $PidTagReplyRecipientEntries = Get-TaggedProperty -DataType "Binary" -Id "0x004F" -Value ([System.Convert]::ToBase64String($FlatListBytes))
-            if($ExPropList -eq $null){
-               $ExPropList = @()
-            }
-            $ExPropList += $PidTagReplyRecipientNames
-            $ExPropList += $PidTagReplyRecipientEntries
-        }        
+        }     
         $SaveToSentFolder = "false"
         if($SaveToSentItems.IsPresent){
             $SaveToSentFolder = "true"
         }
-        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList -CcRecipients $CCRecipients -bccRecipients $BCCRecipients -StandardPropList $StandardPropList -SaveToSentItems $SaveToSentFolder -SendMail 
+        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList -CcRecipients $CCRecipients -bccRecipients $BCCRecipients -StandardPropList  $StandardPropList -SaveToSentItems $SaveToSentFolder -SendMail -ReplyTo $ReplyTo -RequestReadRecipient $RequestReadRecipient.IsPresent -RequestDeliveryRecipient $RequestDeliveryRecipient.IsPresent
         if($ShowRequest.IsPresent){
             write-host $NewMessage
         }       
@@ -1939,7 +1931,10 @@ function Get-MessageJSONFormat {
         [Parameter(Position=10, Mandatory=$false)] [psobject]$ExPropList,
         [Parameter(Position=11, Mandatory=$false)] [switch]$ShowRequest,
         [Parameter(Position=12, Mandatory=$false)] [String]$SaveToSentItems,
-        [Parameter(Position=13, Mandatory=$false)] [switch]$SendMail
+        [Parameter(Position=13, Mandatory=$false)] [switch]$SendMail,
+        [Parameter(Position=14, Mandatory=$false)] [psobject]$ReplyTo,
+        [Parameter(Position=17, Mandatory=$false)] [bool]$RequestReadRecipient,
+        [Parameter(Position=18, Mandatory=$false)] [bool]$RequestDeliveryRecipient
     )
     Begin{
         $NewMessage = "{" + "`r`n"
@@ -2021,6 +2016,31 @@ function Get-MessageJSONFormat {
                 $bccRcpcnt++
             }
             $NewMessage +=  "  ]" + "`r`n"  
+        }
+        $ReplyTocnt = 0
+        if($ReplyTo -ne $null){
+            if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"ReplyTo`": [ " + "`r`n"
+            foreach ($EmailAddress in $ReplyTo) {
+                if($ReplyTocnt -gt 0){
+                    $NewMessage +=  "      ,{ "+ "`r`n"   
+                }
+                else{
+                    $NewMessage +=  "      { "+ "`r`n"
+                }           
+                $NewMessage +=  " `"EmailAddress`":{" + "`r`n"
+                $NewMessage +=  "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
+                $NewMessage +=  "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
+                $NewMessage +=  "}}" + "`r`n"
+                $ReplyTocnt++
+            }
+            $NewMessage +=  "  ]" + "`r`n"  
+        }
+        if($RequestDeliveryRecipient){
+            $NewMessage +=  ",`"IsDeliveryReceiptRequested`": true`r`n"
+        }
+        if($RequestReadRecipient){
+            $NewMessage +=  ",`"IsReadReceiptRequested`": true `r`n"
         }
         if($StandardPropList -ne $null){
             foreach ($StandardProp in $StandardPropList) {
