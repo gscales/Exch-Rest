@@ -24,7 +24,7 @@ Send-MessageREST -MailboxName user@dmaildomain.com  -AccessToken $AccessToken -T
 Example 3 Send a Message and set the ReplyTo address
 
 ```
-Send-MessageREST -MailboxName user@dmaildomain.com  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address user@ydomain.com) -Subject test123 -Body "test 123" -ReplyTo (New-EmailAddress -Address replyTo@ydomain.com) 
+Send-MessageREST -MailboxName user@dmaildomain.com  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address user@ydomain.com) -Subject test123 -Body "test 123" -ReplyTo @(New-EmailAddress -Address replyTo@ydomain.com) 
 ```
 
 Example 4 Send a Message to one recipient and one attachment
@@ -49,4 +49,14 @@ Send-MessageREST -MailboxName user@demaildomain.com  -AccessToken $AccessToken -
 Example 7 Send a Message to one To recipient and one BCC recipient and save it to SentItems 
 ```
 Send-MessageREST -MailboxName user@demaildomain.com  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address user@ydomain.com) -BCCRecipients @(New-EmailAddress -Address bccRecip@ydomain.com) -Subject test123 -Body "test 123" -SaveToSentItems
+```
+
+Example 8 Send a Message and Request a Read recipient
+```
+Send-MessageREST -MailboxName user@demaildomain.com  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address user@ydomain.com) -Subject test123 -Body "test 123" -RequestReadRecipient
+```
+
+Example 9 Send a Message and Request a Delivery recipient
+```
+Send-MessageREST -MailboxName user@demaildomain.com  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address user@ydomain.com) -Subject test123 -Body "test 123" -RequestDeliveryRecipient
 ```
