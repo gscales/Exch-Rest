@@ -244,6 +244,12 @@ function Get-AccessToken{
             $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
             $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
+            if([bool]($JsonObject.PSobject.Properties.name -match "refresh_token")){
+                $JsonObject.refresh_token =  $JsonObject.refresh_token | ConvertTo-SecureString -AsPlainText -Force
+            }
+            if([bool]($JsonObject.PSobject.Properties.name -match "access_token")){
+                $JsonObject.access_token =  $JsonObject.access_token | ConvertTo-SecureString -AsPlainText -Force
+            }
             Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
             Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
             return $JsonObject
@@ -276,7 +282,13 @@ function Get-AccessTokenUserAndPass{
             $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
             Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
-            Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
+            if([bool]($JsonObject.PSobject.Properties.name -match "refresh_token")){
+                $JsonObject.refresh_token =  $JsonObject.refresh_token | ConvertTo-SecureString -AsPlainText -Force
+            }
+            if([bool]($JsonObject.PSobject.Properties.name -match "access_token")){
+                $JsonObject.access_token =  $JsonObject.access_token | ConvertTo-SecureString -AsPlainText -Force
+            }
+            #Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
             return $JsonObject
          }
 }
@@ -320,6 +332,12 @@ function Get-AppOnlyToken{
             $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
             $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/" + $TenantId + "/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
+            if([bool]($JsonObject.PSobject.Properties.name -match "refresh_token")){
+                $JsonObject.refresh_token =  $JsonObject.refresh_token | ConvertTo-SecureString -AsPlainText -Force
+            }
+            if([bool]($JsonObject.PSobject.Properties.name -match "access_token")){
+                $JsonObject.access_token =  $JsonObject.access_token | ConvertTo-SecureString -AsPlainText -Force
+            }
             Add-Member -InputObject $JsonObject -NotePropertyName tenantid -NotePropertyValue $TenantId
             Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
             Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
@@ -341,7 +359,7 @@ function Invoke-RefreshAccessToken{
             $ClientId = $AccessToken.clientid            
            # $redirectUrl = [System.Web.HttpUtility]::UrlEncode($AccessToken.redirectUrl)
             $redirectUrl = $AccessToken.redirectUrl
-            $RefreshToken = $AccessToken.refresh_token
+            $RefreshToken = (Get-TokenFromSecureString -SecureToken $AccessToken.refresh_token)
             $AuthorizationPostRequest = "client_id=$ClientId&refresh_token=$RefreshToken&grant_type=refresh_token&redirect_uri=$redirectUrl"
             $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
             $ClientResult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"),$content)             
@@ -364,6 +382,17 @@ function Invoke-RefreshAccessToken{
          }
 }
 
+
+function Get-TokenFromSecureString{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [System.Security.SecureString]$SecureToken
+    )
+    begin{
+        $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureToken)
+        $Token = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+        return,$Token
+    }
+}
 function Invoke-RestGet
 {
         param( 
@@ -381,7 +410,7 @@ function Invoke-RestGet
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 if([bool]($AccessToken.PSobject.Properties.name -match "refresh_token")){
                     write-host "Refresh Token"
-                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token -ClientId $AccessToken.clientId -redirectUrl $AccessToken.redirectUrl            
+                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken          
                     Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
                 }
                 else{
@@ -389,7 +418,7 @@ function Invoke-RestGet
                 }
 
              }
-             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
+             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-TokenFromSecureString -SecureToken $AccessToken.access_token));
              $HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`"")) 
              $ClientResult = $HttpClient.GetAsync($RequestURL)
              if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
@@ -443,14 +472,14 @@ function Invoke-RestPOST
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 if([bool]($AccessToken.PSobject.Properties.name -match "refresh_token")){
                     write-host "Refresh Token"
-                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token -ClientId $AccessToken.clientId -redirectUrl $AccessToken.redirectUrl               
+                    $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken                
                     Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
                 }
                 else{
                     throw "App Token has expired a new access token is required rerun get-apptoken"
                 }
              }
-             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
+             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-TokenFromSecureString -SecureToken $AccessToken.access_token));
              $PostContent = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
              $HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`"")) 
              $ClientResult = $HttpClient.PostAsync([Uri]($RequestURL),$PostContent)
@@ -498,12 +527,12 @@ function Invoke-RestPatch
              $expiry =  $minTime.AddSeconds($AccessToken.expires_on)
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 write-host "Refresh Token"
-                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token -ClientId $AccessToken.clientId -redirectUrl $AccessToken.redirectUrl               
+                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken            
                 Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
              }
              $method =  New-Object System.Net.Http.HttpMethod("PATCH")
              $HttpRequestMessage =  New-Object System.Net.Http.HttpRequestMessage($method,[Uri]$RequestURL)
-             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
+             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-TokenFromSecureString -SecureToken $AccessToken.access_token));
              $HttpRequestMessage.Content = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
              $ClientResult = $HttpClient.SendAsync($HttpRequestMessage)
              if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
@@ -549,12 +578,12 @@ function Invoke-RestDELETE
              $expiry =  $minTime.AddSeconds($AccessToken.expires_on)
              if($expiry -le [DateTime]::Now.ToUniversalTime()){
                 write-host "Refresh Token"
-                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -RefreshToken $AccessToken.refresh_token -ClientId $AccessToken.clientId -redirectUrl $AccessToken.redirectUrl               
+                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken          
                 Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
              }
              $method =  New-Object System.Net.Http.HttpMethod("DELETE")
              $HttpRequestMessage =  New-Object System.Net.Http.HttpRequestMessage($method,[Uri]$RequestURL)
-             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", $AccessToken.access_token);
+             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-TokenFromSecureString -SecureToken $AccessToken.access_token));
              $ClientResult = $HttpClient.SendAsync($HttpRequestMessage)
              if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
                  if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::NoContent){
