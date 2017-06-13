@@ -245,10 +245,10 @@ function Get-AccessToken{
             $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
             if([bool]($JsonObject.PSobject.Properties.name -match "refresh_token")){
-                $JsonObject.refresh_token =  $JsonObject.refresh_token | ConvertTo-SecureString -AsPlainText -Force
+                $JsonObject.refresh_token =  (Get-ProtectedToken -PlainToken $JsonObject.refresh_token) 
             }
             if([bool]($JsonObject.PSobject.Properties.name -match "access_token")){
-                $JsonObject.access_token =  $JsonObject.access_token | ConvertTo-SecureString -AsPlainText -Force
+                $JsonObject.access_token =  (Get-ProtectedToken -PlainToken $JsonObject.access_token) 
             }
             Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
             Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
@@ -283,10 +283,10 @@ function Get-AccessTokenUserAndPass{
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
             Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
             if([bool]($JsonObject.PSobject.Properties.name -match "refresh_token")){
-                $JsonObject.refresh_token =  $JsonObject.refresh_token | ConvertTo-SecureString -AsPlainText -Force
+                $JsonObject.refresh_token =  (Get-ProtectedToken -PlainToken $JsonObject.refresh_token) 
             }
             if([bool]($JsonObject.PSobject.Properties.name -match "access_token")){
-                $JsonObject.access_token =  $JsonObject.access_token | ConvertTo-SecureString -AsPlainText -Force
+                $JsonObject.access_token =  (Get-ProtectedToken -PlainToken $JsonObject.access_token) 
             }
             #Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
             return $JsonObject
@@ -333,10 +333,10 @@ function Get-AppOnlyToken{
             $ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/" + $TenantId + "/oauth2/token"),$content)
             $JsonObject = ConvertFrom-Json -InputObject  $ClientReesult.Result.Content.ReadAsStringAsync().Result
             if([bool]($JsonObject.PSobject.Properties.name -match "refresh_token")){
-                $JsonObject.refresh_token =  $JsonObject.refresh_token | ConvertTo-SecureString -AsPlainText -Force
+                $JsonObject.refresh_token =  (Get-ProtectedToken -PlainToken $JsonObject.refresh_token) 
             }
             if([bool]($JsonObject.PSobject.Properties.name -match "access_token")){
-                $JsonObject.access_token =  $JsonObject.access_token | ConvertTo-SecureString -AsPlainText -Force
+                $JsonObject.access_token =  (Get-ProtectedToken -PlainToken $JsonObject.access_token) 
             }
             Add-Member -InputObject $JsonObject -NotePropertyName tenantid -NotePropertyValue $TenantId
             Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
@@ -376,12 +376,17 @@ function Invoke-RefreshAccessToken{
                $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
                Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $AccessToken.clientid
                Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $AccessToken.redirectUrl
+               if([bool]($JsonObject.PSobject.Properties.name -match "refresh_token")){
+                   $JsonObject.refresh_token =  (Get-ProtectedToken -PlainToken $JsonObject.refresh_token) 
+               }
+               if([bool]($JsonObject.PSobject.Properties.name -match "access_token")){
+                   $JsonObject.access_token =  (Get-ProtectedToken -PlainToken $JsonObject.access_token) 
+               }
                return $JsonObject
              }
 
          }
 }
-
 
 function Get-TokenFromSecureString{
     param( 
@@ -391,6 +396,22 @@ function Get-TokenFromSecureString{
         $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureToken)
         $Token = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
         return,$Token
+    }
+}
+
+function Get-ProtectedToken{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [String]$PlainToken
+    )
+    begin{
+          $SecureString = New-Object System.Security.SecureString
+          for ($i = 0; $i -lt $PlainToken.length; $i++) 
+          {
+              $SecureString.AppendChar($PlainToken[$i]) 
+          }
+          $EncryptedToken = ConvertFrom-SecureString -SecureString $SecureString 
+          $SecureEncryptedToken = ConvertTo-SecureString -String $EncryptedToken
+          return,$SecureEncryptedToken
     }
 }
 function Invoke-RestGet
