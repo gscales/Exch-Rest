@@ -7,6 +7,8 @@ Switches
 ```
  -SaveToSentItems : Saves the message being sent to the SentItems folder of calling account -MailboxName
  -ShowRequest : Used for debuging outputs the REST message that is being sent to the server
+ -RequestReadRecipient : Sets the flag on a Message to request a Read Recipient
+ -RequestDeliveryRecipient : Sets the flag on the Message to request a Delivery Recipient
 ```
 
 Example 1 Send a Message to one recipient
