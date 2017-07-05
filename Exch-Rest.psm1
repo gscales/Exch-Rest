@@ -414,6 +414,76 @@ function Get-ProtectedToken{
           return,$SecureEncryptedToken
     }
 }
+## Start Code Attribution
+## ExpandPayload function is the work of the following Authors and should remain with the function if copied into other scripts
+## https://www.powershellgallery.com/profiles/chriswahl/
+## End Code Attribution
+function ExpandPayload($response)
+{
+  [void][System.Reflection.Assembly]::LoadWithPartialName('System.Web.Extensions')
+  return ParseItem -jsonItem ((New-Object -TypeName System.Web.Script.Serialization.JavaScriptSerializer -Property @{
+        MaxJsonLength = [Int32]::MaxValue
+  }).DeserializeObject($response))
+}
+function ParseItem($jsonItem) 
+{
+  if($jsonItem.PSObject.TypeNames -match 'Array') 
+  {
+    return ParseJsonArray -jsonArray ($jsonItem)
+  }
+  elseif($jsonItem.PSObject.TypeNames -match 'Dictionary') 
+  {
+    return ParseJsonObject -jsonObj ([HashTable]$jsonItem)
+  }
+  else 
+  {
+    return $jsonItem
+  }
+}
+## Start Code Attribution
+## ParseJsonObject function is the work of the following Authors and should remain with the function if copied into other scripts
+## https://www.powershellgallery.com/profiles/chriswahl/
+## End Code Attribution
+function ParseJsonObject($jsonObj) 
+{
+  $result = New-Object -TypeName PSCustomObject
+  foreach ($key in $jsonObj.Keys) 
+  {
+    $item = $jsonObj[$key]
+    if ($item) 
+    {
+      $parsedItem = ParseItem -jsonItem $item
+    }
+    else 
+    {
+      $parsedItem = $null
+    }
+    $result | Add-Member -MemberType NoteProperty -Name $key -Value $parsedItem
+  }
+  return $result
+}
+## Start Code Attribution
+## ParseJsonArray function is the work of the following Authors and should remain with the function if copied into other scripts
+## https://www.powershellgallery.com/profiles/chriswahl/
+## End Code Attribution
+function ParseJsonArray($jsonArray) 
+{
+  $result = @()
+  $jsonArray | ForEach-Object -Process {
+    $result += , (ParseItem -jsonItem $_)
+  }
+  return $result
+}
+## Start Code Attribution
+## ParseJsonString function is the work of the following Authors and should remain with the function if copied into other scripts
+## https://www.powershellgallery.com/profiles/chriswahl/
+## End Code Attribution
+function ParseJsonString($json) 
+{
+  $config = $javaScriptSerializer.DeserializeObject($json)
+  return ParseJsonObject -jsonObj ($config)
+}
+####
 function Invoke-RestGet
 {
         param( 
@@ -461,7 +531,8 @@ function Invoke-RestGet
                     return  $ClientResult.Result.Content  
                }
                else{
-                   $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+                    $JsonObject = ExpandPayload($ClientResult.Result.Content.ReadAsStringAsync().Result) 
+                    #$JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
                    if([String]::IsNullOrEmpty($ClientResult)){
                         write-host "No Value returned"
                    }
@@ -519,7 +590,8 @@ function Invoke-RestPOST
              }
             else
              {
-               $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+               $JsonObject = ExpandPayload($ClientResult.Result.Content.ReadAsStringAsync().Result)
+               #$JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
                if([String]::IsNullOrEmpty($JsonObject)){
                    Write-Output $ClientResult.Result
                }
@@ -571,7 +643,8 @@ function Invoke-RestPatch
              }
             else
              {
-               $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+              # $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+               $JsonObject = ExpandPayload($ClientResult.Result.Content.ReadAsStringAsync().Result)
                if([String]::IsNullOrEmpty($JsonObject)){
                    Write-Output $ClientResult.Result
                }
@@ -712,18 +785,18 @@ function Get-FolderFromPath{
             $FolderName = $fldArray[$lint];
             $RequestURL = $RequestURL += "`$filter=DisplayName eq '$FolderName'" 
             $tfTargetFolder = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
-            if($tfTargetFolder.Value.Count -eq 1){
-                $folderId = $tfTargetFolder.Value[0].Id.ToString()
+            if($tfTargetFolder.Value.displayname -match $FolderName){
+                $folderId = $tfTargetFolder.value.Id.ToString()
                 $RequestURL =  $EndPoint + "('$MailboxName')/MailFolders('$folderId')/childfolders?"
             }
             else{
 			    throw ("Folder Not found")
 		    }
 	    }  
-		if($tfTargetFolder.Value.Count -gt 0){
-            $folderId = $tfTargetFolder.Value[0].Id.ToString()
-            Add-Member -InputObject $tfTargetFolder.Value[0] -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
-            return ,$tfTargetFolder.Value[0]
+		if($tfTargetFolder.Value -ne $null){
+            $folderId = $tfTargetFolder.Value.Id.ToString()
+            Add-Member -InputObject $tfTargetFolder.Value -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
+            return ,$tfTargetFolder.Value
 		}
 		else{
 			throw ("Folder Not found")
