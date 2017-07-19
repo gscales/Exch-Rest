@@ -8,4 +8,4 @@ $AccessToken =  Get-AccessToken -MailboxName $MailboxName  -ClientId 5471030d-f3
 $OneDriveAttachmentToSend = Get-OneDriveItemFromPath -MailboxName $MailboxName -AccessToken $AccessToken -OneDriveFilePath $OneDriveFile
 $rtArray = @()
 $rtArray += (New-referanceAttachment -Name $OneDriveAttachmentToSend.Name -SourceUrl $OneDriveAttachmentToSend.webUrl -Permission Edit)
-Send-MessageREST -MailboxName $MailboxName  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address glenscales@yahoo.com) -Subject "Daily Send" -Body "See Attached" -ReferanceAttachments $rtArray
+Send-MessageREST -MailboxName $MailboxName  -AccessToken $AccessToken -ToRecipients @(New-EmailAddress -Address user@domain.com) -Subject "Daily Send" -Body "See Attached" -ReferanceAttachments $rtArray
