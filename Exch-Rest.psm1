@@ -213,7 +213,8 @@ function Get-AccessToken{
         [Parameter(Position=1, Mandatory=$false)] [string]$ClientId,
         [Parameter(Position=2, Mandatory=$false)] [string]$redirectUrl,
         [Parameter(Position=3, Mandatory=$false)] [string]$ClientSecret,
-        [Parameter(Position=4, Mandatory=$false)] [string]$ResourceURL
+        [Parameter(Position=4, Mandatory=$false)] [string]$ResourceURL,
+        [Parameter(Position=5, Mandatory=$false)] [switch]$Beta
     )  
  	Begin
 		 {
@@ -252,6 +253,9 @@ function Get-AccessToken{
             }
             Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
             Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
+            if($Beta.IsPresent){
+                Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
+            }
             return $JsonObject
          }
 }
@@ -261,7 +265,8 @@ function Get-AccessTokenUserAndPass{
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [string]$ClientId,
         [Parameter(Position=2, Mandatory=$false)] [string]$ResourceURL,
-        [Parameter(Position=3, Mandatory=$true)] [System.Management.Automation.PSCredential]$Credentials
+        [Parameter(Position=3, Mandatory=$true)] [System.Management.Automation.PSCredential]$Credentials,
+        [Parameter(Position=4, Mandatory=$false)] [switch]$Beta
     )  
  	Begin
 		 {
@@ -288,6 +293,9 @@ function Get-AccessTokenUserAndPass{
             if([bool]($JsonObject.PSobject.Properties.name -match "access_token")){
                 $JsonObject.access_token =  (Get-ProtectedToken -PlainToken $JsonObject.access_token) 
             }
+            if($Beta.IsPresent){
+                Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
+            }
             #Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
             return $JsonObject
          }
@@ -304,6 +312,7 @@ function Get-AppOnlyToken{
         [Parameter(Position=4, Mandatory=$false)] [string]$redirectUrl,     
         [Parameter(Position=6, Mandatory=$false)] [Int32]$ValidateForMinutes,
         [Parameter(Position=7, Mandatory=$false)] [string]$ResourceURL,
+        [Parameter(Position=8, Mandatory=$false)] [switch]$Beta,
         [Parameter(Mandatory=$true)] [Security.SecureString]$password
         
     )  
@@ -341,6 +350,9 @@ function Get-AppOnlyToken{
             Add-Member -InputObject $JsonObject -NotePropertyName tenantid -NotePropertyValue $TenantId
             Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
             Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
+            if($Beta.IsPresent){
+                Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
+            }
             return $JsonObject
          }
 }
@@ -376,6 +388,9 @@ function Invoke-RefreshAccessToken{
                $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
                Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $AccessToken.clientid
                Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $AccessToken.redirectUrl
+               if([bool]($AccessToken.PSobject.Properties.name -match "Beta")){
+                    Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
+               }
                if([bool]($JsonObject.PSobject.Properties.name -match "refresh_token")){
                    $JsonObject.refresh_token =  (Get-ProtectedToken -PlainToken $JsonObject.refresh_token) 
                }
@@ -636,6 +651,66 @@ function Invoke-RestPatch
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
                      Write-Output ("Error making REST Patch " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
+                     Write-Output $ClientResult.Result
+                     if($ClientResult.Content -ne $null){
+                         Write-Output ($ClientResult.Content.ReadAsStringAsync().Result);   
+                     }                     
+             }
+            else
+             {
+              # $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+               $JsonObject = ExpandPayload($ClientResult.Result.Content.ReadAsStringAsync().Result)
+               if([String]::IsNullOrEmpty($JsonObject)){
+                   Write-Output $ClientResult.Result
+               }
+               else{
+                   return $JsonObject
+               }
+               
+             }
+  
+         }    
+}
+
+function Invoke-RestPut
+{
+        param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$RequestURL,
+        [Parameter(Position=1, Mandatory=$true)] [String]$MailboxName,
+        [Parameter(Position=2, Mandatory=$true)] [System.Net.Http.HttpClient]$HttpClient,
+        [Parameter(Position=3, Mandatory=$true)] [psobject]$AccessToken,
+        [Parameter(Position=4, Mandatory=$true)] [String]$ContentHeader,
+        [Parameter(Position=5, Mandatory=$true)] [PSCustomObject]$Content
+        
+    )  
+ 	Begin
+		 {
+             #Check for expired Token
+             $minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0,[System.DateTimeKind]::Utc);
+             $expiry =  $minTime.AddSeconds($AccessToken.expires_on)
+             if($expiry -le [DateTime]::Now.ToUniversalTime()){
+                write-host "Refresh Token"
+                $AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken            
+                Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
+             }
+             $method =  New-Object System.Net.Http.HttpMethod("PUT")
+             $HttpRequestMessage =  New-Object System.Net.Http.HttpRequestMessage($method,[Uri]$RequestURL)
+             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-TokenFromSecureString -SecureToken $AccessToken.access_token));
+             if(![String]::IsNullorEmpty($ContentHeader)){
+                   $HttpRequestMessage.Content = New-Object System.Net.Http.ByteArrayContent -ArgumentList @(,$Content)  
+             }
+             else{
+                   $HttpRequestMessage.Content = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
+             }
+             $ClientResult = $HttpClient.SendAsync($HttpRequestMessage)
+             if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
+                 if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
+                     write-Host ($ClientResult.Result)
+                 }
+             }   
+             if (!$ClientResult.Result.IsSuccessStatusCode)
+             {
+                     Write-Output ("Error making REST PUT " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
                      Write-Output $ClientResult.Result
                      if($ClientResult.Content -ne $null){
                          Write-Output ($ClientResult.Content.ReadAsStringAsync().Result);   
@@ -1654,8 +1729,17 @@ function Get-EndPoint{
     Begin{
         $EndPoint = "https://outlook.office.com/api/v2.0"
         switch($AccessToken.resource){
-            "https://outlook.office.com" {  $EndPoint = "https://outlook.office.com/api/v2.0/" + $Segment }     
-            "https://graph.microsoft.com" {  $EndPoint = "https://graph.microsoft.com/v1.0/" + $Segment  }     
+            "https://outlook.office.com" { if($AccessToken.Beta){
+                 $EndPoint = "https://outlook.office.com/api/beta/" + $Segment
+             }else{
+                 $EndPoint = "https://outlook.office.com/api/v2.0/" + $Segment
+             } }     
+            "https://graph.microsoft.com" {  if($AccessToken.Beta){
+                    $EndPoint = "https://graph.microsoft.com/beta/" + $Segment
+                }else{
+                    $EndPoint = "https://graph.microsoft.com/v1.0/" + $Segment
+                }
+            }     
         }
         return , $EndPoint
         
@@ -1999,17 +2083,18 @@ function Send-MessageREST{
         [Parameter(Position=5, Mandatory=$false)] [String]$Body,
         [Parameter(Position=7, Mandatory=$false)] [psobject]$SenderEmailAddress,
         [Parameter(Position=8, Mandatory=$false)] [psobject]$Attachments,
-        [Parameter(Position=9, Mandatory=$false)] [psobject]$ToRecipients,
-        [Parameter(Position=10, Mandatory=$false)] [psobject]$CCRecipients,
-        [Parameter(Position=11, Mandatory=$false)] [psobject]$BCCRecipients,
-        [Parameter(Position=12, Mandatory=$false)] [psobject]$ExPropList,
-        [Parameter(Position=13, Mandatory=$false)] [psobject]$StandardPropList,
-        [Parameter(Position=14, Mandatory=$false)] [string]$ItemClass,
-        [Parameter(Position=15, Mandatory=$false)] [switch]$SaveToSentItems,
-        [Parameter(Position=16, Mandatory=$false)] [switch]$ShowRequest,
-        [Parameter(Position=17, Mandatory=$false)] [switch]$RequestReadRecipient,
-        [Parameter(Position=18, Mandatory=$false)] [switch]$RequestDeliveryRecipient,
-        [Parameter(Position=19, Mandatory=$false)] [psobject]$ReplyTo
+        [Parameter(Position=9, Mandatory=$false)] [psobject]$ReferanceAttachments,
+        [Parameter(Position=10, Mandatory=$false)] [psobject]$ToRecipients,
+        [Parameter(Position=11, Mandatory=$false)] [psobject]$CCRecipients,
+        [Parameter(Position=12, Mandatory=$false)] [psobject]$BCCRecipients,
+        [Parameter(Position=13, Mandatory=$false)] [psobject]$ExPropList,
+        [Parameter(Position=14, Mandatory=$false)] [psobject]$StandardPropList,
+        [Parameter(Position=15, Mandatory=$false)] [string]$ItemClass,
+        [Parameter(Position=16, Mandatory=$false)] [switch]$SaveToSentItems,
+        [Parameter(Position=17, Mandatory=$false)] [switch]$ShowRequest,
+        [Parameter(Position=18, Mandatory=$false)] [switch]$RequestReadRecipient,
+        [Parameter(Position=19, Mandatory=$false)] [switch]$RequestDeliveryRecipient,
+        [Parameter(Position=20, Mandatory=$false)] [psobject]$ReplyTo
     )
     Begin{
         
@@ -2028,7 +2113,7 @@ function Send-MessageREST{
         if($SaveToSentItems.IsPresent){
             $SaveToSentFolder = "true"
         }
-        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList -CcRecipients $CCRecipients -bccRecipients $BCCRecipients -StandardPropList  $StandardPropList -SaveToSentItems $SaveToSentFolder -SendMail -ReplyTo $ReplyTo -RequestReadRecipient $RequestReadRecipient.IsPresent -RequestDeliveryRecipient $RequestDeliveryRecipient.IsPresent
+        $NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ReferanceAttachments $ReferanceAttachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList -CcRecipients $CCRecipients -bccRecipients $BCCRecipients -StandardPropList  $StandardPropList -SaveToSentItems $SaveToSentFolder -SendMail -ReplyTo $ReplyTo -RequestReadRecipient $RequestReadRecipient.IsPresent -RequestDeliveryRecipient $RequestDeliveryRecipient.IsPresent
         if($ShowRequest.IsPresent){
             write-host $NewMessage
         }       
@@ -2046,6 +2131,7 @@ function Get-MessageJSONFormat {
         [Parameter(Position=2, Mandatory=$false)] [String]$Body,
         [Parameter(Position=3, Mandatory=$false)] [psobject]$SenderEmailAddress,
         [Parameter(Position=5, Mandatory=$false)] [psobject]$Attachments,
+        [Parameter(Position=5, Mandatory=$false)] [psobject]$ReferanceAttachments,
         [Parameter(Position=6, Mandatory=$false)] [psobject]$ToRecipients,
         [Parameter(Position=7, Mandatory=$false)] [psobject]$CcRecipients,
         [Parameter(Position=7, Mandatory=$false)] [psobject]$bccRecipients,
@@ -2224,26 +2310,52 @@ function Get-MessageJSONFormat {
             }
         }                  
         $atcnt = 0
-        if($Attachments -ne $null){
-             if($NewMessage.Length -gt 5){$NewMessage += ","}
+        $processAttachments = $false
+        if($Attachments -ne $null){$processAttachments = $true}
+        if($ReferanceAttachments -ne $null){$processAttachments = $true}
+        if($processAttachments){
+            if($NewMessage.Length -gt 5){$NewMessage += ","}
             $NewMessage +=  "  `"Attachments`": [ " + "`r`n"
-            foreach ($Attachment in $Attachments) {
-                $Item = Get-Item $Attachment
-                if($atcnt -gt 0)
-                {
-                     $NewMessage +=  "   ,{" + "`r`n"                       
+            if($Attachments -ne $null){
+                foreach ($Attachment in $Attachments) {
+                    $Item = Get-Item $Attachment
+                    if($atcnt -gt 0)
+                    {
+                        $NewMessage +=  "   ,{" + "`r`n"                       
+                    }
+                    else{
+                        $NewMessage +=  "    {" + "`r`n"
+                    }               
+                    $NewMessage +=  "     `"@odata.type`": `"#Microsoft.OutlookServices.FileAttachment`"," + "`r`n"
+                    $NewMessage +=  "     `"Name`": `"" + $Item.Name + "`"," + "`r`n"
+                    $NewMessage +=  "     `"ContentBytes`": `" " + [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($Attachment)) + "`"" + "`r`n"
+                    $NewMessage +=  "    } " + "`r`n"
+                    $atcnt++
                 }
-                else{
-                     $NewMessage +=  "    {" + "`r`n"
-                }               
-                $NewMessage +=  "     `"@odata.type`": `"#Microsoft.OutlookServices.FileAttachment`"," + "`r`n"
-                $NewMessage +=  "     `"Name`": `"" + $Item.Name + "`"," + "`r`n"
-                $NewMessage +=  "     `"ContentBytes`": `" " + [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($Attachment)) + "`"" + "`r`n"
-                $NewMessage +=  "    } " + "`r`n"
-                $atcnt++
+            }
+            $atcnt = 0
+            if($ReferanceAttachments -ne $null){
+                foreach ($Attachment in $ReferanceAttachments) {
+                    if($atcnt -gt 0)
+                    {
+                        $NewMessage +=  "   ,{" + "`r`n"                       
+                    }
+                    else{
+                        $NewMessage +=  "    {" + "`r`n"
+                    }               
+                    $NewMessage +=  "     `"@odata.type`": `"#Microsoft.OutlookServices.ReferenceAttachment`"," + "`r`n"
+                    $NewMessage +=  "     `"Name`": `"" + $Attachment.Name + "`"," + "`r`n"
+                    $NewMessage +=  "     `"SourceUrl`": `"" + $Attachment.SourceUrl + "`"," + "`r`n"
+                    $NewMessage +=  "     `"ProviderType`": `"" + $Attachment.ProviderType + "`"," + "`r`n"
+                    $NewMessage +=  "     `"Permission`": `"" + $Attachment.Permission + "`"," + "`r`n"
+                    $NewMessage +=  "     `"IsFolder`": `"" + $Attachment.IsFolder + "`"" + "`r`n"
+                    $NewMessage +=  "    } " + "`r`n"
+                    $atcnt++
+                }
             }
             $NewMessage +=  "  ]" + "`r`n"
-        }        
+        }     
+    
         if($ExPropList -ne $null){
              if($NewMessage.Length -gt 5){$NewMessage += ","}
             $NewMessage +=  "`"SingleValueExtendedProperties`": ["+ "`r`n"
@@ -2293,3 +2405,168 @@ function HexStringToByteArray($HexString)
  	Return @(,$ByteArray)
 
 }
+#region OneDrive
+function Get-DefaultOneDrive{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }  
+            $HttpClient =  Get-HTTPClient($MailboxName)
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =  $EndPoint + "('$MailboxName')/drive/root"
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+            Add-Member -InputObject $JSONOutput -NotePropertyName DriveRESTURI -NotePropertyValue ( $EndPoint + "('$MailboxName')/drives('" + $JSONOutput.Id + "')" )
+            return $JSONOutput            
+            
+
+    }
+}
+function Get-DefaultOneDriveRootItems{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }  
+            $HttpClient =  Get-HTTPClient($MailboxName)
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =  $EndPoint + "('$MailboxName')/drive/root/children"
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+            foreach ($Item in $JSONOutput.value) {
+                Add-Member -InputObject $Item -NotePropertyName DriveRESTURI -NotePropertyValue (((Get-EndPoint -AccessToken $AccessToken -Segment "users") + "('$MailboxName')/drive") + "/items('" + $Item.Id + "')")
+                write-output $Item
+            }   
+            
+            
+
+    }
+}
+
+function Get-OneDriveChildren{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [String]$DriveRESTURI,
+        [Parameter(Position=3, Mandatory=$false)] [String]$FolderPath
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }  
+            $HttpClient =  Get-HTTPClient($MailboxName)
+          if([String]::IsNullOrEmpty($DriveRESTURI)){
+               $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+               $RequestURL =  $EndPoint + "('$MailboxName')/drive/root:" + $FolderPath + ":/children"
+           }
+           else{
+                 $RequestURL =  $DriveRESTURI + "/children"
+           }            
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName   
+            foreach ($Item in $JSONOutput.value) {
+                Add-Member -InputObject $Item -NotePropertyName DriveRESTURI -NotePropertyValue (((Get-EndPoint -AccessToken $AccessToken -Segment "users") + "('$MailboxName')/drive") + "/items('" + $Item.Id + "')")
+                write-output $Item
+            }     
+
+    }
+}
+
+function Get-OneDriveItem{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [String]$DriveRESTURI
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }  
+            $HttpClient =  Get-HTTPClient($MailboxName)
+            $RequestURL =  $DriveRESTURI 
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName 
+            Add-Member -InputObject $JSONOutput -NotePropertyName DriveRESTURI -NotePropertyValue (((Get-EndPoint -AccessToken $AccessToken -Segment "users") + "('$MailboxName')/drive") + "/items('" + $JSONOutput.Id + "')")
+            return $JSONOutput
+    }
+}
+
+function Get-OneDriveItemFromPath{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [String]$OneDriveFilePath
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }  
+            $HttpClient =  Get-HTTPClient($MailboxName)
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =  $EndPoint + "('$MailboxName')/drive/root:" + $OneDriveFilePath
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName 
+            Add-Member -InputObject $JSONOutput -NotePropertyName DriveRESTURI -NotePropertyValue (((Get-EndPoint -AccessToken $AccessToken -Segment "users") + "('$MailboxName')/drive") + "/items('" + $JSONOutput.Id + "')")
+            return $JSONOutput
+    }
+}
+function Invoke-UploadOneDriveItemToPath{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [String]$OneDriveUploadFilePath,
+        [Parameter(Position=3, Mandatory=$false)] [String]$FilePath,
+        [Parameter(Position=4, Mandatory=$false)] [Byte[]]$FileBytes
+        
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }  
+            $HttpClient =  Get-HTTPClient($MailboxName)
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $RequestURL =  $EndPoint + "('$MailboxName')/drive/root:" + $OneDriveUploadFilePath + ":/content"
+            if([String]::IsNullOrEmpty($FileBytes)){
+                $Content = ([System.IO.File]::ReadAllBytes($filePath))
+            }
+            else{
+                $Content = $FileBytes
+            }
+            $JSONOutput = Invoke-RestPut -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -content $Content -contentheader "application/octet-stream"
+            return $JSONOutput
+    }
+}
+function New-ReferanceAttachment{
+        param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$Name,
+        [Parameter(Position=1, Mandatory=$true)] [string]$SourceUrl,
+        [Parameter(Position=2, Mandatory=$false)] [String]$ProviderType,
+        [Parameter(Position=3, Mandatory=$true)] [String]$Permission,
+        [Parameter(Position=4, Mandatory=$false)] [string]$IsFolder
+        
+    )
+    Begin{
+          $ReferanceAttachment = "" | Select Name,SourceUrl,ProviderType,Permission,IsFolder
+          $ReferanceAttachment.IsFolder = "False"
+          $ReferanceAttachment.ProviderType = "oneDriveBusiness"
+          $ReferanceAttachment.Permission = $Permission
+          $ReferanceAttachment.SourceUrl = $SourceUrl
+          $ReferanceAttachment.Name = $Name
+          if(![String]::IsNullOrEmpty($ProviderType)){
+                $ReferanceAttachment.ProviderType = $ProviderType
+          }
+          if(![String]::IsNullOrEmpty($IsFolder)){
+               $ReferanceAttachment.IsFolder = $IsFolder
+          }
+          return $ReferanceAttachment
+    }
+}
+#emdregion
