@@ -1,4 +1,4 @@
-# Calendaring Documenation and Examples
+# Calendaring Documentation and Examples
 
 The Exch-Rest module contains the following Calendaring Cmdlets can help peform one of many calendaring operations
 
@@ -97,13 +97,28 @@ Create a Recurring Appointment on a Group Calendar Calendar
 
 Create a Single or Recurring Meeting 
 
-# Get-DefaultCalendar
+# Get-DefaultCalendarFolder
 
 Return the Default Calendar Folder for a Mailbox
 
-# Get-Calendar
+```
+Get-DefaultCalendarFolder -MailboxName Mailbox@domain.com -AccessToken $AccessToken
+
+```
+
+# Get-CalendarFolder
 
 Return the Calendar folder based on the Name entered
 
+```
+Get-CalendarFolder -MailboxName Mailbox@domain.com -AccessToken $AccessToken -FolderName 'calendar name'
 
+```
 
+# Get-AllCalendarFolders
+Return all Calendar folders
+
+```
+Get-AllCalendarFolders -MailboxName Mailbox@domain.com -AccessToken $AccessToken
+
+```
