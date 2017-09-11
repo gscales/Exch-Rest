@@ -74,10 +74,10 @@ $Recurrence = Get-Recurrence -PatternType weekly -PatternFirstDayOfWeek monday -
 New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Monday Meeting" -Recurrence $Recurrence
 ```
 
-Create a Single Appointment on Secondary Calendar
+Create a Single Appointment on a Secondary Calendar
 
 ```
-#Creates a new all day event for Today on the default calendar
+#Creates a new all day event for Today on the a calendar called Secondary calendar
 New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -CalendarName 'Secondary calendar'
 ```
 
@@ -93,9 +93,45 @@ New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessTok
 
 Create a Single Appointment on a Group Calendar Calendar
 
+To create an appointment in a Group calendar you need to use the -Group switch and -GroupName to specify the name of the group
+
+```
+#Creates a new all event for the 5th of July from 13:00-14:00 on the a group calendar called 'Powershell Module'
+New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -group -groupname 'Powershell Module'
+```
+
+
 Create a Recurring Appointment on a Group Calendar Calendar
 
-Create a Single or Recurring Meeting 
+```
+$days = @()
+$days+"monday"
+$Recurrence = Get-Recurrence -PatternType weekly -PatternFirstDayOfWeek monday -PatternDaysOfWeek $days -PatternIndex first  -RangeType enddate -RangeStartDate ([DateTime]::Parse("2017-07-05 13:00")) -RangeEndDate ([DateTime]::Parse("2019-07-05 13:00"))
+#Creates a new all event for the recurring event on 5th of July from 13:00-14:00 on the a group calendar called 'Powershell Module'
+New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -group -groupname 'Powershell Module' -Recurrence $Recurrence
+```
+
+# Meetings
+
+To create a Meeting you use the same REST message structure with the addition of the Attendees elements https://msdn.microsoft.com/en-us/office/office365/api/complex-types-for-mail-contacts-calendar#AttendeeBaseV2. Meeting Attendess can be Required, Optional or Resources. To pass attendees into the Meeting first create a collection
+$Attendees = @()
+ 
+Then Add Atteendess to that collection eg
+
+$Attendees += (new-attendee -Name 'fred smith' -Address 'fred@datarumble.com' -type 'Required')
+$Attendees += (new-attendee -Name 'barney jones' -Address 'barney@datarumble.com' -type 'Optional')
+
+Then pass that in when creating a new Appontment
+
+Create a Single Meeting with two attendees on the default Calendar for the 5th of July between 1 and 2pm
+```
+#Creates a new all day event for Today on the default calendar
+$Attendees = @()
+$Attendees += (new-attendee -Name 'fred smith' -Address 'fred@datarumble.com' -type 'Required')
+$Attendees += (new-attendee -Name 'barney jones' -Address 'barney@datarumble.com' -type 'Optional')
+
+New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -Attendees $Attendees
+```
 
 # Get-DefaultCalendarFolder
 
