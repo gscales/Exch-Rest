@@ -531,6 +531,9 @@ function Invoke-RestGet
                  if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
                      write-Host ($ClientResult.Result)
                  }
+                 if($ClientResult.Result.Content -ne $null){
+                    Write-Output ($ClientResult.Result.Content.ReadAsStringAsync()); 
+                 }                  
              }             
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
@@ -594,6 +597,9 @@ function Invoke-RestPOST
                  if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
                      write-Host ($ClientResult.Result)
                  }
+                 if($ClientResult.Result.Content -ne $null){
+                    Write-Output ($ClientResult.Result.Content.ReadAsStringAsync()); 
+                 }        
              }   
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
@@ -647,6 +653,9 @@ function Invoke-RestPatch
                  if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
                      write-Host ($ClientResult.Result)
                  }
+                 if($ClientResult.Result.Content -ne $null){
+                    Write-Output ($ClientResult.Result.Content.ReadAsStringAsync()); 
+                 }        
              }   
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
@@ -707,6 +716,9 @@ function Invoke-RestPut
                  if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
                      write-Host ($ClientResult.Result)
                  }
+                 if($ClientResult.Result.Content -ne $null){
+                    Write-Output ($ClientResult.Result.Content.ReadAsStringAsync()); 
+                 }        
              }   
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
@@ -758,6 +770,9 @@ function Invoke-RestDELETE
                  if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::NoContent){
                      write-Host ($ClientResult.Result)
                  }
+                 if($ClientResult.Result.Content -ne $null){
+                    Write-Output ($ClientResult.Result.Content.ReadAsStringAsync()); 
+                 }        
              }   
              if (!$ClientResult.Result.IsSuccessStatusCode)
              {
@@ -912,10 +927,29 @@ function Get-Inbox{
         return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
     }
 }
-function Get-CalendarFolder{
+function Get-DefaultCalendarFolder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
+   
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }   
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users" 
+        $RequestURL =   $EndPoint + "('$MailboxName')/calendar"
+        return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+    }
+}
+
+function Get-CalendarFolder{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
+        [Parameter(Position=1, Mandatory=$true)] [string]$FolderName
     )
     Begin{
         if($AccessToken -eq $null)
@@ -924,12 +958,33 @@ function Get-CalendarFolder{
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
-        $RequestURL =   $EndPoint + "('$MailboxName')/M"
+        $RequestURL =   $EndPoint + "('$MailboxName')/calendars?`$filter=name eq '" + $FolderName + "'"
+        do{
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+            foreach ($Message in $JSONOutput.Value) {
+                Write-Output $Message
+            }           
+            $RequestURL = $JSONOutput.'@odata.nextLink'
+        }while(![String]::IsNullOrEmpty($RequestURL))     
+    }
+}
+function Get-AllCalendarFolders{
+    param( 
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
+        
+    )
+    Begin{
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        }   
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        $RequestURL =   $EndPoint + "('$MailboxName')/calendars"
         return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
     }
 }
-
-
 function Get-InboxItems{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
@@ -1492,6 +1547,21 @@ function Get-ExtendedPropList{
     }
 }
 
+function Get-StandardProperty{
+     param( 
+        [Parameter(Position=1, Mandatory=$true)] [String]$Id,
+        [Parameter(Position=2, Mandatory=$false)] [String]$Value
+    )
+    Begin{
+        $Property = "" | Select Id,Value
+        $Property.Id = $Id
+        if(![String]::IsNullOrEmpty($Value)){
+             $Property.Value = $Value
+        }       
+        return ,$Property
+    }
+}
+
 function Get-TaggedProperty{
      param( 
         [Parameter(Position=0, Mandatory=$true)] [String]$DataType,
@@ -1776,9 +1846,13 @@ function Get-MailboxSettingsReport{
 function Get-EndPoint{
         param(
         [Parameter(Position=0, Mandatory=$true)] [psObject]$AccessToken,
-        [Parameter(Position=1, Mandatory=$true)] [psObject]$Segment
+        [Parameter(Position=1, Mandatory=$true)] [psObject]$Segment,
+        [Parameter(Position=2, Mandatory=$false)] [bool]$group
     )
     Begin{
+        if($group){
+            $Segment = "groups"
+        }
         $EndPoint = "https://outlook.office.com/api/v2.0"
         switch($AccessToken.resource){
             "https://outlook.office.com" { if($AccessToken.Beta){
@@ -1951,6 +2025,57 @@ function Get-ObjectProp{
     }
 }
 
+function Get-Recurrence{
+    param(
+        [Parameter(Position=1, Mandatory=$false)] [string]$RecurrenceTimeZone,
+        [Parameter(Position=2, Mandatory=$true)] [ValidateSet("daily","weekly","absoluteMonthly","relativeMonthly", "absoluteYearly"," relativeYearly")][string]$PatternType,
+        [Parameter(Position=3, Mandatory=$false)] [Int]$PatternInterval,
+        [Parameter(Position=4, Mandatory=$false)] [Int]$PatternMonth,
+        [Parameter(Position=5, Mandatory=$false)] [Int]$PatternDayOfMonth,
+        [Parameter(Position=6, Mandatory=$true)][ValidateSet("sunday","monday","tuesday","wednesday", "thursday","friday","saturday")] [string]$PatternFirstDayOfWeek,
+        [Parameter(Position=7, Mandatory=$false)][psobject]$PatternDaysOfWeek,
+        [Parameter(Position=8, Mandatory=$true)][ValidateSet("first","second","third","fourth", "last")] [string]$PatternIndex,      
+        [Parameter(Position=9, Mandatory=$true)] [ValidateSet("noend","enddate","numbered")][string]$RangeType,
+        [Parameter(Position=10, Mandatory=$true)] [datetime]$RangeStartDate,
+        [Parameter(Position=11, Mandatory=$false)] [datetime]$RangeEndDate,
+        [Parameter(Position=12, Mandatory=$false)] [Int]$RangeNumberOfOccurrences        
+    )
+    Begin{
+        $Recurrence = "" | Select Pattern,Range,RecurrenceTimeZone
+        $Pattern = "" | Select Type,Interval,Month,DayOfMonth,DaysOfWeek,FirstDayOfWeek,Index
+        $Range = "" | Select  Type,StartDate,EndDate,NumberOfOccurrences 
+        if([String]::IsNullOrEmpty($RecurrenceTimeZone)){
+            $RecurrenceTimeZone = [TimeZoneInfo]::Local.Id
+        } 
+        $Range.NumberOfOccurrences = 0
+        $Pattern.Interval = 1
+        $Pattern.Month = 0
+        $Pattern.DayOfMonth = 0
+        $Range.EndDate = "0001-01-01"
+        $Recurrence.Pattern = $Pattern
+        $Recurrence.Pattern.Type = $PatternType
+        $Recurrence.Pattern.Interval = $PatternInterval
+        if($Recurrence.Pattern.Interval -eq 0){
+            $Recurrence.Pattern.Interval = 1
+        }
+        $Recurrence.Pattern.Month = $PatternMonth
+        $Recurrence.Pattern.DayOfMonth = $PatternDayOfMonth
+        $Recurrence.Pattern.DaysOfWeek = $PatternDaysOfWeek
+        $Recurrence.Pattern.FirstDayOfWeek = $PatternFirstDayOfWeek
+        $Recurrence.Pattern.Index = $PatternIndex
+        $Recurrence.Range = $Range
+        $Recurrence.Range.Type = $RangeType
+        $Recurrence.Range.StartDate = $RangeStartDate.ToString("yyyy-MM-dd")
+        if($RangeEndDate -ne $null){
+            $Recurrence.Range.EndDate = $RangeEndDate.ToString("yyyy-MM-dd")
+        }        
+        $Recurrence.Range.NumberOfOccurrences = $RangeNumberOfOccurrences
+        $Recurrence.RecurrenceTimeZone = $RecurrenceTimeZone
+        return ,$Recurrence
+    }
+}
+
+
 function Get-ObjectCollectionProp{
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$Name,  
@@ -1999,7 +2124,8 @@ function Get-ItemProp{
 function Get-ModernGroups {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
-        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken   
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [string]$GroupName   
     )
     Begin{
         
@@ -2008,9 +2134,17 @@ function Get-ModernGroups {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
         $HttpClient =  Get-HTTPClient($MailboxName)
-        $RequestURL =  Get-EndPoint -AccessToken $AccessToken -Segment "/groups"
-        $JsonObject =  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
-        return $JsonObject       
+        $RequestURL =  Get-EndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=groupTypes/any(c:c+eq+'Unified')"
+        if(![String]::IsNullOrEmpty($GroupName)){
+            $RequestURL =  Get-EndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=displayName eq '$GroupName'"
+        }
+        do{
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+            foreach ($Message in $JSONOutput.Value) {
+                Write-Output $Message
+            }           
+            $RequestURL = $JSONOutput.'@odata.nextLink'
+        }while(![String]::IsNullOrEmpty($RequestURL))       
         
     }
 }
@@ -2036,6 +2170,25 @@ function New-EmailAddress {
         }        
         $EmailAddress.Address = $Address
         return, $EmailAddress
+    }
+}
+function New-Attendee {
+    param(
+        [Parameter(Position=0, Mandatory=$false)] [string]$Name,
+        [Parameter(Position=1, Mandatory=$true)] [string]$Address,
+        [Parameter(Position=2, Mandatory=$true)] [ValidateSet("required","optional","resource")][string]$Type
+    )
+    Begin{
+        $Attendee = "" | Select Name,Address,Type
+        if([String]::IsNullOrEmpty($Name)){
+            $Attendee.Name = $Address
+        }
+        else{
+            $Attendee.Name = $Name
+        }        
+        $Attendee.Address = $Address
+        $Attendee.Type = $Type
+        return, $Attendee
     }
 }
 
@@ -2177,6 +2330,136 @@ function Send-MessageREST{
     }
 }
 
+function New-HolidayEvent{
+        param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [string]$CalendarName,
+        [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Calendar,
+        [Parameter(Position=4, Mandatory=$true)] [String]$Subject,
+        [Parameter(Position=5, Mandatory=$false)] [String]$Body,
+        [Parameter(Position=6, Mandatory=$true)] [datetime]$Day,
+        [Parameter(Position=8, Mandatory=$false)] [psobject]$SenderEmailAddress,
+        [Parameter(Position=9, Mandatory=$false)] [psobject]$Attachments,
+        [Parameter(Position=10, Mandatory=$false)] [psobject]$ReferanceAttachments,
+        [Parameter(Position=11, Mandatory=$false)] [psobject]$Attendees,
+        [Parameter(Position=13, Mandatory=$false)] [psobject]$ExPropList,
+        [Parameter(Position=14, Mandatory=$false)] [psobject]$StandardPropList,
+        [Parameter(Position=17, Mandatory=$false)] [switch]$ShowRequest,
+        [Parameter(Position=18, Mandatory=$false)] [switch]$RequestReadRecipient,
+        [Parameter(Position=19, Mandatory=$false)] [switch]$RequestDeliveryRecipient,
+        [Parameter(Position=20, Mandatory=$false)] [psobject]$ReplyTo,
+        [Parameter(Position=21, Mandatory=$false)] [string]$TimeZone,
+        [Parameter(Position=22, Mandatory=$false)] [psobject]$Recurrence,
+        [Parameter(Position=23, Mandatory=$false)] [switch]$Group,
+        [Parameter(Position=24, Mandatory=$false)] [string]$GroupName
+    )
+    Begin{
+        
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        } 
+        if([String]::IsNullOrEmpty($TimeZone)){
+            $TimeZone = [TimeZoneInfo]::Local.Id
+        }  
+        if($AccessToken.resource -eq "https://graph.microsoft.com"){
+             $isAllDay = Get-ItemProp -Name isAllDay -NoQuotes -Value true
+        }else{
+             $isAllDay = Get-ItemProp -Name IsAllDay -NoQuotes -Value true
+        }
+        if($Calendar -eq $null){
+           $Calendar = Get-DefaultCalendarFolder -MailboxName $MailboxName -AccessToken $AccessToken
+        }
+        if(![String]::IsNullOrEmpty($CalendarName)){
+           $Calendar = Get-CalendarFolder -MailboxName $MailboxName -AccessToken $AccessToken -FolderName $CalendarName
+           if([String]::IsNullOrEmpty($Calendar)){throw "Error Calendar folder not found check the folder name this is case sensitive"}
+        }
+        if($StandardPropList -eq $null){
+            $StandardPropList += $isAllDay
+        }else{
+            $StandardPropList = @()
+            $StandardPropList += $isAllDay
+        }
+        $NewMessage = Get-EventJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Start $Day.Date -End $Day.Date.AddDays(1) -TimeZone $TimeZone -Attachments $Attachments -ReferanceAttachments $ReferanceAttachments -Attendees $Attendees -SentDate $SentDate -ExPropList $ExPropList  -StandardPropList  $StandardPropList -ReplyTo $ReplyTo -RequestReadRecipient $RequestReadRecipient.IsPresent -RequestDeliveryRecipient $RequestDeliveryRecipient.IsPresent -Recurrence $Recurrence
+        if($ShowRequest.IsPresent){
+            write-host $NewMessage
+        } 
+ 
+        if($Group.IsPresent){
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "groups" 
+            $ModernGroup = Get-ModernGroups -MailboxName $MailboxName -GroupName  $GroupName -AccessToken $AccessToken
+            $RequestURL =  $EndPoint + "('" + $ModernGroup.id + "')/events"
+        }
+        else{
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users" 
+            $RequestURL =  $EndPoint + "/" + $MailboxName + "/calendars('" + $Calendar.id  + "')/events"
+        }
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
+
+    }
+}
+
+function New-CalendarEventREST{
+        param(
+        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
+        [Parameter(Position=2, Mandatory=$false)] [string]$CalendarName,
+        [Parameter(Position=3, Mandatory=$false)] [PSCustomObject]$Calendar,
+        [Parameter(Position=4, Mandatory=$true)] [String]$Subject,
+        [Parameter(Position=5, Mandatory=$false)] [String]$Body,
+        [Parameter(Position=6, Mandatory=$true)] [datetime]$Start,
+        [Parameter(Position=7, Mandatory=$true)] [datetime]$End,
+        [Parameter(Position=8, Mandatory=$false)] [psobject]$SenderEmailAddress,
+        [Parameter(Position=9, Mandatory=$false)] [psobject]$Attachments,
+        [Parameter(Position=10, Mandatory=$false)] [psobject]$ReferanceAttachments,
+        [Parameter(Position=11, Mandatory=$false)] [psobject]$Attendees,
+        [Parameter(Position=13, Mandatory=$false)] [psobject]$ExPropList,
+        [Parameter(Position=14, Mandatory=$false)] [psobject]$StandardPropList,
+        [Parameter(Position=17, Mandatory=$false)] [switch]$ShowRequest,
+        [Parameter(Position=18, Mandatory=$false)] [switch]$RequestReadRecipient,
+        [Parameter(Position=19, Mandatory=$false)] [switch]$RequestDeliveryRecipient,
+        [Parameter(Position=20, Mandatory=$false)] [psobject]$ReplyTo,
+        [Parameter(Position=21, Mandatory=$false)] [string]$TimeZone,
+        [Parameter(Position=22, Mandatory=$false)] [psobject]$Recurrence,
+        [Parameter(Position=23, Mandatory=$false)] [switch]$Group,
+        [Parameter(Position=24, Mandatory=$false)] [string]$GroupName
+    )
+    Begin{
+        
+        if($AccessToken -eq $null)
+        {
+              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+        } 
+        if([String]::IsNullOrEmpty($TimeZone)){
+            $TimeZone = [TimeZoneInfo]::Local.Id
+        }
+        if($Calendar -eq $null){
+           $Calendar = Get-DefaultCalendarFolder -MailboxName $MailboxName -AccessToken $AccessToken
+        }
+        if(![String]::IsNullOrEmpty($CalendarName)){
+           $Calendar = Get-CalendarFolder -MailboxName $MailboxName -AccessToken $AccessToken -FolderName $CalendarName
+           if([String]::IsNullOrEmpty($Calendar)){throw "Error Calendar folder not found check the folder name this is case sensitive"}
+        }  
+        $NewMessage = Get-EventJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Start $Start -End $End -TimeZone $TimeZone -Attachments $Attachments -ReferanceAttachments $ReferanceAttachments -Attendees $Attendees -SentDate $SentDate -ExPropList $ExPropList  -StandardPropList  $StandardPropList -ReplyTo $ReplyTo -RequestReadRecipient $RequestReadRecipient.IsPresent -RequestDeliveryRecipient $RequestDeliveryRecipient.IsPresent  -Recurrence $Recurrence
+        if($ShowRequest.IsPresent){
+            write-host $NewMessage
+        }   
+        if($Group.IsPresent){
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "groups" 
+            $ModernGroup = Get-ModernGroups -MailboxName $MailboxName -GroupName  $GroupName -AccessToken $AccessToken
+            $RequestURL =  $EndPoint + "('" + $ModernGroup.id + "')/events"
+        }
+        else{
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users" 
+            $RequestURL =  $EndPoint + "/" + $MailboxName + "/calendars('" + $Calendar.id  + "')/events"
+        }
+        $HttpClient =  Get-HTTPClient($MailboxName)
+        return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
+
+    }
+}
 function Get-MessageJSONFormat {
     param(
         [Parameter(Position=1, Mandatory=$false)] [String]$Subject,
@@ -2446,6 +2729,281 @@ function Get-MessageJSONFormat {
         return, $NewMessage
     }
 }
+
+function Get-EventJSONFormat {
+    param(
+        [Parameter(Position=1, Mandatory=$false)] [String]$Subject,
+        [Parameter(Position=2, Mandatory=$false)] [String]$Body,
+        [Parameter(Position=3, Mandatory=$false)] [datetime]$Start,
+        [Parameter(Position=4, Mandatory=$false)] [datetime]$End,
+        [Parameter(Position=5, Mandatory=$false)] [psobject]$SenderEmailAddress,
+        [Parameter(Position=6, Mandatory=$false)] [psobject]$Attachments,
+        [Parameter(Position=7, Mandatory=$false)] [psobject]$ReferanceAttachments,
+        [Parameter(Position=8, Mandatory=$false)] [psobject]$Attendees,
+        [Parameter(Position=9, Mandatory=$false)] [psobject]$SentDate,
+        [Parameter(Position=10, Mandatory=$false)] [psobject]$StandardPropList,
+        [Parameter(Position=11, Mandatory=$false)] [psobject]$ExPropList,
+        [Parameter(Position=12, Mandatory=$false)] [switch]$ShowRequest,
+        [Parameter(Position=15, Mandatory=$false)] [psobject]$ReplyTo,
+        [Parameter(Position=16, Mandatory=$false)] [bool]$RequestReadRecipient,
+        [Parameter(Position=17, Mandatory=$false)] [bool]$RequestDeliveryRecipient,
+        [Parameter(Position=18, Mandatory=$false)] [String]$TimeZone,
+        [Parameter(Position=19, Mandatory=$false)] [psobject]$Recurrence
+    )
+    Begin{
+        $NewMessage = "{" + "`r`n"
+        if(![String]::IsNullOrEmpty($Subject)){
+            $NewMessage +=  "`"Subject`": `"" + $Subject + "`"" + "`r`n"
+        }
+        if($Start -ne $null){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"Start`": {   `"DateTime`":`"" + $Start.ToString("yyyy-MM-ddTHH:mm:ss") + "`"," + "`r`n"
+            $NewMessage +=  "  `"TimeZone`":`"" + $TimeZone + "`"}" + "`r`n"
+        }
+        if($End -ne $null){
+            if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"End`": {   `"DateTime`":`"" + $End.ToString("yyyy-MM-ddTHH:mm:ss") + "`"," + "`r`n"
+            $NewMessage +=  "  `"TimeZone`":`"" + $TimeZone + "`"}" + "`r`n"
+        }
+        if($SenderEmailAddress -ne $null){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"Sender`":{" + "`r`n"
+            $NewMessage +=  " `"EmailAddress`":{" + "`r`n"
+            $NewMessage +=  "  `"Name`":`"" + $SenderEmailAddress.Name + "`"," + "`r`n"
+            $NewMessage +=  "  `"Address`":`"" + $SenderEmailAddress.Address + "`"" + "`r`n"
+            $NewMessage +=  "}}" + "`r`n"
+        }
+        if(![String]::IsNullOrEmpty($Body)){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"Body`": {"+ "`r`n"
+            $NewMessage +=  "`"ContentType`": `"HTML`"," + "`r`n"
+            $NewMessage +=  "`"Content`": `"" + $Body + "`"" + "`r`n"
+            $NewMessage +=  "}" + "`r`n"
+        }      
+        
+        $toRcpcnt = 0;
+        if($Attendees -ne $null){
+                if($NewMessage.Length -gt 5){$NewMessage += ","}
+                $NewMessage +=  "`"Attendees`": [ " + "`r`n"
+                foreach ($Attendee in $Attendees) {
+                    if($toRcpcnt -gt 0){
+                        $NewMessage +=  "      ,{ "+ "`r`n"   
+                    }
+                    else{
+                        $NewMessage +=  "      { "+ "`r`n"
+                    }           
+                    $NewMessage +=  " `"EmailAddress`":{" + "`r`n"
+                    $NewMessage +=  "  `"Name`":`"" + $Attendee.Name + "`"," + "`r`n"
+                    $NewMessage +=  "  `"Address`":`"" + $Attendee.Address + "`"" + "`r`n"
+                    $NewMessage +=  "}," + "`r`n"
+                    $NewMessage +=  "  `"Type`":`"" + $Attendee.Type + "`"" + " }" + "`r`n"
+                    $toRcpcnt++
+                }
+            $NewMessage +=  "  ]" + "`r`n"  
+        }
+        if($Recurrence -ne $null){
+            if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"Recurrence`": { " + "`r`n"
+            $NewMessage +=  "`"Pattern`": { " + "`r`n"
+            $NewMessage +=  "  `"Type`":`"" + $Recurrence.Pattern.Type + "`"," + "`r`n"
+            $NewMessage +=  "  `"Interval`":`"" + $Recurrence.Pattern.Interval + "`"," + "`r`n"
+            $NewMessage +=  "  `"Month`":`"" + $Recurrence.Pattern.Month + "`"," + "`r`n"
+            $NewMessage +=  "  `"DayOfMonth`":`"" + $Recurrence.Pattern.DayOfMonth + "`"," + "`r`n"
+            if($Recurrence.Pattern.DaysOfWeek -ne $null){
+                $NewMessage +=  "  `"DaysOfWeek`":`[" + "`r`n"
+                $first = $true;
+                foreach($day in $Recurrence.Pattern.DaysOfWeek){
+                    if($first)
+                    {
+                        $NewMessage +=  " `"" + $day + "`"`r`n" 
+                    }
+                    else{
+                        $NewMessage +=  ",`"" + $day +  "`"`r`n"
+                    } 
+                   
+                }
+                $NewMessage +=  "  ]," + "`r`n"
+            }            
+            $NewMessage +=  "  `"FirstDayOfWeek`":`"" + $Recurrence.Pattern.FirstDayOfWeek + "`"," + "`r`n"
+            $NewMessage +=  "  `"Index`":`"" + $Recurrence.Pattern.Index + "`"" + "`r`n"
+            $NewMessage +=  "  }," + "`r`n"             
+            $NewMessage +=  "`"Range`": { " + "`r`n"
+            $NewMessage +=  "  `"Type`":`"" + $Recurrence.Range.Type + "`"," + "`r`n"
+            $NewMessage +=  "  `"StartDate`":`"" + $Recurrence.Range.StartDate + "`"," + "`r`n"
+            $NewMessage +=  "  `"EndDate`":`"" + $Recurrence.Range.EndDate + "`"," + "`r`n"
+            $NewMessage +=  "  `"RecurrenceTimeZone`":`"" + $Recurrence.RecurrenceTimeZone + "`"," + "`r`n"
+            $NewMessage +=  "  `"NumberOfOccurrences`":`"" + $Recurrence.Range.NumberOfOccurrences + "`"" + "`r`n"            
+            $NewMessage +=  "  }" + "`r`n"  
+            $NewMessage +=  "  }" + "`r`n"  
+        }
+        $ReplyTocnt = 0
+        if($ReplyTo -ne $null){
+            if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"ReplyTo`": [ " + "`r`n"
+            foreach ($EmailAddress in $ReplyTo) {
+                if($ReplyTocnt -gt 0){
+                    $NewMessage +=  "      ,{ "+ "`r`n"   
+                }
+                else{
+                    $NewMessage +=  "      { "+ "`r`n"
+                }           
+                $NewMessage +=  " `"EmailAddress`":{" + "`r`n"
+                $NewMessage +=  "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
+                $NewMessage +=  "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
+                $NewMessage +=  "}}" + "`r`n"
+                $ReplyTocnt++
+            }
+            $NewMessage +=  "  ]" + "`r`n"  
+        }
+        if($RequestDeliveryRecipient){
+            $NewMessage +=  ",`"IsDeliveryReceiptRequested`": true`r`n"
+        }
+        if($RequestReadRecipient){
+            $NewMessage +=  ",`"IsReadReceiptRequested`": true `r`n"
+        }
+        if($StandardPropList -ne $null){
+            foreach ($StandardProp in $StandardPropList) {
+                if($NewMessage.Length -gt 5){$NewMessage += ","}
+                switch($StandardProp.PropertyType){
+                    "Single" {
+                        if($StandardProp.QuoteValue){
+                           $NewMessage +=  "`"" + $StandardProp.Name + "`": `"" + $StandardProp.Value + "`"" + "`r`n" 
+                        }
+                        else{
+                            $NewMessage +=  "`"" + $StandardProp.Name + "`": " + $StandardProp.Value +  "`r`n" 
+                        }
+                        
+                   
+                   }
+                    "Object"  {
+                              if($StandardProp.isArray){
+                                    $NewMessage +=  "`"" + $StandardProp.PropertyName + "`": [ {"+ "`r`n"
+                              }else{
+                                    $NewMessage +=  "`"" + $StandardProp.PropertyName + "`": {"+ "`r`n"
+                              }                              
+                              $acCount = 0
+                              foreach ($PropKeyValue in $StandardProp.PropertyList) {
+                                    if($acCount -gt 0){
+                                        $NewMessage += ","
+                                    }
+                                    $NewMessage +=  "`"" + $PropKeyValue.Name + "`": `"" + $PropKeyValue.Name + "`"" + "`r`n"
+                                    $acCount++
+                              }
+                               if($StandardProp.isArray){
+                                    $NewMessage +=  "}]" + "`r`n"
+                               }else{
+                                    $NewMessage +=  "}" + "`r`n"
+                               }
+                              
+                    }
+                    "ObjectCollection" {
+                              if($StandardProp.isArray){
+                                    $NewMessage +=  "`"" + $StandardProp.PropertyName + "`": ["+ "`r`n"
+                              }else{
+                                    $NewMessage +=  "`"" + $StandardProp.PropertyName + "`": {"+ "`r`n"
+                              }     
+                              foreach ($EnclosedStandardProp in $StandardProp.PropertyList) {
+                                  $NewMessage +=  "`"" + $EnclosedStandardProp.PropertyName + "`": {"+ "`r`n"
+                                   foreach ($PropKeyValue in $EnclosedStandardProp.PropertyList) {
+                                       $NewMessage +=  "`"" + $PropKeyValue.Name + "`": `"" + $PropKeyValue.Name + "`"," + "`r`n"
+                                  }
+                                  $NewMessage +=  "}" + "`r`n"
+                              }
+                               if($StandardProp.isArray){
+                                    $NewMessage +=  "]" + "`r`n"
+                               }else{
+                                    $NewMessage +=  "}" + "`r`n"
+                               }
+                    }
+                   
+                }
+            }
+        }                  
+        $atcnt = 0
+        $processAttachments = $false
+        if($Attachments -ne $null){$processAttachments = $true}
+        if($ReferanceAttachments -ne $null){$processAttachments = $true}
+        if($processAttachments){
+            if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "  `"Attachments`": [ " + "`r`n"
+            if($Attachments -ne $null){
+                foreach ($Attachment in $Attachments) {
+                    $Item = Get-Item $Attachment
+                    if($atcnt -gt 0)
+                    {
+                        $NewMessage +=  "   ,{" + "`r`n"                       
+                    }
+                    else{
+                        $NewMessage +=  "    {" + "`r`n"
+                    }               
+                    $NewMessage +=  "     `"@odata.type`": `"#Microsoft.OutlookServices.FileAttachment`"," + "`r`n"
+                    $NewMessage +=  "     `"Name`": `"" + $Item.Name + "`"," + "`r`n"
+                    $NewMessage +=  "     `"ContentBytes`": `" " + [System.Convert]::ToBase64String([System.IO.File]::ReadAllBytes($Attachment)) + "`"" + "`r`n"
+                    $NewMessage +=  "    } " + "`r`n"
+                    $atcnt++
+                }
+            }
+            $atcnt = 0
+            if($ReferanceAttachments -ne $null){
+                foreach ($Attachment in $ReferanceAttachments) {
+                    if($atcnt -gt 0)
+                    {
+                        $NewMessage +=  "   ,{" + "`r`n"                       
+                    }
+                    else{
+                        $NewMessage +=  "    {" + "`r`n"
+                    }               
+                    $NewMessage +=  "     `"@odata.type`": `"#Microsoft.OutlookServices.ReferenceAttachment`"," + "`r`n"
+                    $NewMessage +=  "     `"Name`": `"" + $Attachment.Name + "`"," + "`r`n"
+                    $NewMessage +=  "     `"SourceUrl`": `"" + $Attachment.SourceUrl + "`"," + "`r`n"
+                    $NewMessage +=  "     `"ProviderType`": `"" + $Attachment.ProviderType + "`"," + "`r`n"
+                    $NewMessage +=  "     `"Permission`": `"" + $Attachment.Permission + "`"," + "`r`n"
+                    $NewMessage +=  "     `"IsFolder`": `"" + $Attachment.IsFolder + "`"" + "`r`n"
+                    $NewMessage +=  "    } " + "`r`n"
+                    $atcnt++
+                }
+            }
+            $NewMessage +=  "  ]" + "`r`n"
+        }     
+    
+        if($ExPropList -ne $null){
+             if($NewMessage.Length -gt 5){$NewMessage += ","}
+            $NewMessage +=  "`"SingleValueExtendedProperties`": ["+ "`r`n"
+            $propCount = 0
+            foreach($Property in $ExPropList){
+               if($propCount -eq 0){
+                   $NewMessage +=  "{"+ "`r`n"
+               }
+               else{
+                   $NewMessage +=  ",{"+ "`r`n"
+               }
+               if($Property.PropertyType -eq "Tagged"){
+                     $NewMessage +=  "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Id + "`", " + "`r`n"
+               }
+               else{
+                   if($Property.Type -eq "String"){
+                       $NewMessage +=  "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Name " + $Property.Id + "`", " + "`r`n"
+                   }
+                   else{
+                       $NewMessage +=  "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Id " + $Property.Id + "`", " + "`r`n"
+                   }
+               }
+               $NewMessage +=  "`"Value`":`"" + $Property.Value + "`""+ "`r`n"
+               $NewMessage +=  " } " + "`r`n"
+               $propCount++
+            }
+            $NewMessage +=  "]" + "`r`n"   
+        } 
+        if(![String]::IsNullOrEmpty($SaveToSentItems)){
+            $NewMessage += "}   ,`"SaveToSentItems`": `"" + $SaveToSentItems.ToLower() + "`""+ "`r`n"
+        }   
+        $NewMessage +=  "}"
+        if($ShowRequest.IsPresent){
+            Write-Host $NewMessage
+        }
+        return, $NewMessage
+    }
+}
 #endregion
 function HexStringToByteArray($HexString)
 {
@@ -2502,7 +3060,6 @@ function Get-DefaultOneDriveRootItems{
     }
 }
 
-<<<<<<< HEAD
 function Invoke-EnumOneDriveFolders{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
@@ -2695,8 +3252,6 @@ function Invoke-MailFolderPicker{
     }
 }    
 
-=======
->>>>>>> fb6f8121b5985c6523d82df7a3cbd814d5b9f5ce
 function Get-OneDriveChildren{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
