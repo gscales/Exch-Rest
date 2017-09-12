@@ -1,12 +1,12 @@
 # Calendaring Documentation and Examples
 
-The Exch-Rest module contains the following Calendaring Cmdlets can help peform one of many calendaring operations
+The Exch-Rest module contains the following Calendaring Cmdlets to help peform one of many calendaring operations using REST
 
-#First Step is to Create an AcessToken to use for Authentication see https://github.com/gscales/Exch-Rest#authentication
+#First Step before you can use any of the calendaring cmdlets is to Create an AcessToken to use for Authentication see https://github.com/gscales/Exch-Rest#authentication
 
 # Recurrence
 
-When you want to create a recurring Appointment you need to create a recurrence structure that can be used in one of the Calendaring cmdlets. The recurrence structure is documented https://github.com/microsoftgraph/microsoft-graph-docs/blob/master/api-reference/beta/resources/patternedrecurrence.md and https://msdn.microsoft.com/en-us/office/office365/api/complex-types-for-mail-contacts-calendar#PatternedRecurrence
+When you want to create a recurring Appointment you need to create a recurrence structure that can be used in one of the Calendaring cmdlets. The recurrence structure is documented https://github.com/microsoftgraph/microsoft-graph-docs/blob/master/api-reference/beta/resources/patternedrecurrence.md and https://msdn.microsoft.com/en-us/office/office365/api/complex-types-for-mail-contacts-calendar#PatternedRecurrence . The Get-Recurrence cmdlet creates a recurrence structure that you can then feed into the other event cmdlets
 ```
 Get-Recurrence Parameters
 
@@ -26,7 +26,7 @@ Get-Recurrence Parameters
 ```
 
 
-Examples of Creating the Recurrence structure use the Get-Recurrence cmdlet
+Examples of Creating the Recurrence structure using the Get-Recurrence cmdlet
 ```
 #Creates a Recurrance Structure to be used in Calendaring Cmdlets 
 #Daily recurrance eveny day
@@ -81,7 +81,7 @@ Create a Single Appointment on a Secondary Calendar
 New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -CalendarName 'Secondary calendar'
 ```
 
-Create a Recurring Appointment on Secondary Calendar
+Create a Recurring Appointment on a Secondary Calendar
 
 ```
 $days = @()
