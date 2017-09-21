@@ -22,6 +22,24 @@
 ## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ## SOFTWARE.
+
+Update-FormatData -AppendPath "$PSScriptRoot\TypeData\PoshExchRest.Format.ps1xml"
+
+# Load the module functions
+try
+{
+    Get-ChildItem "$PSScriptRoot\Public" -Filter "*.ps1" | Select-Object -Expand FullName | ForEach-Object{
+        $Function = Split-Path $_ -Leaf
+        . $_
+    }
+}
+catch
+{
+    Write-Warning("{0}: {1}" -f $Function,$_.Exception.Message)
+    Continue
+}
+
+
 function Get-AppSettings(){
         param( 
         
