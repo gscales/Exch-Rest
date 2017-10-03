@@ -16,7 +16,6 @@ function  Find-Rooms {
         if(![String]::IsNullOrEmpty($filter)){
                 $RequestURL =  $EndPoint + "('" + $MailboxName + "')/findrooms?`$Top=1000&`$filter=" + $filter
         }
-        Write-Host $RequestURL
         do{
             $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {

@@ -1,4 +1,4 @@
-function  Get-People {
+function  Find-MeetingTimes {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -13,7 +13,7 @@ function  Get-People {
         }        
         $HttpClient =  Get-HTTPClient($MailboxName)
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
-        $RequestURL =  $EndPoint + "('" + $MailboxName + "')/people?`$Top=1000"
+        $RequestURL =  $EndPoint + "('" + $MailboxName + "')/findMeetingTimes"
         if(![String]::IsNullOrEmpty($filter)){
                 $RequestURL =  $EndPoint + "('" + $MailboxName + "')/people?`$Top=1000&`$filter=" + $filter
         }
@@ -22,7 +22,7 @@ function  Get-People {
         }
         Write-Host $RequestURL
         do{
-            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+            $JSONOutput = Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {
                 Write-Output $Message
             }           
