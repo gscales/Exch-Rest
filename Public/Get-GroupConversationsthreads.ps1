@@ -11,7 +11,7 @@ function Get-GroupConversations{
         }   
         $HttpClient =  Get-HTTPClient($MailboxName)
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "groups"
-        $RequestURL =   $EndPoint + "('" + $Group.Id + "')/conversations?`$Top=1000"
+        $RequestURL =   $EndPoint + "('" + $Group.Id + "')/threads?`$Top=1000"
         do{
             $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {

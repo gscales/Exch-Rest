@@ -11,7 +11,7 @@ function Import-AccessToken{
  	Begin
 		 {
             $JsonObject = "" | Select token_type,scope,expires_in,ext_expires_in,expires_on,not_before,resource,access_token,clientid,redirectUrl
-	        $Decoded =  Invoke-DecodeToken -Token $AccessToken
+	    $Decoded =  Invoke-DecodeToken -Token $AccessToken
             $JsonObject.access_token = $AccessToken
             
             if(![String]::IsNullOrEmpty($RefreshToken)){
