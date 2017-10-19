@@ -8,7 +8,8 @@ function Get-WellKnownFolderItems{
         [Parameter(Position=6, Mandatory=$false)] [string]$Filter,
         [Parameter(Position=7, Mandatory=$false)] [string]$Top,
         [Parameter(Position=8, Mandatory=$false)] [string]$OrderBy,
-        [Parameter(Position=9, Mandatory=$false)] [bool]$TopOnly
+        [Parameter(Position=9, Mandatory=$false)] [bool]$TopOnly,
+        [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList
     )
     Begin{
         if($AccessToken -eq $null)
@@ -35,8 +36,12 @@ function Get-WellKnownFolderItems{
         {
             $HttpClient =  Get-HTTPClient($MailboxName)
             $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
-            $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue + $Filter + $OrderBy
-            
+            $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue 
+            if($PropList -ne $null){
+               $Props = Get-ExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
+               $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
+            }
+            $RequestURL += $Filter + $OrderBy
             if($ReturnSize.IsPresent){
                 $PropName = "PropertyId"
                 if($AccessToken.resource -eq "https://graph.microsoft.com"){
@@ -48,6 +53,9 @@ function Get-WellKnownFolderItems{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
                     Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($Folder.FolderRestURI + "/messages('" + $Message.Id + "')")
+                    if($PropList -ne $null){
+                        Invoke-EXRParseExtendedProperties -Item $Message
+                    }
                     Write-Output $Message
                 }           
                 $RequestURL = $JSONOutput.'@odata.nextLink'
