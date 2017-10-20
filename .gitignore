@@ -1,0 +1,8 @@
+*TempPoint*
+*.sln
+*.pssproj
+*.psproj
+*.psprojs
+
+# ignore the settings folder and files for VSCode
+.vscode/*
