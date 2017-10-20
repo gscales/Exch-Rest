@@ -1,5 +1,6 @@
-﻿function Move-Message
+﻿function Move-EXRMessage
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]
@@ -15,7 +16,11 @@
 		
 		[Parameter(Position = 3, Mandatory = $false)]
 		[string]
-		$TargetFolderPath
+		$TargetFolderPath,
+
+		[Parameter(Position = 4, Mandatory = $false)]
+		[psobject]
+		$Folder
 	)
 	Begin
 	{
@@ -23,7 +28,7 @@
 		{
 			$AccessToken = Get-AccessToken -MailboxName $MailboxName
 		}
-		if ($TargetFolderPath -ne $null)
+		if (![String]::IsNullOrEmpty($TargetFolderPath))
 		{
 			$Folder = Get-FolderFromPath -FolderPath $TargetFolderPath -AccessToken $AccessToken -MailboxName $MailboxName
 		}

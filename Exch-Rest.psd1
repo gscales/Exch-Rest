@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '2.4'
+	ModuleVersion	   = '2.5'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -103,6 +103,7 @@
 		'Get-EventJSONFormat',
 		'Get-EXRItemRetentionTags',
 		'Get-EXRRetainedPurgesFolderItems',
+		'Get-EXRWellKnownFolder',
 		'Get-ExtendedPropList',
 		'Get-FocusedInboxItems',
 		'Get-FolderClass',
@@ -166,7 +167,8 @@
 		'Invoke-RestPOST',
 		'Invoke-RestPut',
 		'Invoke-UploadOneDriveItemToPath',
-		'Move-Message',
+		'Move-EXRMessage',
+        'Copy-EXRMessage',
 		'New-Attendee',
 		'New-CalendarEventREST',
 		'New-CalendarFolder',
