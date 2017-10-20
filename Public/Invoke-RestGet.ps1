@@ -26,7 +26,6 @@ function Invoke-RestGet
              $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-TokenFromSecureString -SecureToken $AccessToken.access_token));
              $HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`"")) 
              $ClientResult = $HttpClient.GetAsync($RequestURL)
-             Write-Output $ClientResult.Result
              if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
                  if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
                      write-Host ($ClientResult.Result)

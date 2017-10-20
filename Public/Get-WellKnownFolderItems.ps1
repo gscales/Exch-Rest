@@ -37,6 +37,7 @@ function Get-WellKnownFolderItems{
             $HttpClient =  Get-HTTPClient($MailboxName)
             $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue 
+            $folderURI =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder
             if($PropList -ne $null){
                $Props = Get-ExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
@@ -52,7 +53,7 @@ function Get-WellKnownFolderItems{
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
-                    Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($Folder.FolderRestURI + "/messages('" + $Message.Id + "')")
+                    Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($folderURI  + "/messages('" + $Message.Id + "')")
                     if($PropList -ne $null){
                         Invoke-EXRParseExtendedProperties -Item $Message
                     }
