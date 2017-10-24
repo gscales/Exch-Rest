@@ -35,17 +35,17 @@
 		Add-Type -AssemblyName System.Web
 		$HttpClient = Get-HTTPClient($MailboxName)
 		$AppSetting = Get-AppSettings
-		if ($ClientId -eq $null)
+		if ([String]::IsNullOrEmpty($ClientId))
 		{
-			$ClientId = $AppSetting.ClientId
+			$ClientId = "1950a258-227b-4e31-a9cf-717495945fc2"
 		}
-		if ($ClientSecret -eq $null)
+		if ([String]::IsNullOrEmpty(($ClientSecret)))
 		{
 			$ClientSecret = $AppSetting.ClientSecret
 		}
-		if ($redirectUrl -eq $null)
+		if ([String]::IsNullOrEmpty($redirectUrl))
 		{
-			$redirectUrl = [System.Web.HttpUtility]::UrlEncode($AppSetting.redirectUrl)
+			$redirectUrl = [System.Web.HttpUtility]::UrlEncode("urn:ietf:wg:oauth:2.0:oob")
 		}
 		else
 		{

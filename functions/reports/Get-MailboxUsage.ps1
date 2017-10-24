@@ -16,7 +16,7 @@ function  Get-MailboxUsage {
         $RequestURL =  $EndPoint + "/MailboxUsage(view='$ViewType',period='$PeriodType')/content"
         Write-Host $RequestURL
         $Output = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
-        $OutPutStream = $Output.Content.ReadAsStreamAsync().Result
+        $OutPutStream = $Output.ReadAsStreamAsync().Result
         return ConvertFrom-Csv ([System.Text.Encoding]::UTF8.GetString($OutPutStream.ToArray()))
     }
 }

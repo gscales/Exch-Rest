@@ -5,7 +5,8 @@ function Invoke-EXRParseExtendedProperties{
     )  
  	Begin
 	{
-        if($Item.singleValueExtendedProperties.Count -gt 0){
+        if($Item.singleValueExtendedProperties -ne $null){
+
             foreach($Prop in $Item.singleValueExtendedProperties){
                 Switch($Prop.Id){
                     "Binary 0x3019" {
@@ -28,6 +29,10 @@ function Invoke-EXRParseExtendedProperties{
 		             "String {403fc56b-cd30-47c5-86f8-ede9e35a022b} Name ComplianceTag" {
                         Add-Member -InputObject $Item -NotePropertyName "ComplianceTag" -NotePropertyValue $Prop.Value
                     }
+                    "Integer 0xe08" {
+                        Add-Member -InputObject $Item -NotePropertyName "Size" -NotePropertyValue $Prop.Value
+                    }
+                    default {Write-Host $Prop.Id}
                 }
             }
         }
