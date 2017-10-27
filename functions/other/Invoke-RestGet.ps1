@@ -5,7 +5,8 @@ function Invoke-RestGet
         [Parameter(Position=1, Mandatory=$true)] [String]$MailboxName,
         [Parameter(Position=2, Mandatory=$true)] [System.Net.Http.HttpClient]$HttpClient,
         [Parameter(Position=3, Mandatory=$true)] [psobject]$AccessToken,
-        [Parameter(Position=4, Mandatory=$false)] [switch]$NoJSON
+        [Parameter(Position=4, Mandatory=$false)] [switch]$NoJSON,
+        [Parameter(Position=5, Mandatory=$false)] [bool]$TrackStatus = $false
     )  
  	Begin
 		 {
@@ -26,6 +27,15 @@ function Invoke-RestGet
              $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-TokenFromSecureString -SecureToken $AccessToken.access_token));
              $HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`"")) 
              $ClientResult = $HttpClient.GetAsync($RequestURL)
+             $exProgress = 0
+             if($TrackStatus){
+                While($ClientResult.Status -eq [System.Threading.Tasks.TaskStatus]::Running -bor $ClientResult.Status -eq [System.Threading.Tasks.TaskStatus]::WaitingForActivation){
+                        Write-Progress -Activity ("Executing Request " + $RequestURL) -PercentComplete $exProgress;
+                        Start-Sleep -Milliseconds 200
+                        $exProgress += .2
+                }
+                Write-Progress -Activity "Executing Request" -Completed 
+             }
              if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
                  if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
                      write-Host ($ClientResult.Result)

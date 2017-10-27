@@ -1,4 +1,4 @@
-﻿function Get-EXREmail
+﻿function Get-EXREmailHeaders
 {
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
@@ -11,11 +11,7 @@
 
 		[Parameter(Position = 2, Mandatory = $false)]
 		[psobject]
-		$ItemRESTURI,
-
-		[Parameter(Position = 3, Mandatory = $false)]
-		[psobject]
-		$PropList
+		$ItemRESTURI
 	)
 	Begin
 	{
@@ -24,14 +20,8 @@
 			$AccessToken = Get-AccessToken -MailboxName $MailboxName
 		}
 		$HttpClient = Get-HTTPClient($MailboxName)
-		$RequestURL = $ItemRESTURI
-		if($PropList -ne $null){
-               $Props = Get-ExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
-               $RequestURL += "?`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
-        }
+		$RequestURL = $ItemRESTURI + "/internetMessageHeaders"
 		$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
-		Add-Member -InputObject $JSONOutput -NotePropertyName ItemRESTURI -NotePropertyValue $ItemRESTURI
-		Invoke-EXRParseExtendedProperties -Item $JSONOutput
 		return $JSONOutput 
 		
 	}

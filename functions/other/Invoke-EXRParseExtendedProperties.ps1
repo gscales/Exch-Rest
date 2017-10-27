@@ -6,7 +6,6 @@ function Invoke-EXRParseExtendedProperties{
  	Begin
 	{
         if($Item.singleValueExtendedProperties -ne $null){
-
             foreach($Prop in $Item.singleValueExtendedProperties){
                 Switch($Prop.Id){
                     "Binary 0x3019" {
@@ -31,6 +30,9 @@ function Invoke-EXRParseExtendedProperties{
                     }
                     "Integer 0xe08" {
                         Add-Member -InputObject $Item -NotePropertyName "Size" -NotePropertyValue $Prop.Value
+                    }
+		    "String 0x7d" {
+                        Add-Member -InputObject $Item -NotePropertyName "PR_TRANSPORT_MESSAGE_HEADERS" -NotePropertyValue $Prop.Value
                     }
                     default {Write-Host $Prop.Id}
                 }

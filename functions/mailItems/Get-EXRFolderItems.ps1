@@ -9,7 +9,9 @@ function Get-EXRFolderItems{
         [Parameter(Position=7, Mandatory=$false)] [string]$Top,
         [Parameter(Position=8, Mandatory=$false)] [string]$OrderBy,
         [Parameter(Position=9, Mandatory=$false)] [bool]$TopOnly,
-        [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList
+        [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList,
+        [Parameter(Position=11, Mandatory=$false)] [string]$Search,
+        [Parameter(Position=12, Mandatory=$false)] [switch]$TrackStatus
     )
     Begin{
         if($AccessToken -eq $null)
@@ -18,6 +20,9 @@ function Get-EXRFolderItems{
         }  
         if(![String]::IsNullorEmpty($Filter)){
             $Filter = "`&`$filter=" + $Filter
+        }
+        if(![String]::IsNullorEmpty($Search)){
+            $Search = "`&`$Search=" + $Search
         }
         if(![String]::IsNullorEmpty($Orderby)){
             $OrderBy = "`&`$OrderBy=" + $OrderBy
@@ -49,9 +54,9 @@ function Get-EXRFolderItems{
                $Props = Get-ExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
-            $RequestURL += $Filter + $OrderBy
+            $RequestURL += $Search + $Filter + $OrderBy
             do{
-                $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+                $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -TrackStatus $TrackStatus.IsPresent
                 foreach ($Message in $JSONOutput.Value) {
                     Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($folderURI  + "/messages('" + $Message.Id + "')")
                     Invoke-EXRParseExtendedProperties -Item $Message
