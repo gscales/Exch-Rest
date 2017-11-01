@@ -27,7 +27,11 @@
 		
 		[Parameter(Position = 6, Mandatory = $false)]
 		[String]
-		$Prompt
+		$Prompt,
+
+		[Parameter(Position = 7, Mandatory = $false)]
+		[switch]
+		$SaveToPrivateData
 		
 	)
 	Begin
@@ -87,6 +91,12 @@
 		if ($Beta.IsPresent)
 		{
 			Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
+		}
+		if($SaveToPrivateData.IsPresent){
+			$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
+			if(!$MyInvocation.MyCommand.Module.PrivateData['EXRTokens'].ContainsKey($HostDomain)){			
+				$MyInvocation.MyCommand.Module.PrivateData['EXRTokens'].Add($HostDomain,$JsonObject)
+			}
 		}
 		return $JsonObject
 	}

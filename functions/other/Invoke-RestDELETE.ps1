@@ -15,7 +15,9 @@
 		
 		[Parameter(Position = 3, Mandatory = $true)]
 		[psobject]
-		$AccessToken
+		$AccessToken,
+		[Parameter(Position=4, Mandatory=$false)] [switch]$NoJSON,
+        [Parameter(Position=5, Mandatory=$false)] [bool]$TrackStatus = $false
 		
 	)
 	Begin
@@ -33,39 +35,41 @@
 		$HttpRequestMessage = New-Object System.Net.Http.HttpRequestMessage($method, [Uri]$RequestURL)
 		$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-TokenFromSecureString -SecureToken $AccessToken.access_token));
 		$ClientResult = $HttpClient.SendAsync($HttpRequestMessage)
-		if ($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK)
-		{
-			if ($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::NoContent)
-			{
-				write-Host ($ClientResult.Result)
-			}
-			if ($ClientResult.Result.Content -ne $null)
-			{
-				Write-Output ($ClientResult.Result.Content.ReadAsStringAsync());
-			}
-		}
-		if (!$ClientResult.Result.IsSuccessStatusCode)
-		{
-			Write-Output ("Error making REST Delete " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
-			Write-Output $ClientResult.Result
-			if ($ClientResult.Content -ne $null)
-			{
-				Write-Output ($ClientResult.Content.ReadAsStringAsync().Result);
-			}
-		}
-		else
-		{
-			$JsonObject = ConvertFrom-Json -InputObject $ClientResult.Result.Content.ReadAsStringAsync().Result
-			if ([String]::IsNullOrEmpty($JsonObject))
-			{
-				Write-Output $ClientResult.Result
-			}
-			else
-			{
-				return $JsonObject
-			}
-			
-		}
+             if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK){
+                 if($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created){
+                     write-Host ($ClientResult.Result)
+                 }
+                 if($ClientResult.Result.Content -ne $null){
+                    Write-Host ($ClientResult.Result.Content.ReadAsStringAsync().Result); 
+                 }                  
+             }             
+             if (!$ClientResult.Result.IsSuccessStatusCode)
+             {
+                    Write-Host ("Error making REST Get " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
+                    Write-Host ("RequestURL : " + $RequestURL)                
+             }
+            else
+             {
+               if($NoJSON){
+                    return  $ClientResult.Result.Content  
+               }
+               else{
+                    $JsonObject = ExpandPayload($ClientResult.Result.Content.ReadAsStringAsync().Result) 
+                    #$JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+                   if([String]::IsNullOrEmpty($ClientResult)){
+                        write-host "No Value returned"
+                   }
+                   else{
+									
+						if($ClientResult.Result.StatusCode -eq "NoContent"){
+							Write-host "Item Deleted"
+						}
+						return $JsonObject	
+                   }
+
+               }  
+
+             }
 		
 	}
 }

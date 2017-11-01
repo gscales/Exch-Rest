@@ -36,6 +36,7 @@
 				$Folder | Add-Member -NotePropertyName FolderPath -NotePropertyValue ("\\" + $Folder.DisplayName)
 				$folderId = $Folder.Id.ToString()
 				Add-Member -InputObject $Folder -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
+				Invoke-EXRParseExtendedProperties -Item $Folder
 				Write-Output $Folder
 				if ($Folder.ChildFolderCount -gt 0)
 				{

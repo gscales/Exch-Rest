@@ -107,9 +107,12 @@
 		'Get-EXRFolderItems',
 		'Get-EXREmail',
 		'Get-EXRWellKnownFolderList',	
-		'Get-EXRMailboxUsageUserDetail',
+		'Get-EXRMailboxUsageDetail',
 		'Get-EXREmailHeaders',	
 		'Get-EXRTransportHeader',
+		'Get-EXRItemSize',
+		'Invoke-EXRNewMessagesForm',
+		'Start-EXRMailClient',
 		'Get-ExtendedPropList',
 		'Get-FocusedInboxItems',
 		'Get-FolderClass',
@@ -175,7 +178,7 @@
 		'Invoke-EXRReadEmail',
 		'Invoke-UploadOneDriveItemToPath',
 		'Move-EXRMessage',
-        	'Copy-EXRMessage',
+        'Copy-EXRMessage',
 		'New-Attendee',
 		'New-CalendarEventREST',
 		'New-CalendarFolder',
@@ -236,8 +239,11 @@
 			
 			# ReleaseNotes of this module
 			ReleaseNotes  = 'https://github.com/gscales/Exch-Rest'
+
+			
 			
 		} # End of PSData hashtable
+		EXRTokens = @{}
 		
 	} # End of PrivateData hashtable
 	

@@ -1,4 +1,4 @@
-function  Get-EXRMailboxUsageUserDetail {
+function  Get-EXRMailboxUsageDetail {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -12,7 +12,7 @@ function  Get-EXRMailboxUsageUserDetail {
         }        
         $HttpClient =  Get-HTTPClient($MailboxName)
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "reports"
-        $RequestURL =  $EndPoint + "/getMailboxUsageUserDetail(period='$PeriodType')/content"
+        $RequestURL =  $EndPoint + "/getMailboxUsageDetail(period='$PeriodType')/content"
         Write-Host $RequestURL
         $Output = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
         $OutPutStream = $Output.ReadAsStreamAsync().Result

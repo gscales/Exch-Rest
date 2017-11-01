@@ -17,7 +17,7 @@
 		[psobject]
 		$PropList
 	)
-	Begin
+	Process
 	{
 		if ($AccessToken -eq $null)
 		{

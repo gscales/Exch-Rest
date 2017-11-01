@@ -38,18 +38,18 @@ function Get-WellKnownFolderItems{
             $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue 
             $folderURI =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder
+             if($ReturnSize.IsPresent){
+                if($PropList -eq $null){
+                    $PropList = @()
+                    $PidTagMessageSize = Get-TaggedProperty -DataType "Integer" -Id "0x0E08"  
+                    $PropList += $PidTagMessageSize
+                }
+            }
             if($PropList -ne $null){
                $Props = Get-ExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
             $RequestURL += $Filter + $OrderBy
-            if($ReturnSize.IsPresent){
-                $PropName = "PropertyId"
-                if($AccessToken.resource -eq "https://graph.microsoft.com"){
-                        $PropName = "Id"
-                }
-                $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?`$select=ReceivedDateTime,Sender,Subject,IsRead`&`$Top=" + $TopValue + "`&`$expand=SingleValueExtendedProperties(`$filter=$PropName%20eq%20'Integer%200x0E08')" + $Filter + $OrderBy
-            }
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
