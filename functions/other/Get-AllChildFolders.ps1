@@ -29,7 +29,7 @@
 		}
 		do
 		{
-			$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -TrackStatus $true
+			$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -TrackStatus $true -ProcessMessage ("Processing Folder " + $Folder.FolderPath )
 			foreach ($ChildFolder in $JSONOutput.Value)
 			{
 				$ChildFolder | Add-Member -NotePropertyName FolderPath -NotePropertyValue ($Folder.FolderPath + "\" + $ChildFolder.DisplayName)

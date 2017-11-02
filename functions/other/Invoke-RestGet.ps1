@@ -6,7 +6,8 @@ function Invoke-RestGet
         [Parameter(Position=2, Mandatory=$true)] [System.Net.Http.HttpClient]$HttpClient,
         [Parameter(Position=3, Mandatory=$true)] [psobject]$AccessToken,
         [Parameter(Position=4, Mandatory=$false)] [switch]$NoJSON,
-        [Parameter(Position=5, Mandatory=$false)] [bool]$TrackStatus = $false
+        [Parameter(Position=5, Mandatory=$false)] [bool]$TrackStatus = $false,
+        [Parameter(Position=5, Mandatory=$false)] [String]$ProcessMessage
     )  
  	Begin
 		 {
@@ -30,7 +31,12 @@ function Invoke-RestGet
              $exProgress = 0
              if($TrackStatus){
                 While($ClientResult.Status -eq [System.Threading.Tasks.TaskStatus]::Running -bor $ClientResult.Status -eq [System.Threading.Tasks.TaskStatus]::WaitingForActivation){
-                        Write-Progress -Activity ("Executing Request " + $RequestURL) -PercentComplete $exProgress;
+                        if([String]::IsNullOrEmpty($ProcessMessage)){
+                             Write-Progress -Activity ("Executing Request " + $RequestURL) -PercentComplete $exProgress;
+                        }
+                        else{
+                            Write-Progress -Activity ($ProcessMessage) -PercentComplete $exProgress;
+                        }                       
                         Start-Sleep -Milliseconds 200
                         $exProgress += .2
                 }
