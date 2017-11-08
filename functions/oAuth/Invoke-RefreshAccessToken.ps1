@@ -46,6 +46,13 @@
 			{
 				$JsonObject.access_token = (Get-ProtectedToken -PlainToken $JsonObject.access_token)
 			}
+			$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
+			if(!$MyInvocation.MyCommand.Module.PrivateData['EXRTokens'].ContainsKey($HostDomain)){			
+				$MyInvocation.MyCommand.Module.PrivateData['EXRTokens'].Add($HostDomain,$JsonObject)
+			}
+			else{
+				$MyInvocation.MyCommand.Module.PrivateData['EXRTokens'][$HostDomain] = $JsonObject
+			}
 			return $JsonObject
 		}
 		

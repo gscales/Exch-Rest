@@ -361,7 +361,12 @@
 						$NewMessage += "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Id " + $Property.Id + "`", " + "`r`n"
 					}
 				}
-				$NewMessage += "`"Value`":`"" + $Property.Value + "`"" + "`r`n"
+				if($Property.Value -eq "null"){
+					$NewMessage += "`"Value`":null" + "`r`n"
+				}
+				else{
+					$NewMessage += "`"Value`":`"" + $Property.Value + "`"" + "`r`n"
+				}				
 				$NewMessage += " } " + "`r`n"
 				$propCount++
 			}

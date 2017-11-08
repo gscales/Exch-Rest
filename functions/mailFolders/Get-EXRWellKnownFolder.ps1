@@ -8,7 +8,10 @@ function Get-EXRWellKnownFolder{
     Begin{
         if($AccessToken -eq $null)
         {
-              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+            $AccessToken = Get-EXRProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-AccessToken -MailboxName $MailboxName       
+            }                 
         }  
             $HttpClient =  Get-HTTPClient($MailboxName)
             $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"

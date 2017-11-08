@@ -31,8 +31,14 @@ function Invoke-EXRParseExtendedProperties{
                     "Integer 0xe08" {
                         Add-Member -InputObject $Item -NotePropertyName "Size" -NotePropertyValue $Prop.Value
                     }
-		    "String 0x7d" {
+		            "String 0x7d" {
                         Add-Member -InputObject $Item -NotePropertyName "PR_TRANSPORT_MESSAGE_HEADERS" -NotePropertyValue $Prop.Value
+                    }
+                    "SystemTime 0xF02"{
+                        Add-Member -InputObject $Item -NotePropertyName "PR_RENEWTIME" -NotePropertyValue ([DateTime]::Parse($Prop.Value))
+                    }
+                    "SystemTime 0xF01"{
+                        Add-Member -InputObject $Item -NotePropertyName "PR_RENEWTIME2" -NotePropertyValue ([DateTime]::Parse($Prop.Value))
                     }
                     default {Write-Host $Prop.Id}
                 }

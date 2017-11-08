@@ -67,7 +67,8 @@ function Invoke-RestGet
                         write-host "No Value returned"
                    }
                    else{
-                        return $JsonObject
+                       Add-Member -InputObject $JsonObject -NotePropertyName DateTimeRESTOperation -NotePropertyValue (Get-Date).ToString("s")
+                       return $JsonObject
                    }
 
                }  

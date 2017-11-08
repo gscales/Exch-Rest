@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '2.7'
+	ModuleVersion	   = '2.8'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -111,6 +111,11 @@
 		'Get-EXREmailHeaders',	
 		'Get-EXRTransportHeader',
 		'Get-EXRItemSize',
+		'Get-EXRLastInboxEmail',
+		'Get-EXRProfiledToken',
+		'Get-EXRPinnedEmailProperty',
+		'Set-EXRPinEmail',
+		'Set-EXRUnPinEmail',
 		'Invoke-EXRNewMessagesForm',
 		'Start-EXRMailClient',
 		'Get-ExtendedPropList',
