@@ -201,6 +201,7 @@ function Start-EXRMailClient
 	}
 }
 function OpenMailbox(){
+		[CmdletBinding()]
 		param (
 	
 
@@ -216,22 +217,22 @@ function OpenMailbox(){
 		$tvTreView.Nodes.Clear()
 		$Script:Treeinfo.Clear()
 		if($AccessToken -eq $null){
-			$Script:AccessToken = Get-AccessToken -MailboxName $emEmailAddressTextBox.Text -ClientId $unCASUrlTextBox.Text -redirectUrl $RedirectTextBox.Text -ResourceURL graph.Microsoft.com
+			$Script:AccessToken = Get-EXRAccessToken -MailboxName $emEmailAddressTextBox.Text -ClientId $unCASUrlTextBox.Text -redirectUrl $RedirectTextBox.Text -ResourceURL graph.Microsoft.com
 		}
 		else{
 			$Script:AccessToken = $AccessToken
 		}		
-	    $rootFolder = Get-RootMailFolder -AccessToken $Script:AccessToken -MailboxName $emEmailAddressTextBox.Text
+	    $rootFolder = Get-EXRRootMailFolder -AccessToken $Script:AccessToken -MailboxName $emEmailAddressTextBox.Text
 		if ($ShowFolderSize)
 		{
 			$PropList = @()
-			$FolderSizeProp = Get-TaggedProperty -Id "0x0E08" -DataType Long
+			$FolderSizeProp = Get-EXRTaggedProperty -Id "0x0E08" -DataType Long
 			$PropList += $FolderSizeProp
-			$Folders = Get-AllMailFolders -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken  -PropList $PropList
+			$Folders = Get-EXRAllMailFolders -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken  -PropList $PropList
 		}
 		else
 		{
-			$Folders = Get-AllMailFolders -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken 
+			$Folders = Get-EXRAllMailFolders -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken 
 		}	
 		$Script:Treeinfo = @{ }
 		$TNRoot = new-object System.Windows.Forms.TreeNode("Root")
@@ -384,7 +385,7 @@ function newMessage($reply){
 }
 
 function SendMessage(){
-	Send-MessageREST -MailboxName $emEmailAddressTextBox.Text  -AccessToken $Script:AccessToken -ToRecipients @(New-EmailAddress -Address $miMessageTotextlabelBox.Text) -Subject $miMessageSubjecttextlabelBox.Text -Body $miMessageBodytextlabelBox.Text -Attachments $script:Attachments
+	Send-EXRMessageREST -MailboxName $emEmailAddressTextBox.Text  -AccessToken $Script:AccessToken -ToRecipients @(New-EXREmailAddress -Address $miMessageTotextlabelBox.Text) -Subject $miMessageSubjecttextlabelBox.Text -Body $miMessageBodytextlabelBox.Text -Attachments $script:Attachments
 	
 	$script:newmsgform.close()
 
@@ -480,7 +481,7 @@ function showMessage($MessageID){
 	if ($script:msMessage.hasattachments){
 		write-host "Attachment"
 		$exButton4.Enabled = $true
-		$Attachments = Get-Attachments -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ItemURI $MessageID -MetaData 
+		$Attachments = Get-EXRAttachments -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ItemURI $MessageID -MetaData 
 		foreach($attach in $Attachments)
 		{			
 			$attname = $attname + $attach.Name.ToString() + "; "
@@ -512,8 +513,8 @@ $miMessageAttachmentslableBox1.Text = $attname
 function downloadattachments{
 	$dlfolder = new-object -com shell.application 
 	$dlfolderpath = $dlfolder.BrowseForFolder(0,"Download attachments to",0) 
-	Get-Attachments -MailboxName $emEmailAddressTextBox.Text -ItemURI $Script:msMessage.ItemRESTURI -MetaData -AccessToken $Script:AccessToken | ForEach-Object{
-            $attach = Invoke-DownloadAttachment -MailboxName $emEmailAddressTextBox.Text -AttachmentURI $_.AttachmentRESTURI -AccessToken $Script:AccessToken
+	Get-EXRAttachments -MailboxName $emEmailAddressTextBox.Text -ItemURI $Script:msMessage.ItemRESTURI -MetaData -AccessToken $Script:AccessToken | ForEach-Object{
+            $attach = Invoke-EXRDownloadAttachment -MailboxName $emEmailAddressTextBox.Text -AttachmentURI $_.AttachmentRESTURI -AccessToken $Script:AccessToken
            	$fiFile = new-object System.IO.FileStream(($dlfolderpath.Self.Path  + "\" + $attach.Name.ToString()), [System.IO.FileMode]::Create)
             $attachBytes = [System.Convert]::FromBase64String($attach.ContentBytes)   
 		    $fiFile.Write($attachBytes, 0, $attachBytes.Length)

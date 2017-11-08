@@ -1,5 +1,6 @@
 function Set-EXRUnPinEmail
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]
@@ -17,12 +18,12 @@ function Set-EXRUnPinEmail
 	{
 		if ($AccessToken -eq $null)
 		{
-			$AccessToken = Get-AccessToken -MailboxName $MailboxName
+			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
 		$Props = Get-EXRPinnedEmailProperty
 		$Props[0].Value = "null"
 		$Props[1].Value = "null"
-		return Update-Message -MailboxName $MailboxName -ItemURI $ItemRESTURI -ExPropList $Props -AccessToken $AccessToken
+		return Update-EXRMessage -MailboxName $MailboxName -ItemURI $ItemRESTURI -ExPropList $Props -AccessToken $AccessToken
 		
 	}
 }

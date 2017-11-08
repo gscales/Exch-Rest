@@ -1,4 +1,5 @@
 function  Get-EXRMailboxUsageDetail {
+    [CmdletBinding()]
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -8,13 +9,13 @@ function  Get-EXRMailboxUsageDetail {
         
         if($AccessToken -eq $null)
         {
-              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+              $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
         }        
-        $HttpClient =  Get-HTTPClient($MailboxName)
-        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "reports"
+        $HttpClient =  Get-EXRHTTPClient -MailboxName $MailboxName
+        $EndPoint =  Get-EXREndPoint -AccessToken $AccessToken -Segment "reports"
         $RequestURL =  $EndPoint + "/getMailboxUsageDetail(period='$PeriodType')/content"
         Write-Host $RequestURL
-        $Output = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
+        $Output = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
         $OutPutStream = $Output.ReadAsStreamAsync().Result
         return ConvertFrom-Csv ([System.Text.Encoding]::UTF8.GetString($OutPutStream.ToArray()))
     }

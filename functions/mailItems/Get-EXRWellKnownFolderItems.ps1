@@ -1,4 +1,5 @@
 function Get-EXRWellKnownFolderItems{
+    [CmdletBinding()]
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -14,7 +15,7 @@ function Get-EXRWellKnownFolderItems{
     Begin{
         if($AccessToken -eq $null)
         {
-              $AccessToken = Get-AccessToken -MailboxName $MailboxName          
+              $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
         }  
         if(![String]::IsNullorEmpty($Filter)){
             $Filter = "`&`$filter=" + $Filter
@@ -34,24 +35,24 @@ function Get-EXRWellKnownFolderItems{
         }
         if($WellKnownFolder -ne $null)
         {
-            $HttpClient =  Get-HTTPClient($MailboxName)
-            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+            $HttpClient =  Get-EXRHTTPClient -MailboxName $MailboxName
+            $EndPoint =  Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue 
             $folderURI =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder
              if($ReturnSize.IsPresent){
                 if($PropList -eq $null){
                     $PropList = @()
-                    $PidTagMessageSize = Get-TaggedProperty -DataType "Integer" -Id "0x0E08"  
+                    $PidTagMessageSize = Get-EXRTaggedProperty -DataType "Integer" -Id "0x0E08"  
                     $PropList += $PidTagMessageSize
                 }
             }
             if($PropList -ne $null){
-               $Props = Get-ExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
+               $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
             $RequestURL += $Filter + $OrderBy
             do{
-                $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+                $JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
                     Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($EndPoint + "('" + $MailboxName + "')/messages('" + $Message.Id + "')")
                     if($PropList -ne $null){

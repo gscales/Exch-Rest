@@ -6,9 +6,9 @@ The Exch-Rest module contains the following Calendaring Cmdlets to help peform o
 
 # Recurrence
 
-When you want to create a recurring Appointment you need to create a recurrence structure that can be used in one of the Calendaring cmdlets. The recurrence structure is documented https://github.com/microsoftgraph/microsoft-graph-docs/blob/master/api-reference/beta/resources/patternedrecurrence.md and https://msdn.microsoft.com/en-us/office/office365/api/complex-types-for-mail-contacts-calendar#PatternedRecurrence . The Get-Recurrence cmdlet creates a recurrence structure that you can then feed into the other event cmdlets
+When you want to create a recurring Appointment you need to create a recurrence structure that can be used in one of the Calendaring cmdlets. The recurrence structure is documented https://github.com/microsoftgraph/microsoft-graph-docs/blob/master/api-reference/beta/resources/patternedrecurrence.md and https://msdn.microsoft.com/en-us/office/office365/api/complex-types-for-mail-contacts-calendar#PatternedRecurrence . The Get-EXRRecurrence cmdlet creates a recurrence structure that you can then feed into the other event cmdlets
 ```
-Get-Recurrence Parameters
+Get-EXRRecurrence Parameters
 
 -RecurrenceTimeZone (TimeZone for the Recurrence your create eg for the local Timezone [TimeZoneInfo]::Local.Id
 -PatternType Recurrence patternType valid values "daily","weekly","absoluteMonthly","relativeMonthly", "absoluteYearly"," relativeYearly"
@@ -26,16 +26,16 @@ Get-Recurrence Parameters
 ```
 
 
-Examples of Creating the Recurrence structure using the Get-Recurrence cmdlet
+Examples of Creating the Recurrence structure using the Get-EXRRecurrence cmdlet
 ```
 #Creates a Recurrance Structure to be used in Calendaring Cmdlets 
 #Daily recurrance eveny day
-$Recurrence = Get-Recurrence -PatternType daily -PatternFirstDayOfWeek monday -PatternIndex first -RangeType noend -RangeStartDate (Get-Date)
+$Recurrence = Get-EXRRecurrence -PatternType daily -PatternFirstDayOfWeek monday -PatternIndex first -RangeType noend -RangeStartDate (Get-Date)
 
 #Create a weekly recurrance for every Monday End in two months
 $days = @()
 $days+"monday"
-$Recurrence = Get-Recurrence -PatternType weekly -PatternFirstDayOfWeek monday -PatternDaysOfWeek $days -PatternIndex first  -RangeType enddate -RangeStartDate (Get-Date) -RangeEndDate (Get-Date).AddMonth(2)
+$Recurrence = Get-EXRRecurrence -PatternType weekly -PatternFirstDayOfWeek monday -PatternDaysOfWeek $days -PatternIndex first  -RangeType enddate -RangeStartDate (Get-Date) -RangeEndDate (Get-Date).AddMonth(2)
 ```
 
 
@@ -45,23 +45,23 @@ Creates a new Holiday event (Basically creates an All Day event on one day)
 
 ```
 #Creates a new all day event for Today on the default calendar
-New-HolidayEvent -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Day (Get-Date) -Subject "Name of Holiday"
+New-EXRHolidayEvent -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Day (Get-Date) -Subject "Name of Holiday"
 
 #Create a new all day event for Today on the Australia holidays calendar
-New-HolidayEvent -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Day (Get-Date) -Subject "Name of Holiday" -CalendarName 'Australia holidays'
+New-EXRHolidayEvent -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Day (Get-Date) -Subject "Name of Holiday" -CalendarName 'Australia holidays'
 
 #Creates a new recurring all day event for the 5th July to remember the cats birthday each year for 10 years on the default calendar
-$Recurrence = Get-Recurrence -PatternType absoluteYearly -PatternMonth 7 -PatternDayOfMonth 5 -PatternFirstDayOfWeek monday -PatternIndex first  -RangeType enddate -RangeStartDate ([DateTime]::Parse("2017-07-05")) -RangeEndDate ([DateTime]::Parse("2027-07-05"))
-New-HolidayEvent -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Day [DateTime]::Parse("2017-07-05") -Subject "Cats Birthday" -Recurrence $Recurrence
+$Recurrence = Get-EXRRecurrence -PatternType absoluteYearly -PatternMonth 7 -PatternDayOfMonth 5 -PatternFirstDayOfWeek monday -PatternIndex first  -RangeType enddate -RangeStartDate ([DateTime]::Parse("2017-07-05")) -RangeEndDate ([DateTime]::Parse("2027-07-05"))
+New-EXRHolidayEvent -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Day [DateTime]::Parse("2017-07-05") -Subject "Cats Birthday" -Recurrence $Recurrence
 ```
 
 
-# New-CalendarEventREST
+# New-EXRCalendarEventREST
 
 Create a Single Appointment on the default Calendar for the 5th of July between 1 and 2pm
 ```
 #Creates a new all day event for Today on the default calendar
-New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event"
+New-EXRCalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event"
 ```
 
 Create a Recurring Appointment for each monday on the default Calendar between 1 and 2pm
@@ -69,16 +69,16 @@ Create a Recurring Appointment for each monday on the default Calendar between 1
 ```
 $days = @()
 $days+"monday"
-$Recurrence = Get-Recurrence -PatternType weekly -PatternFirstDayOfWeek monday -PatternDaysOfWeek $days -PatternIndex first  -RangeType enddate -RangeStartDate ([DateTime]::Parse("2017-07-05 13:00")) -RangeEndDate ([DateTime]::Parse("2019-07-05 13:00"))
+$Recurrence = Get-EXRRecurrence -PatternType weekly -PatternFirstDayOfWeek monday -PatternDaysOfWeek $days -PatternIndex first  -RangeType enddate -RangeStartDate ([DateTime]::Parse("2017-07-05 13:00")) -RangeEndDate ([DateTime]::Parse("2019-07-05 13:00"))
 #Creates a new all day event for Today on the default calendar
-New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Monday Meeting" -Recurrence $Recurrence
+New-EXRCalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Monday Meeting" -Recurrence $Recurrence
 ```
 
 Create a Single Appointment on a Secondary Calendar
 
 ```
 #Creates a new all day event for Today on the a calendar called Secondary calendar
-New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -CalendarName 'Secondary calendar'
+New-EXRCalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -CalendarName 'Secondary calendar'
 ```
 
 Create a Recurring Appointment on a Secondary Calendar
@@ -86,9 +86,9 @@ Create a Recurring Appointment on a Secondary Calendar
 ```
 $days = @()
 $days+"monday"
-$Recurrence = Get-Recurrence -PatternType weekly -PatternFirstDayOfWeek monday -PatternDaysOfWeek $days -PatternIndex first  -RangeType enddate -RangeStartDate ([DateTime]::Parse("2017-07-05 13:00")) -RangeEndDate ([DateTime]::Parse("2019-07-05 13:00"))
+$Recurrence = Get-EXRRecurrence -PatternType weekly -PatternFirstDayOfWeek monday -PatternDaysOfWeek $days -PatternIndex first  -RangeType enddate -RangeStartDate ([DateTime]::Parse("2017-07-05 13:00")) -RangeEndDate ([DateTime]::Parse("2019-07-05 13:00"))
 #Creates a new all day event for Today on the default calendar
-New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Monday Meeting" -Recurrence $Recurrence -CalendarName 'Secondary calendar'
+New-EXRCalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Monday Meeting" -Recurrence $Recurrence -CalendarName 'Secondary calendar'
 ```
 
 Create a Single Appointment on a Group Calendar Calendar
@@ -97,7 +97,7 @@ To create an appointment in a Group calendar you need to use the -Group switch a
 
 ```
 #Creates a new all event for the 5th of July from 13:00-14:00 on the a group calendar called 'Powershell Module'
-New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -group -groupname 'Powershell Module'
+New-EXRCalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -group -groupname 'Powershell Module'
 ```
 
 
@@ -106,9 +106,9 @@ Create a Recurring Appointment on a Group Calendar Calendar
 ```
 $days = @()
 $days+"monday"
-$Recurrence = Get-Recurrence -PatternType weekly -PatternFirstDayOfWeek monday -PatternDaysOfWeek $days -PatternIndex first  -RangeType enddate -RangeStartDate ([DateTime]::Parse("2017-07-05 13:00")) -RangeEndDate ([DateTime]::Parse("2019-07-05 13:00"))
+$Recurrence = Get-EXRRecurrence -PatternType weekly -PatternFirstDayOfWeek monday -PatternDaysOfWeek $days -PatternIndex first  -RangeType enddate -RangeStartDate ([DateTime]::Parse("2017-07-05 13:00")) -RangeEndDate ([DateTime]::Parse("2019-07-05 13:00"))
 #Creates a new all event for the recurring event on 5th of July from 13:00-14:00 on the a group calendar called 'Powershell Module'
-New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -group -groupname 'Powershell Module' -Recurrence $Recurrence
+New-EXRCalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -group -groupname 'Powershell Module' -Recurrence $Recurrence
 ```
 
 # Meetings
@@ -118,8 +118,8 @@ $Attendees = @()
  
 Then Add Atteendess to that collection eg
 
-$Attendees += (new-attendee -Name 'fred smith' -Address 'fred@datarumble.com' -type 'Required')
-$Attendees += (new-attendee -Name 'barney jones' -Address 'barney@datarumble.com' -type 'Optional')
+$Attendees += (New-EXRAttendee -Name 'fred smith' -Address 'fred@datarumble.com' -type 'Required')
+$Attendees += (New-EXRAttendee -Name 'barney jones' -Address 'barney@datarumble.com' -type 'Optional')
 
 Then pass that in when creating a new Appontment
 
@@ -127,34 +127,34 @@ Create a Single Meeting with two attendees on the default Calendar for the 5th o
 ```
 #Creates a new all day event for Today on the default calendar
 $Attendees = @()
-$Attendees += (new-attendee -Name 'fred smith' -Address 'fred@datarumble.com' -type 'Required')
-$Attendees += (new-attendee -Name 'barney jones' -Address 'barney@datarumble.com' -type 'Optional')
+$Attendees += (New-EXRAttendee -Name 'fred smith' -Address 'fred@datarumble.com' -type 'Required')
+$Attendees += (New-EXRAttendee -Name 'barney jones' -Address 'barney@datarumble.com' -type 'Optional')
 
-New-CalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -Attendees $Attendees
+New-EXRCalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $AccessToken -Start ([DateTime]::Parse("2017-07-05 13:00")) -End ([DateTime]::Parse("2017-07-05 14:00")) -Subject "Name of Event" -Attendees $Attendees
 ```
 
-# Get-DefaultCalendarFolder
+# Get-EXRDefaultCalendarFolder
 
 Return the Default Calendar Folder for a Mailbox
 
 ```
-Get-DefaultCalendarFolder -MailboxName Mailbox@domain.com -AccessToken $AccessToken
+Get-EXRDefaultCalendarFolder -MailboxName Mailbox@domain.com -AccessToken $AccessToken
 
 ```
 
-# Get-CalendarFolder
+# Get-EXRCalendarFolder
 
 Return the Calendar folder based on the Name entered
 
 ```
-Get-CalendarFolder -MailboxName Mailbox@domain.com -AccessToken $AccessToken -FolderName 'calendar name'
+Get-EXRCalendarFolder -MailboxName Mailbox@domain.com -AccessToken $AccessToken -FolderName 'calendar name'
 
 ```
 
-# Get-AllCalendarFolders
+# Get-EXRAllCalendarFolders
 Return all Calendar folders
 
 ```
-Get-AllCalendarFolders -MailboxName Mailbox@domain.com -AccessToken $AccessToken
+Get-EXRAllCalendarFolders -MailboxName Mailbox@domain.com -AccessToken $AccessToken
 
 ```

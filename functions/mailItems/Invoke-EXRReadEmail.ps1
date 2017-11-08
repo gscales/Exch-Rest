@@ -1,5 +1,6 @@
 function Invoke-EXRReadEmail
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]
@@ -17,7 +18,7 @@ function Invoke-EXRReadEmail
 	{
 		if ($AccessToken -eq $null)
 		{
-			$AccessToken = Get-AccessToken -MailboxName $MailboxName
+			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
 		$msMessage = Get-EXREmail -MailboxName $MailboxName -ItemRESTURI $ItemRESTURI -AccessToken $AccessToken
         $msgform = new-object System.Windows.Forms.form 
@@ -105,7 +106,7 @@ function Invoke-EXRReadEmail
         if ($msMessage.hasattachments){
             write-host "Attachment"
             $exButton4.Enabled = $true
-            $Attachments = Get-Attachments -MailboxName $MailboxName -AccessToken $AccessToken -ItemURI $ItemRESTURI -MetaData 
+            $Attachments = Get-EXRAttachments -MailboxName $MailboxName -AccessToken $AccessToken -ItemURI $ItemRESTURI -MetaData 
             foreach($attach in $Attachments)
             {			
                 $attname = $attname + $attach.Name.ToString() + "; "
