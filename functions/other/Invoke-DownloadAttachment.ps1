@@ -19,7 +19,7 @@
 		{
 			$AccessToken = Get-AccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-HTTPClient($MailboxName)
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$AttachmentURI = $AttachmentURI + "?`$expand"
 		$AttachmentObj = Invoke-RestGet -RequestURL $AttachmentURI -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -TrackStatus:$true
 		return $AttachmentObj

@@ -15,12 +15,12 @@
 		{
 			$AccessToken = Get-AccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-HTTPClient($MailboxName)
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/MailboxSettings/ArchiveFolder"
 		$JsonObject = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		$folderId = $JsonObject.value.ToString()
-		$HttpClient = Get-HTTPClient($MailboxName)
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $EndPoint + "('$MailboxName')/MailFolders('$folderId')"
 		return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 	}

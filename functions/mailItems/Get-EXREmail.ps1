@@ -23,7 +23,7 @@
 		{
 			$AccessToken = Get-AccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-HTTPClient($MailboxName)
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $ItemRESTURI
 		if($PropList -ne $null){
                $Props = Get-ExtendedPropList -PropertyList $PropList -AccessToken $AccessToken

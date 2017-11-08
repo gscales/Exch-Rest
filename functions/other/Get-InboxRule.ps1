@@ -1,4 +1,4 @@
-function Get-InboxRule{
+﻿function Get-InboxRule{
     <#
     .SYNOPSIS
     Get inbox rules.
@@ -49,7 +49,7 @@ function Get-InboxRule{
             Throw("This function requires a beta access token. Use the '-Beta' switch with Get-AccessToken to create a beta access token.")
         }
         
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
         if($PSCmdLet.ParameterSetName -eq "Id"){
             $RequestURL = $EndPoint + "('$MailboxName')/MailFolders/Inbox/MessageRules/$Id"

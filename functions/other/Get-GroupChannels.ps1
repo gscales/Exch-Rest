@@ -1,4 +1,4 @@
-function Get-GroupChannels{
+﻿function Get-GroupChannels{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -10,7 +10,7 @@ function Get-GroupChannels{
         {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "groups"
         if([String]::IsNullOrEmpty($ChannelName)){
             $RequestURL =   $EndPoint + "('" + $Group.Id + "')/channels?`$Top=1000"

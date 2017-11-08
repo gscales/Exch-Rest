@@ -27,7 +27,7 @@
 		$ParentFolder = Get-FolderFromPath -FolderPath $ParentFolderPath -AccessToken $AccessToken -MailboxName $MailboxName
 		if ($ParentFolder -ne $null)
 		{
-			$HttpClient = Get-HTTPClient($MailboxName)
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $ParentFolder.FolderRestURI + "/childfolders"
 			$NewFolderPost = "{`"DisplayName`": `"" + $DisplayName + "`"}"
 			write-host $NewFolderPost

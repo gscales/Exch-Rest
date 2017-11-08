@@ -28,7 +28,7 @@
 		{
 			$AccessToken = Get-AccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-HTTPClient($MailboxName)
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/drive/root:" + $OneDriveUploadFilePath + ":/content"
 		if ([String]::IsNullOrEmpty($FileBytes))

@@ -27,7 +27,7 @@
 		$Folder = Get-FolderFromPath -FolderPath $FolderPath -AccessToken $AccessToken -MailboxName $MailboxName
 		if ($Folder -ne $null)
 		{
-			$HttpClient = Get-HTTPClient($MailboxName)
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $Folder.FolderRestURI
 			$RenameFolderPost = "{`"DisplayName`": `"" + $NewDisplayName + "`"}"
 			return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $RenameFolderPost

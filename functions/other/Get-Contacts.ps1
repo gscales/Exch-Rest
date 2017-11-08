@@ -1,4 +1,4 @@
-function Get-Contacts{
+﻿function Get-Contacts{
 
 	   [CmdletBinding()] 
     param( 
@@ -21,7 +21,7 @@ function Get-Contacts{
 			    $Contacts = Get-ContactsFolder -MailboxName $MailboxName -AccessToken $AccessToken -FolderName $ContactsFolderName
 			    if([String]::IsNullOrEmpty($Contacts)){throw "Error Contacts folder not found check the folder name this is case sensitive"}
 			}    
-            $HttpClient =  Get-HTTPClient($MailboxName)
+            $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
             $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users" 
             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/contactFolders('" + $Contacts.id  + "')/contacts/?`$Top=1000"
             do{

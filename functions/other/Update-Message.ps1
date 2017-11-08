@@ -44,7 +44,7 @@
 		{
 			$AccessToken = Get-AccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-HTTPClient($MailboxName)
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $ItemURI
 		$UpdateItemPatch = Get-MessageJSONFormat -Subject $Subject -Body $Body -Attachments $Attachments -ExPropList $ExPropList -StandardPropList $StandardPropList
 		Write-host $UpdateItemPatch

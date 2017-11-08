@@ -74,7 +74,7 @@
 		}
 		if ($Folder -ne $null)
 		{
-			$HttpClient = Get-HTTPClient($MailboxName)
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $Folder.FolderRestURI + "/messages/?" + $SelectProperties + "`&`$Top=" + $TopValue + $Filter + $OrderBy
 			
 			if ($ReturnSize.IsPresent)

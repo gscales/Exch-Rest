@@ -35,7 +35,7 @@
 		{
 			$SelectProperties = "`$select=" + $SelectProperties
 		}
-		$HttpClient = Get-HTTPClient($MailboxName)
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $ItemURI + "/Attachments?" + $SelectProperties
 		do
 		{

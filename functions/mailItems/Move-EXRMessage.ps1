@@ -34,7 +34,7 @@
 		}
 		if ($Folder -ne $null)
 		{
-			$HttpClient = Get-HTTPClient($MailboxName)
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $ItemURI + "/move"
 			$MoveItemPost = "{`"DestinationId`": `"" + $Folder.Id + "`"}"
 			write-host $MoveItemPost

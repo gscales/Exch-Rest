@@ -17,7 +17,7 @@
 	{
 		$rptCollection = @()
 		$AccessToken = Get-AppOnlyToken -CertFileName $CertFileName -password $password
-		$HttpClient = Get-HTTPClient($Mailboxes[0])
+		$HttpClient = Get-HTTPClient -MailboxName $Mailboxes[0]
 		foreach ($MailboxName in $Mailboxes)
 		{
 			$rptObj = "" | Select-Object MailboxName, Language, Locale, TimeZone, AutomaticReplyStatus

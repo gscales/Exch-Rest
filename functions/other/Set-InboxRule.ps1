@@ -1,4 +1,4 @@
-function Set-InboxRule{
+﻿function Set-InboxRule{
     <#
     .SYNOPSIS
     Remove an inbox rule.
@@ -66,7 +66,7 @@ function Set-InboxRule{
             Throw("This function requires a beta access token. Use the '-Beta' switch with Get-AccessToken to create a beta access token.")
         }
         
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
         $RequestURL = $EndPoint + "('$MailboxName')/MailFolders/Inbox/MessageRules/$Id"
     }

@@ -1,4 +1,4 @@
-function  Get-People {
+﻿function  Get-People {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -11,7 +11,7 @@ function  Get-People {
         {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
         $RequestURL =  $EndPoint + "('" + $MailboxName + "')/people?`$Top=1000"
         if(![String]::IsNullOrEmpty($filter)){

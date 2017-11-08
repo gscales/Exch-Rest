@@ -12,7 +12,7 @@
 	Begin
 	{
 		Add-Type -AssemblyName System.Web
-		$HttpClient = Get-HTTPClient($MailboxName)
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$ClientId = $AccessToken.clientid
 		# $redirectUrl = [System.Web.HttpUtility]::UrlEncode($AccessToken.redirectUrl)
 		$redirectUrl = $AccessToken.redirectUrl

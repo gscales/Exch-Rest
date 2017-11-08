@@ -1,4 +1,4 @@
-function Get-ChannelInformation{
+﻿function Get-ChannelInformation{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -10,7 +10,7 @@ function Get-ChannelInformation{
         {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "groups"
         $RequestURL =   $EndPoint + "('" + $Group.Id + "')/channels('" + $Channel.Id + "')"
         return  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName

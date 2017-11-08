@@ -24,7 +24,7 @@
 	Begin
 	{
 		Add-Type -AssemblyName System.Web
-		$HttpClient = Get-HTTPClient($MailboxName)
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$AppSetting = Get-AppSettings
 		if ($ClientId -eq $null)
 		{

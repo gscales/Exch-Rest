@@ -33,29 +33,33 @@
 		$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList $CertFileName, $password, $exVal
 		$x5t = [System.Convert]::ToBase64String($cert.GetCertHash())
 		$jti = [System.Guid]::NewGuid().ToString()
-		$Headerassertaion = "{"
-		$Headerassertaion += "     `"alg`": `"RS256`","
-		$Headerassertaion += "     `"x5t`": `"" + $x5t + "`""
-		$Headerassertaion += "}"
-		$PayLoadassertaion += "{"
-		$PayLoadassertaion += "    `"aud`": `"https://login.windows.net/" + $TenantId + "/oauth2/token`","
-		$PayLoadassertaion += "    `"exp`": $exp,"
-		$PayLoadassertaion += "    `"iss`": `"" + $ClientId + "`","
-		$PayLoadassertaion += "    `"jti`": `"" + $jti + "`","
-		$PayLoadassertaion += "    `"nbf`": $nbf,"
-		$PayLoadassertaion += "    `"sub`": `"" + $ClientId + "`""
-		$PayLoadassertaion += "} "
-		$encodedHeader = [System.Convert]::ToBase64String([System.Text.UTF8Encoding]::UTF8.GetBytes($Headerassertaion)).Replace('=', '').Replace('+', '-').Replace('/', '_')
-		$encodedPayLoadassertaion = [System.Convert]::ToBase64String([System.Text.UTF8Encoding]::UTF8.GetBytes($PayLoadassertaion)).Replace('=', '').Replace('+', '-').Replace('/', '_')
-		$JWTOutput = $encodedHeader + "." + $encodedPayLoadassertaion
+		$headerAssertion = @"
+{
+     "alg": "RS256",
+     "x5t": "$x5t"
+}
+"@
+		$payLoadAssertion += @"
+{
+    "aud": "https://login.windows.net/$TenantId/oauth2/token",
+    "exp": $exp,
+    "iss": "$ClientId",
+    "jti": "$jti",
+    "nbf": $nbf,
+    "sub": "$ClientId"
+}
+"@
+		$encodedHeader = [System.Convert]::ToBase64String([System.Text.UTF8Encoding]::UTF8.GetBytes($headerAssertion)).Replace('=', '').Replace('+', '-').Replace('/', '_')
+		$encodedPayLoadAssertion = [System.Convert]::ToBase64String([System.Text.UTF8Encoding]::UTF8.GetBytes($payLoadAssertion)).Replace('=', '').Replace('+', '-').Replace('/', '_')
+		$JWTOutput = $encodedHeader + "." + $encodedPayLoadAssertion
 		$SigBytes = [System.Text.UTF8Encoding]::UTF8.GetBytes($JWTOutput)
 		$rsa = $cert.PrivateKey;
 		$sha256 = [System.Security.Cryptography.SHA256]::Create()
-		$hash = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($encodedHeader + '.' + $encodedPayLoadassertaion));
+		$hash = $sha256.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($encodedHeader + '.' + $encodedPayLoadAssertion));
 		$sigform = New-Object System.Security.Cryptography.RSAPKCS1SignatureFormatter($rsa);
 		$sigform.SetHashAlgorithm("SHA256");
 		$sig = [System.Convert]::ToBase64String($sigform.CreateSignature($hash)).Replace('=', '').Replace('+', '-').Replace('/', '_')
-		$JWTOutput = $encodedHeader + '.' + $encodedPayLoadassertaion + '.' + $sig
+		$JWTOutput = $encodedHeader + '.' + $encodedPayLoadAssertion + '.' + $sig
 		Write-Output ($JWTOutput)
 		
 	}

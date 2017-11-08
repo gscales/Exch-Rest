@@ -1,4 +1,4 @@
-function Get-ContactsFolder{
+﻿function Get-ContactsFolder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -9,7 +9,7 @@ function Get-ContactsFolder{
         {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
         $RequestURL =   $EndPoint + "('$MailboxName')/contactFolders?`$filter=name eq '" + $FolderName + "'"
         do{

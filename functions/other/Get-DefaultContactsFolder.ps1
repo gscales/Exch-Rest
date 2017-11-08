@@ -1,4 +1,4 @@
-function Get-DefaultContactsFolder{
+﻿function Get-DefaultContactsFolder{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
@@ -9,7 +9,7 @@ function Get-DefaultContactsFolder{
         {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users" 
         $RequestURL =   $EndPoint + "('$MailboxName')/contactFolders/contacts"
         return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName

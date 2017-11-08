@@ -1,4 +1,4 @@
-function Get-EXRWellKnownFolderItems{
+﻿function Get-EXRWellKnownFolderItems{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -34,7 +34,7 @@ function Get-EXRWellKnownFolderItems{
         }
         if($WellKnownFolder -ne $null)
         {
-            $HttpClient =  Get-HTTPClient($MailboxName)
+            $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
             $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue 
             $folderURI =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder

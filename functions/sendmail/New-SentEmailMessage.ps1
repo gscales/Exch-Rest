@@ -80,7 +80,7 @@
 		if ($Folder -ne $null)
 		{
 			$RequestURL = $Folder.FolderRestURI + "/messages"
-			$HttpClient = Get-HTTPClient($MailboxName)
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
 		}
 		

@@ -38,7 +38,7 @@
 			$retentionTagGUID = "{$($PolicyTagValue)}"
 			$policyTagGUID = new-Object Guid($retentionTagGUID)
 			$PolicyTagBase64 = [System.Convert]::ToBase64String($PolicyTagGUID.ToByteArray())
-			$HttpClient = Get-HTTPClient($MailboxName)
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $Folder.FolderRestURI
 			$FolderPostValue = "{`"SingleValueExtendedProperties`": [`r`n"
 			$FolderPostValue += "`t{`"PropertyId`":`"Binary 0x3019`",`"Value`":`"" + $PolicyTagBase64 + "`"},`r`n"

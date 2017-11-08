@@ -22,7 +22,7 @@
 		$confirmation = Read-Host "Are you Sure You Want To proceed with deleting the Item"
 		if ($confirmation -eq 'y')
 		{
-			$HttpClient = Get-HTTPClient($MailboxName)
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $ItemURI
 			return Invoke-RestDELETE -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		}

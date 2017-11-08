@@ -1,4 +1,4 @@
-function  Find-Rooms {
+﻿function  Find-Rooms {
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -10,7 +10,7 @@ function  Find-Rooms {
         {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
         $RequestURL =  $EndPoint + "('" + $MailboxName + "')/findrooms?`$Top=1000"
         if(![String]::IsNullOrEmpty($filter)){

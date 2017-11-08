@@ -1,4 +1,4 @@
-function  Get-EmailActivity{
+﻿function  Get-EmailActivity{
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -11,7 +11,7 @@ function  Get-EmailActivity{
         {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }        
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "reports"
         $RequestURL =  $EndPoint + "/EmailActivity(view='$ViewType',period='$PeriodType')/content"
         Write-Host $RequestURL

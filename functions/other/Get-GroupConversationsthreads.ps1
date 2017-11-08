@@ -1,4 +1,4 @@
-function Get-GroupConversations{
+﻿function Get-GroupConversations{
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
@@ -9,7 +9,7 @@ function Get-GroupConversations{
         {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }   
-        $HttpClient =  Get-HTTPClient($MailboxName)
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "groups"
         $RequestURL =   $EndPoint + "('" + $Group.Id + "')/threads?`$Top=1000"
         do{

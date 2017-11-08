@@ -1,4 +1,4 @@
-function Get-EXRWellKnownFolderList{
+﻿function Get-EXRWellKnownFolderList{
     [CmdletBinding()]
     param( 
 
@@ -8,7 +8,7 @@ function Get-EXRWellKnownFolderList{
         {
               $AccessToken = Get-AccessToken -MailboxName $MailboxName          
         }  
-            $HttpClient =  Get-HTTPClient($MailboxName)
+            $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
             $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
             $RequestURL =  $EndPoint + "('$MailboxName')/MailFolders/$FolderName"
             if($PropList -ne $null){
