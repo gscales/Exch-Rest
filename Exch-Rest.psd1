@@ -161,7 +161,6 @@
 		'Get-Users',
 		'Get-WellKnownFolderItems',
 		'Import-AccessToken',
-		'Import-ModuleFile',
 		'Invoke-CreateSelfSignedCert',
 		'Invoke-DecodeToken',
 		'Invoke-DeleteFolder',

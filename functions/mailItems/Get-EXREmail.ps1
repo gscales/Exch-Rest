@@ -1,4 +1,4 @@
-﻿function Get-EXREmail
+function Get-EXREmail
 {
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
@@ -21,15 +21,15 @@
 	{
 		if ($AccessToken -eq $null)
 		{
-			$AccessToken = Get-AccessToken -MailboxName $MailboxName
+			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
 		$RequestURL = $ItemRESTURI
 		if($PropList -ne $null){
-               $Props = Get-ExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
+               $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "?`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
         }
-		$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+		$JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		Add-Member -InputObject $JSONOutput -NotePropertyName ItemRESTURI -NotePropertyValue $ItemRESTURI
 		Invoke-EXRParseExtendedProperties -Item $JSONOutput
 		return $JSONOutput 

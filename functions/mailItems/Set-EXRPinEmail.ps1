@@ -17,12 +17,12 @@ function Set-EXRPinEmail
 	{
 		if ($AccessToken -eq $null)
 		{
-			$AccessToken = Get-AccessToken -MailboxName $MailboxName
+			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
 		$Props = Get-EXRPinnedEmailProperty
 		$Props[0].Value = [DateTime]::Parse("4500-9-1").ToString("yyyy-MM-ddTHH:mm:ssZ")
 		$Props[1].Value = [DateTime]::Parse("4500-9-1").ToString("yyyy-MM-ddTHH:mm:ssZ")
-		return Update-Message -MailboxName $MailboxName -ItemURI $ItemRESTURI -ExPropList $Props -AccessToken $AccessToken
+		return Update-EXRMessage -MailboxName $MailboxName -ItemURI $ItemRESTURI -ExPropList $Props -AccessToken $AccessToken
 		
 	}
 }

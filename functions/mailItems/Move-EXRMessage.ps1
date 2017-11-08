@@ -1,4 +1,4 @@
-﻿function Move-EXRMessage
+function Move-EXRMessage
 {
 	[CmdletBinding()]
 	param (
@@ -26,19 +26,19 @@
 	{
 		if ($AccessToken -eq $null)
 		{
-			$AccessToken = Get-AccessToken -MailboxName $MailboxName
+			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
 		if (![String]::IsNullOrEmpty($TargetFolderPath))
 		{
-			$Folder = Get-FolderFromPath -FolderPath $TargetFolderPath -AccessToken $AccessToken -MailboxName $MailboxName
+			$Folder = Get-EXRFolderFromPath -FolderPath $TargetFolderPath -AccessToken $AccessToken -MailboxName $MailboxName
 		}
 		if ($Folder -ne $null)
 		{
-			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+			$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
 			$RequestURL = $ItemURI + "/move"
 			$MoveItemPost = "{`"DestinationId`": `"" + $Folder.Id + "`"}"
 			write-host $MoveItemPost
-			return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $MoveItemPost
+			return Invoke-EXRRestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $MoveItemPost
 		}
 	}
 }
