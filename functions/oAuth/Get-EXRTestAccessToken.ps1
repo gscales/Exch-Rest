@@ -1,4 +1,5 @@
 function Get-EXRTestAccessToken{
+    [CmdletBinding()]
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=0, Mandatory=$false)] [switch]$beta,

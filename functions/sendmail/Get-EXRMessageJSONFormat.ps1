@@ -1,5 +1,6 @@
 function Get-EXRMessageJSONFormat
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 1, Mandatory = $false)]
 		[String]

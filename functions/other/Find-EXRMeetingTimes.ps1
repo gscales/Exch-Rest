@@ -1,4 +1,5 @@
 function  Find-EXRMeetingTimes {
+    [CmdletBinding()]
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,

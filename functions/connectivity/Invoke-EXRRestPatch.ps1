@@ -1,5 +1,6 @@
 function Invoke-EXRRestPatch
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]

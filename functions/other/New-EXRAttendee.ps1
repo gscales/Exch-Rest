@@ -1,5 +1,6 @@
 function New-EXRAttendee
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $false)]
 		[string]

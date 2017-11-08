@@ -1,5 +1,6 @@
 function Get-EXRAllChildFolders
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[PSCustomObject]

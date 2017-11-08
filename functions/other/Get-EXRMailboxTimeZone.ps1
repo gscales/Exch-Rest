@@ -1,5 +1,6 @@
 function Get-EXRMailboxTimeZone
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]

@@ -1,5 +1,6 @@
 function Get-EXRArchiveFolder
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]

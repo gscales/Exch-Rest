@@ -1,5 +1,6 @@
 function Get-EXRAutomaticRepliesSettings
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]

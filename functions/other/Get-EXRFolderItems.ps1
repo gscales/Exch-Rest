@@ -1,5 +1,6 @@
 function Get-EXRFolderItems
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]

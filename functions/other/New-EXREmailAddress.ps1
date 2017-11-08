@@ -1,5 +1,6 @@
 function New-EXREmailAddress
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $false)]
 		[string]

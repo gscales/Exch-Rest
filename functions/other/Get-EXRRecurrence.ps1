@@ -1,5 +1,6 @@
 function Get-EXRRecurrence
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 1, Mandatory = $false)]
 		[string]

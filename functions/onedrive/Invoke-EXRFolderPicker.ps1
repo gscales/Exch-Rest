@@ -1,5 +1,6 @@
 function Invoke-EXRFolderPicker
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]

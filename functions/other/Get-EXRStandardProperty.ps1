@@ -1,5 +1,6 @@
 function Get-EXRStandardProperty
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 1, Mandatory = $true)]
 		[String]

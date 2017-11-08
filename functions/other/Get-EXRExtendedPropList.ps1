@@ -1,5 +1,6 @@
 function Get-EXRExtendedPropList
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 1, Mandatory = $false)]
 		[PSCustomObject]

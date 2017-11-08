@@ -1,5 +1,6 @@
 function Get-EXRAppOnlyToken
 {
+	[CmdletBinding()]
 	param (
 		
 		[Parameter(Position = 1, Mandatory = $true)]

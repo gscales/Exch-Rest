@@ -1,5 +1,6 @@
 function Get-EXRTokenFromSecureString
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[System.Security.SecureString]

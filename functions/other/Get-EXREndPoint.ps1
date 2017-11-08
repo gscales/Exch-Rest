@@ -1,5 +1,6 @@
 function Get-EXREndPoint
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[psObject]

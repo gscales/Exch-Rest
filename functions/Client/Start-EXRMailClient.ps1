@@ -201,6 +201,7 @@ function Start-EXRMailClient
 	}
 }
 function OpenMailbox(){
+		[CmdletBinding()]
 		param (
 	
 

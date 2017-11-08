@@ -1,5 +1,6 @@
 function Invoke-EXRDecodeToken
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 1, Mandatory = $true)]
 		[String]

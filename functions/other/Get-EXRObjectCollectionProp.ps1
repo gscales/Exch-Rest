@@ -1,5 +1,6 @@
 function Get-EXRObjectCollectionProp
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[string]

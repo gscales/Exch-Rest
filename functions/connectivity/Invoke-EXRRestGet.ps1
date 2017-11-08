@@ -1,5 +1,6 @@
 function Invoke-EXRRestGet
 {
+        [CmdletBinding()]
         param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$RequestURL,
         [Parameter(Position=1, Mandatory=$true)] [String]$MailboxName,

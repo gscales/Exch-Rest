@@ -1,5 +1,6 @@
 function Get-EXRNamedProperty
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 0, Mandatory = $true)]
 		[String]

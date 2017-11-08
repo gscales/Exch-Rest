@@ -1,6 +1,7 @@
 
 
 function  Send-EXRSimpleMeetingRequest {
+    [CmdletBinding()]
     param(
         [Parameter(Position=0, Mandatory=$true)] [string]$SenderName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,

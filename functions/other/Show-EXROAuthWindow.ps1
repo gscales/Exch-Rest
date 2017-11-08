@@ -1,5 +1,6 @@
 function Show-EXROAuthWindow
 {
+	[CmdletBinding()]
 	param (
 		[System.Uri]
 		$Url

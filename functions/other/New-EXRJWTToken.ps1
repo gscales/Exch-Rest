@@ -1,5 +1,6 @@
 function New-EXRJWTToken
 {
+	[CmdletBinding()]
 	param (
 		[Parameter(Position = 1, Mandatory = $true)]
 		[string]

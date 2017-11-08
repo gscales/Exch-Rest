@@ -1,4 +1,5 @@
 function Get-EXRTestAppToken{
+    [CmdletBinding()]
     param( 
         [Parameter(Position=0, Mandatory=$true)] [string]$CertFile,
         [Parameter(Position=1, Mandatory=$false)] [switch]$beta
