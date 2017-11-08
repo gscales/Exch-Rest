@@ -62,20 +62,20 @@ You can either authenticate as a user or as an application.
 
 #### Example 1: authenticating as a user (supplying the ClientId and redirectUrl you created during application registration)
 ```
-$Token = Get-AccessToken -MailboxName mailbox@domain.com `
+$Token = Get-EXRAccessToken -MailboxName mailbox@domain.com `
                          -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 `
                          -redirectUrl urn:ietf:wg:oauth:2.0:oob
 ```
 #### Example 1a: authenticating as a user (supplying the ClientId and redirectUrl you created during application registration) against the Microsoft Graph Endpoint
 ```
-$Token = Get-AccessToken -MailboxName mailbox@domain.com `
+$Token = Get-EXRAccessToken -MailboxName mailbox@domain.com `
                          -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 `
                          -redirectUrl urn:ietf:wg:oauth:2.0:oob         
                          -ResourceURL graph.microsoft.com             
 ```
 #### Example 2: authenticating as a user can and supplying a ClientSecret
 ```
-$Token = Get-AccessToken -MailboxName mailbox@domain.com `
+$Token = Get-EXRAccessToken -MailboxName mailbox@domain.com `
                          -ClientId 1bdbfb41-f690-4f93-b0bb-002004bbca79 `
                          -redirectUrl 'http://localhost:8000/authorize' `
                          -ClientSecret 1rwq9MmrSMu4SGhMEfGb9ggktWjzPYtW5lcAxXLzEtU=
@@ -83,7 +83,7 @@ $Token = Get-AccessToken -MailboxName mailbox@domain.com `
 ```
 #### Example 2a: authenticating as a user can and supplying a ClientSecret against the Microsoft Graph Endpoint
 ```
-$Token = Get-AccessToken -MailboxName mailbox@domain.com `
+$Token = Get-EXRAccessToken -MailboxName mailbox@domain.com `
                          -ClientId 1bdbfb41-f690-4f93-b0bb-002004bbca79 `
                          -redirectUrl 'http://localhost:8000/authorize' `
                          -ClientSecret 1rwq9MmrSMu4SGhMEfGb9ggktWjzPYtW5lcAxXLzEtU=
@@ -91,14 +91,14 @@ $Token = Get-AccessToken -MailboxName mailbox@domain.com `
 ```
 #### Example 3: authenticating as an application using a certificate
 ```
-$Token = Get-AppOnlyToken -CertFile "c:\temp\drCert.pfx" `
+$Token = Get-EXRAppOnlyToken -CertFile "c:\temp\drCert.pfx" `
                           -ClientId 1bdbfb41-f690-4f93-b0bb-002004bbca79 `
                           -redirectUrl 'http://localhost:8000/authorize' `
                           -TenantId cbdbfb41-f690-4f93-b0bb-002004bbca79
 ```
 #### Example 3a: authenticating as an application using a certificate  against the Microsoft Graph Endpoint
 ```
-$Token = Get-AppOnlyToken -CertFile "c:\temp\drCert.pfx" `
+$Token = Get-EXRAppOnlyToken -CertFile "c:\temp\drCert.pfx" `
                           -ClientId 1bdbfb41-f690-4f93-b0bb-002004bbca79 `
                           -redirectUrl 'http://localhost:8000/authorize' `
                           -TenantId cbdbfb41-f690-4f93-b0bb-002004bbca79
@@ -108,7 +108,7 @@ Note that example 3 is typically used for administrative purposes to manage muli
 
 #### Example 4: authenticating as a user with PSCredentials (supplying the ClientId and redirectUrl you created during application registration)
 ```
-$Token = Get-AccessTokenUserAndPass -MailboxName mailbox@domain.com `
+$Token = Get-EXRAccessTokenUserAndPass -MailboxName mailbox@domain.com `
                          -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 `
                          -redirectUrl urn:ietf:wg:oauth:2.0:oob
 ```
@@ -116,7 +116,7 @@ $Token = Get-AccessTokenUserAndPass -MailboxName mailbox@domain.com `
 ```
 $secpasswd = ConvertTo-SecureString "PlainTextPassword" -AsPlainText -Force
 $mycreds = New-Object System.Management.Automation.PSCredential ("username", $secpasswd)
-$Token = Get-AccessTokenUserAndPass -MailboxName mailbox@domain.com `
+$Token = Get-EXRAccessTokenUserAndPass -MailboxName mailbox@domain.com `
                          -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 `
                          -redirectUrl urn:ietf:wg:oauth:2.0:oob         
                          -ResourceURL graph.microsoft.com   
@@ -127,52 +127,144 @@ $Token = Get-AccessTokenUserAndPass -MailboxName mailbox@domain.com `
 After you have authenticated and received a token you can use that token with the Exch-Rest functions to access the Office 365/Exchange REST API.
 #### Example 1: get information about the inbox of a mailbox
 ```
-Get-Inbox -MailboxName mailbox@domain.com -AccessToken $Token
+Get-EXRInbox -MailboxName mailbox@domain.com -AccessToken $Token
 ```
 
 ## Available functions
-  * Get-AllMailFolders
-  * Get-AllChildFolders
-  * Get-AllCalendarFolders
-  * Get-AllContactFolders
-  * Get-AllTaskfolders
-  * Get-AccessToken
-  * Get-AppOnlyToken
-  * Get-MailboxSettings
-  * Get-AutomaticRepliesSettings
-  * Get-MailboxTimeZone
-  * Get-FolderFromPath
-  * Get-Inbox
-  * Get-InboxItems
-  * Get-FocusedInboxItems
-  * Get-CalendarItems
-  * Get-FolderItems
-  * New-ContactFolder
-  * New-CalendarFolder
-  * Set-FolderRetentionTag
-  * Get-AllMailboxItems
-  * Get-TaggedProperty
-  * Get-NamedProperty
-  * Get-FolderPath
-  * Get-ArchiveFolder
-  * Get-MailboxSettingsReport
-  * Get-People
-  * Get-UserPhotoMetaData
-  * Get-UserPhoto
-  * Get-MailboxUser
-  * Get-CalendarGroups
-  * Invoke-EnumCalendarGroups
-  * New-Folder
-  * Rename-Folder
-  * Update-Folder
-  * Invoke-DeleteFolder
-  * Update-FolderClass
-  * Get-FolderClass
-  * GetExtendedPropList
-  * GetFolderRetentionTags
-  * Send-MessageREST
-  * Get-Attachments
-  * Invoke-DownloadAttachment
+  * Convert-EXRFromBase64StringWithNoPadding
+  * Copy-EXRMessage
+  * Export-EXRContactFolderToCSV
+  * Find-EXRMeetingTimes
+  * Find-EXRRooms
+  * Get-EXRAccessToken
+  * Get-EXRAccessTokenUserAndPass
+  * Get-EXRAllCalendarFolders
+  * Get-EXRAllChildFolders
+  * Get-EXRAllContactFolders
+  * Get-EXRAllMailboxItems
+  * Get-EXRAllMailFolders
+  * Get-EXRAllTaskfolders
+  * Get-EXRAppOnlyToken
+  * Get-EXRAppSettings
+  * Get-EXRArchiveFolder
+  * Get-EXRAttachments
+  * Get-EXRAutomaticRepliesSettings
+  * Get-EXRCalendarFolder
+  * Get-EXRCalendarGroups
+  * Get-EXRCalendarView
+  * Get-EXRChannelInformation
+  * Get-EXRContacts
+  * Get-EXRContactsFolder
+  * Get-EXRDefaultCalendarFolder
+  * Get-EXRDefaultContactsFolder
+  * Get-EXRDefaultOneDrive
+  * Get-EXRDefaultOneDriveRootItems
+  * Get-EXREmail
+  * Get-EXREmailActivity
+  * Get-EXREmailHeaders
+  * Get-EXREndPoint
+  * Get-EXREventJSONFormat
+  * Get-EXRExtendedPropList
+  * Get-EXRFocusedInboxItems
+  * Get-EXRFolderClass
+  * Get-EXRFolderFromPath
+  * Get-EXRFolderItems
+  * Get-EXRFolderItems
+  * Get-EXRFolderPath
+  * Get-EXRGroupChannels
+  * Get-EXRGroupConversations
+  * Get-EXRHTTPClient
+  * Get-EXRInbox
+  * Get-EXRInboxItems
+  * Get-EXRInboxRule
+  * Get-EXRItemProp
+  * Get-EXRItemRetentionTags
+  * Get-EXRItemSize
+  * Get-EXRLastInboxEmail
+  * Get-EXRMailAppProps
+  * Get-EXRMailboxSettings
+  * Get-EXRMailboxSettingsReport
+  * Get-EXRMailboxTimeZone
+  * Get-EXRMailboxUsage
+  * Get-EXRMailboxUsageUserDetail
+  * Get-EXRMailboxUser
+  * Get-EXRMessageJSONFormat
+  * Get-EXRModernGroups
+  * Get-EXRNamedProperty
+  * Get-EXRObjectCollectionProp
+  * Get-EXRObjectProp
+  * Get-EXROffice365ActiveUsers
+  * Get-EXROneDriveChildren
+  * Get-EXROneDriveItem
+  * Get-EXROneDriveItemFromPath
+  * Get-EXRPeople
+  * Get-EXRPinnedEmailProperty
+  * Get-EXRProfiledToken
+  * Get-EXRProtectedToken
+  * Get-EXRRecoverableItemsFolders
+  * Get-EXRRecurrence
+  * Get-EXRRetainedPurgesFolderItems
+  * Get-EXRRootMailFolder
+  * Get-EXRStandardProperty
+  * Get-EXRTaggedProperty
+  * Get-EXRTestAccessToken
+  * Get-EXRTestAppToken
+  * Get-EXRTokenFromSecureString
+  * Get-EXRTransportHeader
+  * Get-EXRUserPhoto
+  * Get-EXRUserPhotoMetaData
+  * Get-EXRUsers
+  * Get-EXRWellKnownFolder
+  * Get-EXRWellKnownFolderItems
+  * Get-EXRWellKnownFolderItems
+  * Get-EXRWellKnownFolderList
+  * Import-EXRAccessToken
+  * Invoke-EXRCreateSelfSignedCert
+  * Invoke-EXRDecodeToken
+  * Invoke-EXRDeleteFolder
+  * Invoke-EXRDeleteItem
+  * Invoke-EXRDownloadAttachment
+  * Invoke-EXREnumCalendarGroups
+  * Invoke-EXREnumChildFolders
+  * Invoke-EXREnumOneDriveFolders
+  * Invoke-EXRFolderPicker
+  * Invoke-EXRMailFolderPicker
+  * Invoke-EXRNewMessagesForm
+  * Invoke-EXROneDriveFolderPicker
+  * Invoke-EXRParseExtendedProperties
+  * Invoke-EXRReadEmail
+  * Invoke-EXRRefreshAccessToken
+  * Invoke-EXRRestDELETE
+  * Invoke-EXRRestGet
+  * Invoke-EXRRestPatch
+  * Invoke-EXRRestPOST
+  * Invoke-EXRRestPut
+  * Invoke-EXRUploadOneDriveItemToPath
+  * Move-EXRMessage
+  * New-EXRAttendee
+  * New-EXRCalendarEventREST
+  * New-EXRCalendarFolder
+  * New-EXRContactFolder
+  * New-EXREmailAddress
+  * New-EXRFolder
+  * New-EXRHolidayEvent
+  * New-EXRInboxRule
+  * New-EXRJWTToken
+  * New-EXRReferanceAttachment
+  * New-EXRSentEmailMessage
+  * Remove-EXRInboxRule
+  * Rename-EXRFolder
+  * Send-EXRMessageREST
+  * Send-EXRSimpleMeetingRequest
+  * Set-EXRFolderRetentionTag
+  * Set-EXRInboxRule
+  * Set-EXRPinEmail
+  * Set-EXRUnPinEmail
+  * Show-EXROAuthWindow
+  * Start-EXRMailClient
+  * Update-EXRFolder
+  * Update-EXRFolderClass
+  * Update-EXRMessage
   
 
 ## Internal functions
