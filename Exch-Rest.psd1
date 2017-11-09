@@ -155,7 +155,6 @@
 		'Get-EXRUsers',
 		'Get-EXRWellKnownFolder',
 		'Get-EXRWellKnownFolderItems',
-		'Get-EXRWellKnownFolderItems',
 		'Get-EXRWellKnownFolderList',
 		'Import-EXRAccessToken',
 		'Invoke-EXRCreateSelfSignedCert',
