@@ -22,7 +22,7 @@ if ((Get-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\WindowsPowerShell\Exch-Res
 . Import-ModuleFile -Path "$ModuleRoot\internal\scripts\preimport.ps1"
 
 # Import all internal functions
-foreach ($function in (Get-ChildItem "$ModuleRoot\internal\functions\*.ps1" -ErrorAction SilentlyContinue))
+foreach ($function in (Get-ChildItem "$ModuleRoot\internal\functions\*\*.ps1" -ErrorAction SilentlyContinue))
 {
 	. Import-ModuleFile -Path $function.FullName
 }

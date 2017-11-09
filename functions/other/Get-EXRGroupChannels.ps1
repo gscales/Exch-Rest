@@ -11,8 +11,8 @@ function Get-EXRGroupChannels{
         {
               $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
         }   
-        $HttpClient =  Get-EXRHTTPClient -MailboxName $MailboxName
-        $EndPoint =  Get-EXREndPoint -AccessToken $AccessToken -Segment "groups"
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "groups"
         if([String]::IsNullOrEmpty($ChannelName)){
             $RequestURL =   $EndPoint + "('" + $Group.Id + "')/channels?`$Top=1000"
         }
@@ -21,7 +21,7 @@ function Get-EXRGroupChannels{
         }
         Write-Host $RequestURL        
         do{
-            $JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {
                 Write-Output $Message
             }           

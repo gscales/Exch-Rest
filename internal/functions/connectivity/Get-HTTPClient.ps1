@@ -1,4 +1,4 @@
-function Get-EXRHTTPClient
+function Get-HTTPClient
 {
 	[CmdletBinding()]
 	param (
@@ -6,7 +6,7 @@ function Get-EXRHTTPClient
 		[string]
 		$MailboxName
 	)
-	Begin
+	process
 	{
 		Add-Type -AssemblyName System.Net.Http
 		$handler = New-Object  System.Net.Http.HttpClientHandler

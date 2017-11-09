@@ -38,11 +38,11 @@ function Import-EXRAccessToken
 		
 		if (![String]::IsNullOrEmpty($RefreshToken))
 		{
-			Add-Member -InputObject $JsonObject -NotePropertyName refresh_token -NotePropertyValue (Get-EXRProtectedToken -PlainToken $RefreshToken)
+			Add-Member -InputObject $JsonObject -NotePropertyName refresh_token -NotePropertyValue (Get-ProtectedToken -PlainToken $RefreshToken)
 		}
 		if ([bool]($JsonObject.PSobject.Properties.name -match "access_token"))
 		{
-			$JsonObject.access_token = (Get-EXRProtectedToken -PlainToken $JsonObject.access_token)
+			$JsonObject.access_token = (Get-ProtectedToken -PlainToken $JsonObject.access_token)
 		}
 		$JsonObject.token_type = "Bearer"
 		$JsonObject.scope = $Decoded.claims.scp

@@ -1,9 +1,10 @@
-function Show-EXROAuthWindow
+function Show-OAuthWindow
 {
 	[CmdletBinding()]
 	param (
 		[System.Uri]
 		$Url
+		
 	)
 	## Start Code Attribution
 	## Show-AuthWindow function is the work of the following Authors and should remain with the function if copied into other scripts

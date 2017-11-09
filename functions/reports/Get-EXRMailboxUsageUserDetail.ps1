@@ -11,11 +11,11 @@ function  Get-EXRMailboxUsageDetail {
         {
               $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
         }        
-        $HttpClient =  Get-EXRHTTPClient -MailboxName $MailboxName
-        $EndPoint =  Get-EXREndPoint -AccessToken $AccessToken -Segment "reports"
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "reports"
         $RequestURL =  $EndPoint + "/getMailboxUsageDetail(period='$PeriodType')/content"
         Write-Host $RequestURL
-        $Output = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
+        $Output = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
         $OutPutStream = $Output.ReadAsStreamAsync().Result
         return ConvertFrom-Csv ([System.Text.Encoding]::UTF8.GetString($OutPutStream.ToArray()))
     }

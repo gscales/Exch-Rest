@@ -40,8 +40,8 @@ function Get-EXRFolderItems{
         }
         if($Folder -ne $null)
         {
-            $HttpClient =  Get-EXRHTTPClient -MailboxName $MailboxName
-            $EndPoint =  Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+            $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders('" + $Folder.Id + "')/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue 
             $folderURI =  $EndPoint + "('" + $MailboxName + "')/MailFolders('" + $Folder.Id + "')"
             if($ReturnSize.IsPresent){
@@ -57,10 +57,10 @@ function Get-EXRFolderItems{
             }
             $RequestURL += $Search + $Filter + $OrderBy
             do{
-                $JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -TrackStatus $TrackStatus.IsPresent
+                $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -TrackStatus $TrackStatus.IsPresent
                 foreach ($Message in $JSONOutput.Value) {
                     Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($folderURI  + "/messages('" + $Message.Id + "')")
-                    Invoke-EXRParseExtendedProperties -Item $Message
+                    Expand-ExtendedProperties -Item $Message
                     Write-Output $Message
                 }           
                 $RequestURL = $JSONOutput.'@odata.nextLink'

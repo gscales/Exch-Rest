@@ -61,8 +61,8 @@ function New-EXRInboxRule{
             Throw("This function requires a beta access token. Use the '-Beta' switch with Get-EXRAccessToken to create a beta access token.")
         }
         
-        $HttpClient =  Get-EXRHTTPClient -MailboxName $MailboxName
-        $EndPoint =  Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
         $RequestURL = $EndPoint + "('$MailboxName')/MailFolders/Inbox/MessageRules"
     }
     Process{

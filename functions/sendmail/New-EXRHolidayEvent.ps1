@@ -123,7 +123,7 @@ function New-EXRHolidayEvent
 			$StandardPropList = @()
 			$StandardPropList += $isAllDay
 		}
-		$NewMessage = Get-EXREventJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Start $Day.Date -End $Day.Date.AddDays(1) -TimeZone $TimeZone -Attachments $Attachments -ReferanceAttachments $ReferanceAttachments -Attendees $Attendees -SentDate $SentDate -ExPropList $ExPropList -StandardPropList $StandardPropList -ReplyTo $ReplyTo -RequestReadRecipient $RequestReadRecipient.IsPresent -RequestDeliveryRecipient $RequestDeliveryRecipient.IsPresent -Recurrence $Recurrence
+		$NewMessage = Get-EventJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Start $Day.Date -End $Day.Date.AddDays(1) -TimeZone $TimeZone -Attachments $Attachments -ReferanceAttachments $ReferanceAttachments -Attendees $Attendees -SentDate $SentDate -ExPropList $ExPropList -StandardPropList $StandardPropList -ReplyTo $ReplyTo -RequestReadRecipient $RequestReadRecipient.IsPresent -RequestDeliveryRecipient $RequestDeliveryRecipient.IsPresent -Recurrence $Recurrence
 		if ($ShowRequest.IsPresent)
 		{
 			write-host $NewMessage
@@ -131,17 +131,17 @@ function New-EXRHolidayEvent
 		
 		if ($Group.IsPresent)
 		{
-			$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "groups"
+			$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "groups"
 			$ModernGroup = Get-EXRModernGroups -MailboxName $MailboxName -GroupName $GroupName -AccessToken $AccessToken
 			$RequestURL = $EndPoint + "('" + $ModernGroup.id + "')/events"
 		}
 		else
 		{
-			$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+			$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 			$RequestURL = $EndPoint + "/" + $MailboxName + "/calendars('" + $Calendar.id + "')/events"
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		return Invoke-EXRRestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
 		
 	}
 }

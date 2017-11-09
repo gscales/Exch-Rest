@@ -1,4 +1,4 @@
-function Convert-EXRFromBase64StringWithNoPadding
+function Convert-FromBase64StringWithNoPadding
 {
 	[CmdletBinding()]
 	Param (

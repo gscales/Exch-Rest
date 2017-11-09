@@ -18,13 +18,13 @@ function Get-EXRMailboxSettingsReport
 	{
 		$rptCollection = @()
 		$AccessToken = Get-EXRAppOnlyToken -CertFileName $CertFileName -password $password
-		$HttpClient = Get-EXRHTTPClient -MailboxName $Mailboxes[0]
+		$HttpClient = Get-HTTPClient -MailboxName $Mailboxes[0]
 		foreach ($MailboxName in $Mailboxes)
 		{
 			$rptObj = "" | Select-Object MailboxName, Language, Locale, TimeZone, AutomaticReplyStatus
-			$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+			$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 			$RequestURL = $EndPoint + "('$MailboxName')/MailboxSettings"
-			$Results = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+			$Results = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 			$rptObj.MailboxName = $MailboxName
 			$rptObj.Language = $Results.Language.DisplayName
 			$rptObj.Locale = $Results.Language.Locale

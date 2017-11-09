@@ -28,10 +28,10 @@ function Update-EXRFolder
 		$Folder = Get-EXRFolderFromPath -FolderPath $FolderPath -AccessToken $AccessToken -MailboxName $MailboxName
 		if ($Folder -ne $null)
 		{
-			$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $Folder.FolderRestURI
 			$FolderPostValue = $FolderPost
-			return Invoke-EXRRestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $FolderPostValue
+			return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $FolderPostValue
 			
 		}
 		

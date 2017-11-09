@@ -35,8 +35,8 @@ function Get-EXRWellKnownFolderItems{
         }
         if($WellKnownFolder -ne $null)
         {
-            $HttpClient =  Get-EXRHTTPClient -MailboxName $MailboxName
-            $EndPoint =  Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+            $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue 
             $folderURI =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder
              if($ReturnSize.IsPresent){
@@ -52,11 +52,11 @@ function Get-EXRWellKnownFolderItems{
             }
             $RequestURL += $Filter + $OrderBy
             do{
-                $JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+                $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
                     Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($EndPoint + "('" + $MailboxName + "')/messages('" + $Message.Id + "')")
                     if($PropList -ne $null){
-                        Invoke-EXRParseExtendedProperties -Item $Message
+                        Expand-ExtendedProperties -Item $Message
                     }
                     Write-Output $Message
                 }           

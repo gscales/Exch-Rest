@@ -1,4 +1,4 @@
-function Invoke-EXRRestPOST
+function Invoke-RestPatch
 {
 	[CmdletBinding()]
 	param (
@@ -22,28 +22,22 @@ function Invoke-EXRRestPOST
 		[PSCustomObject]
 		$Content
 	)
-	Begin
+	process
 	{
 		#Check for expired Token
 		$minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0, [System.DateTimeKind]::Utc);
 		$expiry = $minTime.AddSeconds($AccessToken.expires_on)
 		if ($expiry -le [DateTime]::Now.ToUniversalTime())
 		{
-			if ([bool]($AccessToken.PSobject.Properties.name -match "refresh_token"))
-			{
-				write-host "Refresh Token"
-				$AccessToken = Invoke-EXRRefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
-				Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
-			}
-			else
-			{
-				throw "App Token has expired a new access token is required rerun get-apptoken"
-			}
+			write-host "Refresh Token"
+			$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
+			Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
 		}
-		$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-EXRTokenFromSecureString -SecureToken $AccessToken.access_token));
-		$PostContent = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
-		$HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`""))
-		$ClientResult = $HttpClient.PostAsync([Uri]($RequestURL), $PostContent)
+		$method = New-Object System.Net.Http.HttpMethod("PATCH")
+		$HttpRequestMessage = New-Object System.Net.Http.HttpRequestMessage($method, [Uri]$RequestURL)
+		$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
+		$HttpRequestMessage.Content = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
+		$ClientResult = $HttpClient.SendAsync($HttpRequestMessage)
 		if ($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK)
 		{
 			if ($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created)
@@ -57,7 +51,7 @@ function Invoke-EXRRestPOST
 		}
 		if (!$ClientResult.Result.IsSuccessStatusCode)
 		{
-			Write-Output ("Error making REST POST " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
+			Write-Output ("Error making REST Patch " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
 			Write-Output $ClientResult.Result
 			if ($ClientResult.Content -ne $null)
 			{
@@ -66,8 +60,8 @@ function Invoke-EXRRestPOST
 		}
 		else
 		{
-			$JsonObject = ExpandPayload($ClientResult.Result.Content.ReadAsStringAsync().Result)
-			#$JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+			# $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+			$JsonObject = ExpandPayload -response $ClientResult.Result.Content.ReadAsStringAsync().Result
 			if ([String]::IsNullOrEmpty($JsonObject))
 			{
 				Write-Output $ClientResult.Result

@@ -20,8 +20,8 @@ function Get-EXRAllMailFolders
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/MailFolders/msgfolderroot/childfolders?`$Top=1000"
 		if ($PropList -ne $null)
 		{
@@ -31,13 +31,13 @@ function Get-EXRAllMailFolders
 		}
 		do
 		{
-			$JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -TrackStatus $true
+			$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -TrackStatus $true
 			foreach ($Folder in $JSONOutput.Value)
 			{
 				$Folder | Add-Member -NotePropertyName FolderPath -NotePropertyValue ("\\" + $Folder.DisplayName)
 				$folderId = $Folder.Id.ToString()
 				Add-Member -InputObject $Folder -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
-				Invoke-EXRParseExtendedProperties -Item $Folder
+				Expand-ExtendedProperties -Item $Folder
 				Write-Output $Folder
 				if ($Folder.ChildFolderCount -gt 0)
 				{

@@ -24,10 +24,10 @@ function Invoke-EXREnumOneDriveFolders
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		if ([String]::IsNullOrEmpty($DriveRESTURI))
 		{
-			$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+			$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 			$RequestURL = $EndPoint + "('$MailboxName')/drive/root/children?`$filter folder ne null`&`$Top=1000"
 		}
 		else
@@ -36,10 +36,10 @@ function Invoke-EXREnumOneDriveFolders
 		}
 		do
 		{
-			$JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+			$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 			foreach ($Item in $JSONOutput.value)
 			{
-				Add-Member -InputObject $Item -NotePropertyName DriveRESTURI -NotePropertyValue (((Get-EXREndPoint -AccessToken $AccessToken -Segment "users") + "('$MailboxName')/drive") + "/items('" + $Item.Id + "')")
+				Add-Member -InputObject $Item -NotePropertyName DriveRESTURI -NotePropertyValue (((Get-EndPoint -AccessToken $AccessToken -Segment "users") + "('$MailboxName')/drive") + "/items('" + $Item.Id + "')")
 				Add-Member -InputObject $Item -NotePropertyName Path -NotePropertyValue ("\" + $Item.name)
 				if ([bool]($Item.PSobject.Properties.name -match "folder"))
 				{

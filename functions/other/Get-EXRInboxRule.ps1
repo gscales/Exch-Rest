@@ -49,8 +49,8 @@ function Get-EXRInboxRule{
             Throw("This function requires a beta access token. Use the '-Beta' switch with Get-EXRAccessToken to create a beta access token.")
         }
         
-        $HttpClient =  Get-EXRHTTPClient -MailboxName $MailboxName
-        $EndPoint =  Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
         if($PSCmdLet.ParameterSetName -eq "Id"){
             $RequestURL = $EndPoint + "('$MailboxName')/MailFolders/Inbox/MessageRules/$Id"
         }
@@ -60,7 +60,7 @@ function Get-EXRInboxRule{
     }
     Process{
         $Results = @()
-        $Response = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+        $Response = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
         
         if($PSCmdLet.ParameterSetName -eq "Id")
         {

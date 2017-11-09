@@ -1,4 +1,4 @@
-function Get-EXREventJSONFormat
+function Get-MessageJSONFormat
 {
 	[CmdletBinding()]
 	param (
@@ -11,83 +11,75 @@ function Get-EXREventJSONFormat
 		$Body,
 		
 		[Parameter(Position = 3, Mandatory = $false)]
-		[datetime]
-		$Start,
-		
-		[Parameter(Position = 4, Mandatory = $false)]
-		[datetime]
-		$End,
-		
-		[Parameter(Position = 5, Mandatory = $false)]
 		[psobject]
 		$SenderEmailAddress,
 		
-		[Parameter(Position = 6, Mandatory = $false)]
+		[Parameter(Position = 5, Mandatory = $false)]
 		[psobject]
 		$Attachments,
 		
-		[Parameter(Position = 7, Mandatory = $false)]
+		[Parameter(Position = 5, Mandatory = $false)]
 		[psobject]
 		$ReferanceAttachments,
 		
-		[Parameter(Position = 8, Mandatory = $false)]
+		[Parameter(Position = 6, Mandatory = $false)]
 		[psobject]
-		$Attendees,
+		$ToRecipients,
 		
-		[Parameter(Position = 9, Mandatory = $false)]
+		[Parameter(Position = 7, Mandatory = $false)]
+		[psobject]
+		$CcRecipients,
+		
+		[Parameter(Position = 7, Mandatory = $false)]
+		[psobject]
+		$bccRecipients,
+		
+		[Parameter(Position = 8, Mandatory = $false)]
 		[psobject]
 		$SentDate,
 		
-		[Parameter(Position = 10, Mandatory = $false)]
+		[Parameter(Position = 9, Mandatory = $false)]
 		[psobject]
 		$StandardPropList,
 		
-		[Parameter(Position = 11, Mandatory = $false)]
+		[Parameter(Position = 10, Mandatory = $false)]
 		[psobject]
 		$ExPropList,
 		
-		[Parameter(Position = 12, Mandatory = $false)]
+		[Parameter(Position = 11, Mandatory = $false)]
 		[switch]
 		$ShowRequest,
 		
-		[Parameter(Position = 15, Mandatory = $false)]
+		[Parameter(Position = 12, Mandatory = $false)]
+		[String]
+		$SaveToSentItems,
+		
+		[Parameter(Position = 13, Mandatory = $false)]
+		[switch]
+		$SendMail,
+		
+		[Parameter(Position = 14, Mandatory = $false)]
 		[psobject]
 		$ReplyTo,
 		
-		[Parameter(Position = 16, Mandatory = $false)]
+		[Parameter(Position = 17, Mandatory = $false)]
 		[bool]
 		$RequestReadRecipient,
 		
-		[Parameter(Position = 17, Mandatory = $false)]
-		[bool]
-		$RequestDeliveryRecipient,
-		
 		[Parameter(Position = 18, Mandatory = $false)]
-		[String]
-		$TimeZone,
-		
-		[Parameter(Position = 19, Mandatory = $false)]
-		[psobject]
-		$Recurrence
+		[bool]
+		$RequestDeliveryRecipient
 	)
 	Begin
 	{
 		$NewMessage = "{" + "`r`n"
+		if ($SendMail.IsPresent)
+		{
+			$NewMessage += "  `"Message`" : {" + "`r`n"
+		}
 		if (![String]::IsNullOrEmpty($Subject))
 		{
 			$NewMessage += "`"Subject`": `"" + $Subject + "`"" + "`r`n"
-		}
-		if ($Start -ne $null)
-		{
-			if ($NewMessage.Length -gt 5) { $NewMessage += "," }
-			$NewMessage += "`"Start`": {   `"DateTime`":`"" + $Start.ToString("yyyy-MM-ddTHH:mm:ss") + "`"," + "`r`n"
-			$NewMessage += "  `"TimeZone`":`"" + $TimeZone + "`"}" + "`r`n"
-		}
-		if ($End -ne $null)
-		{
-			if ($NewMessage.Length -gt 5) { $NewMessage += "," }
-			$NewMessage += "`"End`": {   `"DateTime`":`"" + $End.ToString("yyyy-MM-ddTHH:mm:ss") + "`"," + "`r`n"
-			$NewMessage += "  `"TimeZone`":`"" + $TimeZone + "`"}" + "`r`n"
 		}
 		if ($SenderEmailAddress -ne $null)
 		{
@@ -108,11 +100,11 @@ function Get-EXREventJSONFormat
 		}
 		
 		$toRcpcnt = 0;
-		if ($Attendees -ne $null)
+		if ($ToRecipients -ne $null)
 		{
 			if ($NewMessage.Length -gt 5) { $NewMessage += "," }
-			$NewMessage += "`"Attendees`": [ " + "`r`n"
-			foreach ($Attendee in $Attendees)
+			$NewMessage += "`"ToRecipients`": [ " + "`r`n"
+			foreach ($EmailAddress in $ToRecipients)
 			{
 				if ($toRcpcnt -gt 0)
 				{
@@ -123,52 +115,58 @@ function Get-EXREventJSONFormat
 					$NewMessage += "      { " + "`r`n"
 				}
 				$NewMessage += " `"EmailAddress`":{" + "`r`n"
-				$NewMessage += "  `"Name`":`"" + $Attendee.Name + "`"," + "`r`n"
-				$NewMessage += "  `"Address`":`"" + $Attendee.Address + "`"" + "`r`n"
-				$NewMessage += "}," + "`r`n"
-				$NewMessage += "  `"Type`":`"" + $Attendee.Type + "`"" + " }" + "`r`n"
+				$NewMessage += "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
+				$NewMessage += "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
+				$NewMessage += "}}" + "`r`n"
 				$toRcpcnt++
 			}
 			$NewMessage += "  ]" + "`r`n"
 		}
-		if ($Recurrence -ne $null)
+		$ccRcpcnt = 0
+		if ($CcRecipients -ne $null)
 		{
 			if ($NewMessage.Length -gt 5) { $NewMessage += "," }
-			$NewMessage += "`"Recurrence`": { " + "`r`n"
-			$NewMessage += "`"Pattern`": { " + "`r`n"
-			$NewMessage += "  `"Type`":`"" + $Recurrence.Pattern.Type + "`"," + "`r`n"
-			$NewMessage += "  `"Interval`":`"" + $Recurrence.Pattern.Interval + "`"," + "`r`n"
-			$NewMessage += "  `"Month`":`"" + $Recurrence.Pattern.Month + "`"," + "`r`n"
-			$NewMessage += "  `"DayOfMonth`":`"" + $Recurrence.Pattern.DayOfMonth + "`"," + "`r`n"
-			if ($Recurrence.Pattern.DaysOfWeek -ne $null)
+			$NewMessage += "`"CcRecipients`": [ " + "`r`n"
+			foreach ($EmailAddress in $CcRecipients)
 			{
-				$NewMessage += "  `"DaysOfWeek`":`[" + "`r`n"
-				$first = $true;
-				foreach ($day in $Recurrence.Pattern.DaysOfWeek)
+				if ($ccRcpcnt -gt 0)
 				{
-					if ($first)
-					{
-						$NewMessage += " `"" + $day + "`"`r`n"
-					}
-					else
-					{
-						$NewMessage += ",`"" + $day + "`"`r`n"
-					}
-					
+					$NewMessage += "      ,{ " + "`r`n"
 				}
-				$NewMessage += "  ]," + "`r`n"
+				else
+				{
+					$NewMessage += "      { " + "`r`n"
+				}
+				$NewMessage += " `"EmailAddress`":{" + "`r`n"
+				$NewMessage += "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
+				$NewMessage += "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
+				$NewMessage += "}}" + "`r`n"
+				$ccRcpcnt++
 			}
-			$NewMessage += "  `"FirstDayOfWeek`":`"" + $Recurrence.Pattern.FirstDayOfWeek + "`"," + "`r`n"
-			$NewMessage += "  `"Index`":`"" + $Recurrence.Pattern.Index + "`"" + "`r`n"
-			$NewMessage += "  }," + "`r`n"
-			$NewMessage += "`"Range`": { " + "`r`n"
-			$NewMessage += "  `"Type`":`"" + $Recurrence.Range.Type + "`"," + "`r`n"
-			$NewMessage += "  `"StartDate`":`"" + $Recurrence.Range.StartDate + "`"," + "`r`n"
-			$NewMessage += "  `"EndDate`":`"" + $Recurrence.Range.EndDate + "`"," + "`r`n"
-			$NewMessage += "  `"RecurrenceTimeZone`":`"" + $Recurrence.RecurrenceTimeZone + "`"," + "`r`n"
-			$NewMessage += "  `"NumberOfOccurrences`":`"" + $Recurrence.Range.NumberOfOccurrences + "`"" + "`r`n"
-			$NewMessage += "  }" + "`r`n"
-			$NewMessage += "  }" + "`r`n"
+			$NewMessage += "  ]" + "`r`n"
+		}
+		$bccRcpcnt = 0
+		if ($bccRecipients -ne $null)
+		{
+			if ($NewMessage.Length -gt 5) { $NewMessage += "," }
+			$NewMessage += "`"BccRecipients`": [ " + "`r`n"
+			foreach ($EmailAddress in $bccRecipients)
+			{
+				if ($bccRcpcnt -gt 0)
+				{
+					$NewMessage += "      ,{ " + "`r`n"
+				}
+				else
+				{
+					$NewMessage += "      { " + "`r`n"
+				}
+				$NewMessage += " `"EmailAddress`":{" + "`r`n"
+				$NewMessage += "  `"Name`":`"" + $EmailAddress.Name + "`"," + "`r`n"
+				$NewMessage += "  `"Address`":`"" + $EmailAddress.Address + "`"" + "`r`n"
+				$NewMessage += "}}" + "`r`n"
+				$bccRcpcnt++
+			}
+			$NewMessage += "  ]" + "`r`n"
 		}
 		$ReplyTocnt = 0
 		if ($ReplyTo -ne $null)
@@ -364,7 +362,12 @@ function Get-EXREventJSONFormat
 						$NewMessage += "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Id " + $Property.Id + "`", " + "`r`n"
 					}
 				}
-				$NewMessage += "`"Value`":`"" + $Property.Value + "`"" + "`r`n"
+				if($Property.Value -eq "null"){
+					$NewMessage += "`"Value`":null" + "`r`n"
+				}
+				else{
+					$NewMessage += "`"Value`":`"" + $Property.Value + "`"" + "`r`n"
+				}				
 				$NewMessage += " } " + "`r`n"
 				$propCount++
 			}

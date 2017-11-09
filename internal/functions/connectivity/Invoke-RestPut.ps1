@@ -1,4 +1,4 @@
-function Invoke-EXRRestPut
+function Invoke-RestPut
 {
 	[CmdletBinding()]
 	param (
@@ -35,12 +35,12 @@ function Invoke-EXRRestPut
 		if ($expiry -le [DateTime]::Now.ToUniversalTime())
 		{
 			write-host "Refresh Token"
-			$AccessToken = Invoke-EXRRefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
+			$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
 			Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
 		}
 		$method = New-Object System.Net.Http.HttpMethod("PUT")
 		$HttpRequestMessage = New-Object System.Net.Http.HttpRequestMessage($method, [Uri]$RequestURL)
-		$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (Get-EXRTokenFromSecureString -SecureToken $AccessToken.access_token));
+		$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
 		if (![String]::IsNullorEmpty($ContentHeader))
 		{
 			$HttpRequestMessage.Content = New-Object System.Net.Http.ByteArrayContent -ArgumentList @( ,$Content)
@@ -73,7 +73,7 @@ function Invoke-EXRRestPut
 		else
 		{
 			# $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
-			$JsonObject = ExpandPayload($ClientResult.Result.Content.ReadAsStringAsync().Result)
+			$JsonObject = ExpandPayload -response $ClientResult.Result.Content.ReadAsStringAsync().Result
 			if ([String]::IsNullOrEmpty($JsonObject))
 			{
 				Write-Output $ClientResult.Result

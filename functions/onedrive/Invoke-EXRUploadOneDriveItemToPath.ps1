@@ -29,8 +29,8 @@ function Invoke-EXRUploadOneDriveItemToPath
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/drive/root:" + $OneDriveUploadFilePath + ":/content"
 		if ([String]::IsNullOrEmpty($FileBytes))
 		{
@@ -40,7 +40,7 @@ function Invoke-EXRUploadOneDriveItemToPath
 		{
 			$Content = $FileBytes
 		}
-		$JSONOutput = Invoke-EXRRestPut -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -content $Content -contentheader "application/octet-stream"
+		$JSONOutput = Invoke-RestPut -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -content $Content -contentheader "application/octet-stream"
 		return $JSONOutput
 	}
 }

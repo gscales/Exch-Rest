@@ -38,7 +38,7 @@ function Get-EXRAppOnlyToken
 	)
 	Begin
 	{
-		$AppSetting = Get-EXRAppSettings
+		$AppSetting = Get-AppSettings
 		if ($TenantId -eq $null)
 		{
 			$AppSetting.TenantId
@@ -61,22 +61,22 @@ function Get-EXRAppOnlyToken
 		}
 		$JWTToken = New-EXRJWTToken -CertFileName $CertFileName -password $password -TenantId $TenantId -ClientId $ClientId -ValidateForMinutes $ValidateForMinutes
 		Add-Type -AssemblyName System.Web
-		$HttpClient = Get-EXRHTTPClient -MailboxName " "
+		$HttpClient = Get-HTTPClient -MailboxName " "
 		$AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&client_assertion=$JWTToken&grant_type=client_credentials&redirect_uri=$redirectUrl"
 		$content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
 		$ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/" + $TenantId + "/oauth2/token"), $content)
 		$JsonObject = ConvertFrom-Json -InputObject $ClientReesult.Result.Content.ReadAsStringAsync().Result
 		if ([bool]($JsonObject.PSobject.Properties.name -match "refresh_token"))
 		{
-			$JsonObject.refresh_token = (Get-EXRProtectedToken -PlainToken $JsonObject.refresh_token)
+			$JsonObject.refresh_token = (Get-ProtectedToken -PlainToken $JsonObject.refresh_token)
 		}
 		if ([bool]($JsonObject.PSobject.Properties.name -match "access_token"))
 		{
-			$JsonObject.access_token = (Get-EXRProtectedToken -PlainToken $JsonObject.access_token)
+			$JsonObject.access_token = (Get-ProtectedToken -PlainToken $JsonObject.access_token)
 		}
 		if ([bool]($JsonObject.PSobject.Properties.name -match "id_token"))
 		{
-			$JsonObject.id_token = (Get-EXRProtectedToken -PlainToken $JsonObject.id_token)
+			$JsonObject.id_token = (Get-ProtectedToken -PlainToken $JsonObject.id_token)
 		}
 		Add-Member -InputObject $JsonObject -NotePropertyName tenantid -NotePropertyValue $TenantId
 		Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId

@@ -39,7 +39,7 @@ function Set-EXRFolderRetentionTag
 			$retentionTagGUID = "{$($PolicyTagValue)}"
 			$policyTagGUID = new-Object Guid($retentionTagGUID)
 			$PolicyTagBase64 = [System.Convert]::ToBase64String($PolicyTagGUID.ToByteArray())
-			$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $Folder.FolderRestURI
 			$FolderPostValue = "{`"SingleValueExtendedProperties`": [`r`n"
 			$FolderPostValue += "`t{`"PropertyId`":`"Binary 0x3019`",`"Value`":`"" + $PolicyTagBase64 + "`"},`r`n"
@@ -47,7 +47,7 @@ function Set-EXRFolderRetentionTag
 			$FolderPostValue += "`t{`"PropertyId`":`"Integer 0x301A`",`"Value`":`"" + $RetentionPeriodValue + "`"}`r`n"
 			$FolderPostValue += "]}"
 			Write-Host $FolderPostValue
-			return Invoke-EXRRestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $FolderPostValue
+			return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $FolderPostValue
 		}
 	}
 	
