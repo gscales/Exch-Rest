@@ -109,7 +109,6 @@
 		'Get-EXRFolderClass',
 		'Get-EXRFolderFromPath',
 		'Get-EXRFolderItems',
-		'Get-EXRFolderItems',
 		'Get-EXRFolderPath',
 		'Get-EXRGroupChannels',
 		'Get-EXRGroupConversations',
