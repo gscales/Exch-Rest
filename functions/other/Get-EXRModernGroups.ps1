@@ -21,15 +21,15 @@ function Get-EXRModernGroups
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		$RequestURL = Get-EXREndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=groupTypes/any(c:c+eq+'Unified')"
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$RequestURL = Get-EndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=groupTypes/any(c:c+eq+'Unified')"
 		if (![String]::IsNullOrEmpty($GroupName))
 		{
-			$RequestURL = Get-EXREndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=displayName eq '$GroupName'"
+			$RequestURL = Get-EndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=displayName eq '$GroupName'"
 		}
 		do
 		{
-			$JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+			$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 			foreach ($Message in $JSONOutput.Value)
 			{
 				Write-Output $Message

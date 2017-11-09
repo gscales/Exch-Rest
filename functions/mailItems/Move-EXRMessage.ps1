@@ -34,11 +34,11 @@ function Move-EXRMessage
 		}
 		if ($Folder -ne $null)
 		{
-			$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $ItemURI + "/move"
 			$MoveItemPost = "{`"DestinationId`": `"" + $Folder.Id + "`"}"
 			write-host $MoveItemPost
-			return Invoke-EXRRestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $MoveItemPost
+			return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $MoveItemPost
 		}
 	}
 }

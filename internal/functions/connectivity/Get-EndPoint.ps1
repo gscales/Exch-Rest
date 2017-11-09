@@ -1,4 +1,4 @@
-function Get-EXREndPoint
+function Get-EndPoint
 {
 	[CmdletBinding()]
 	param (
@@ -14,7 +14,7 @@ function Get-EXREndPoint
 		[bool]
 		$group
 	)
-	Begin
+	process
 	{
 		if ($group)
 		{
@@ -45,6 +45,5 @@ function Get-EXREndPoint
 			}
 		}
 		return, $EndPoint
-		
 	}
 }

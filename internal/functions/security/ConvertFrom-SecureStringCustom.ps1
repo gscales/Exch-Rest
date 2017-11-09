@@ -1,4 +1,4 @@
-function Get-EXRTokenFromSecureString
+function ConvertFrom-SecureStringCustom
 {
 	[CmdletBinding()]
 	param (
@@ -6,7 +6,7 @@ function Get-EXRTokenFromSecureString
 		[System.Security.SecureString]
 		$SecureToken
 	)
-	begin
+	process
 	{
 		$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureToken)
 		$Token = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)

@@ -99,7 +99,7 @@ function Invoke-EXRReadEmail
         $exButton4.Size = new-object System.Drawing.Size(150,20)
         $exButton4.Text = "Download Attachments"
         $exButton4.Enabled = $false
-        $exButton4.Add_Click({DownloadAttachments})
+        $exButton4.Add_Click({Save-ClientAttachment})
         $msgform.Controls.Add($exButton4)
         
         $attname = ""

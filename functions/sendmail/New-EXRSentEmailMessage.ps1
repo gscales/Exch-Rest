@@ -72,7 +72,7 @@ function New-EXRSentEmailMessage
 		$ExPropList += $SentFlag
 		$ExPropList += $SentTime
 		$ExPropList += $RcvdTime
-		$NewMessage = Get-EXRMessageJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList
+		$NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList
 		if ($FolderPath -ne $null)
 		{
 			$Folder = Get-EXRFolderFromPath -FolderPath $FolderPath -AccessToken $AccessToken -MailboxName $MailboxName
@@ -81,8 +81,8 @@ function New-EXRSentEmailMessage
 		if ($Folder -ne $null)
 		{
 			$RequestURL = $Folder.FolderRestURI + "/messages"
-			$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-			Invoke-EXRRestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+			Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
 		}
 		
 	}

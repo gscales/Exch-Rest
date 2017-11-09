@@ -23,8 +23,8 @@ function Get-EXRFolderFromPath
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/MailFolders/msgfolderroot/childfolders?"
 		#  $RootFolder = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		#Split the Search path into an array  
@@ -36,7 +36,7 @@ function Get-EXRFolderFromPath
 			#Perform search based on the displayname of each folder level
 			$FolderName = $fldArray[$lint];
 			$RequestURL = $RequestURL += "`$filter=DisplayName eq '$FolderName'"
-			$tfTargetFolder = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+			$tfTargetFolder = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 			if ($tfTargetFolder.Value.displayname -match $FolderName)
 			{
 				$folderId = $tfTargetFolder.value.Id.ToString()

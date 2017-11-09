@@ -1,10 +1,10 @@
-function Get-EXRAppSettings
+function Get-AppSettings
 {
 	[CmdletBinding()]
 	param (
 		
 	)
-	Begin
+	process
 	{
 		$configObj = "" | Select-Object ResourceURL, ClientId, redirectUrl, ClientSecret, x5t, TenantId, ValidateForMinutes
 		$configObj.ResourceURL = "outlook.office.com"

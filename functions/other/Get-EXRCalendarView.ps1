@@ -24,13 +24,13 @@ function Get-EXRCalendarView
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/calendarview?startdatetime=" + $StartTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ") + "&enddatetime=" + $EndTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 		Write-Host $RequestURL
 		do
 		{
-			$JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+			$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 			foreach ($Message in $JSONOutput.Value)
 			{
 				Write-Output $Message

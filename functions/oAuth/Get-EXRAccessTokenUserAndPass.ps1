@@ -25,8 +25,8 @@ function Get-EXRAccessTokenUserAndPass
 	Begin
 	{
 		Add-Type -AssemblyName System.Web
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		$AppSetting = Get-EXRAppSettings
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$AppSetting = Get-AppSettings
 		if ($ClientId -eq $null)
 		{
 			$ClientId = $AppSetting.ClientId
@@ -45,11 +45,11 @@ function Get-EXRAccessTokenUserAndPass
 		Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
 		if ([bool]($JsonObject.PSobject.Properties.name -match "refresh_token"))
 		{
-			$JsonObject.refresh_token = (Get-EXRProtectedToken -PlainToken $JsonObject.refresh_token)
+			$JsonObject.refresh_token = (Get-ProtectedToken -PlainToken $JsonObject.refresh_token)
 		}
 		if ([bool]($JsonObject.PSobject.Properties.name -match "access_token"))
 		{
-			$JsonObject.access_token = (Get-EXRProtectedToken -PlainToken $JsonObject.access_token)
+			$JsonObject.access_token = (Get-ProtectedToken -PlainToken $JsonObject.access_token)
 		}
 		if ($Beta.IsPresent)
 		{
@@ -57,7 +57,7 @@ function Get-EXRAccessTokenUserAndPass
 		}
 		if ([bool]($JsonObject.PSobject.Properties.name -match "id_token"))
 		{
-			$JsonObject.id_token = (Get-EXRProtectedToken -PlainToken $JsonObject.id_token)
+			$JsonObject.id_token = (Get-ProtectedToken -PlainToken $JsonObject.id_token)
 		}
 		#Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
 		return $JsonObject

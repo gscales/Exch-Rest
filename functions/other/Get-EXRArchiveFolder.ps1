@@ -16,13 +16,13 @@ function Get-EXRArchiveFolder
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/MailboxSettings/ArchiveFolder"
-		$JsonObject = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+		$JsonObject = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		$folderId = $JsonObject.value.ToString()
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $EndPoint + "('$MailboxName')/MailFolders('$folderId')"
-		return Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+		return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 	}
 }

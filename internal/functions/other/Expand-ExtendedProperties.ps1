@@ -1,13 +1,20 @@
-function Invoke-EXRParseExtendedProperties{
-	   [CmdletBinding()] 
-    param( 
-		[Parameter(Position=1, Mandatory=$false)] [psobject]$Item
-    )  
- 	Begin
+function Expand-ExtendedProperties
+{
+	[CmdletBinding()] 
+    param (
+		[Parameter(Position = 1, Mandatory = $false)]
+		[psobject]
+		$Item
+	)
+	
+ 	process
 	{
-        if($Item.singleValueExtendedProperties -ne $null){
-            foreach($Prop in $Item.singleValueExtendedProperties){
-                Switch($Prop.Id){
+		if ($Item.singleValueExtendedProperties -ne $null)
+		{
+			foreach ($Prop in $Item.singleValueExtendedProperties)
+			{
+				Switch ($Prop.Id)
+				{
                     "Binary 0x3019" {
                         Add-Member -InputObject $Item -NotePropertyName "PR_POLICY_TAG" -NotePropertyValue ([System.GUID]([Convert]::FromBase64String($Prop.Value)))
                     }

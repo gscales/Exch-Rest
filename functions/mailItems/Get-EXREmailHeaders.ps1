@@ -20,9 +20,9 @@ function Get-EXREmailHeaders
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $ItemRESTURI + "/internetMessageHeaders"
-		$JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+		$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		return $JSONOutput 
 		
 	}

@@ -45,10 +45,10 @@ function Update-EXRMessage
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $ItemURI
-		$UpdateItemPatch = Get-EXRMessageJSONFormat -Subject $Subject -Body $Body -Attachments $Attachments -ExPropList $ExPropList -StandardPropList $StandardPropList
+		$UpdateItemPatch = Get-MessageJSONFormat -Subject $Subject -Body $Body -Attachments $Attachments -ExPropList $ExPropList -StandardPropList $StandardPropList
 		Write-host $UpdateItemPatch
-		return Invoke-EXRRestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $UpdateItemPatch
+		return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $UpdateItemPatch
 	}
 }

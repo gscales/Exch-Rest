@@ -16,10 +16,10 @@ function Get-EXRDefaultOneDrive
 		{
 			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		$EndPoint = Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/drive/root"
-		$JSONOutput = Invoke-EXRRestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+		$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		Add-Member -InputObject $JSONOutput -NotePropertyName DriveRESTURI -NotePropertyValue ($EndPoint + "('$MailboxName')/drives('" + $JSONOutput.Id + "')")
 		return $JSONOutput
 		

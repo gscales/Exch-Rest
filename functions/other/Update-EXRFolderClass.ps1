@@ -28,10 +28,10 @@ function Update-EXRFolderClass
 		$Folder = Get-EXRFolderFromPath -FolderPath $FolderPath -AccessToken $AccessToken -MailboxName $MailboxName
 		if ($Folder -ne $null)
 		{
-			$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $Folder.FolderRestURI
 			$UpdateFolderPost = "{`"SingleValueExtendedProperties`": [{`"PropertyId`":`"String 0x3613`",`"Value`":`"" + $FolderClass + "`"}]}"
-			return Invoke-EXRRestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $UpdateFolderPost
+			return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $UpdateFolderPost
 			
 		}
 		

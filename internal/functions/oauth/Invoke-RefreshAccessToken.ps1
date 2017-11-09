@@ -1,4 +1,4 @@
-function Invoke-EXRRefreshAccessToken
+function Invoke-RefreshAccessToken
 {
 	[CmdletBinding()]
 	param (
@@ -10,14 +10,14 @@ function Invoke-EXRRefreshAccessToken
 		[psobject]
 		$AccessToken
 	)
-	Begin
+	process
 	{
 		Add-Type -AssemblyName System.Web
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$ClientId = $AccessToken.clientid
 		# $redirectUrl = [System.Web.HttpUtility]::UrlEncode($AccessToken.redirectUrl)
 		$redirectUrl = $AccessToken.redirectUrl
-		$RefreshToken = (Get-EXRTokenFromSecureString -SecureToken $AccessToken.refresh_token)
+		$RefreshToken = (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.refresh_token)
 		$AuthorizationPostRequest = "client_id=$ClientId&refresh_token=$RefreshToken&grant_type=refresh_token&redirect_uri=$redirectUrl"
 		$content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
 		$ClientResult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"), $content)
@@ -41,11 +41,11 @@ function Invoke-EXRRefreshAccessToken
 			}
 			if ([bool]($JsonObject.PSobject.Properties.name -match "refresh_token"))
 			{
-				$JsonObject.refresh_token = (Get-EXRProtectedToken -PlainToken $JsonObject.refresh_token)
+				$JsonObject.refresh_token = (Get-ProtectedToken -PlainToken $JsonObject.refresh_token)
 			}
 			if ([bool]($JsonObject.PSobject.Properties.name -match "access_token"))
 			{
-				$JsonObject.access_token = (Get-EXRProtectedToken -PlainToken $JsonObject.access_token)
+				$JsonObject.access_token = (Get-ProtectedToken -PlainToken $JsonObject.access_token)
 			}
 			$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
 			if(!$MyInvocation.MyCommand.Module.PrivateData['EXRTokens'].ContainsKey($HostDomain)){			

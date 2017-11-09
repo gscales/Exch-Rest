@@ -28,11 +28,11 @@ function New-EXRFolder
 		$ParentFolder = Get-EXRFolderFromPath -FolderPath $ParentFolderPath -AccessToken $AccessToken -MailboxName $MailboxName
 		if ($ParentFolder -ne $null)
 		{
-			$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $ParentFolder.FolderRestURI + "/childfolders"
 			$NewFolderPost = "{`"DisplayName`": `"" + $DisplayName + "`"}"
 			write-host $NewFolderPost
-			return Invoke-EXRRestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewFolderPost
+			return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewFolderPost
 			
 		}
 		

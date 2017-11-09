@@ -1,4 +1,4 @@
-function Get-EXRProtectedToken
+function Get-ProtectedToken
 {
 	[CmdletBinding()]
 	param (

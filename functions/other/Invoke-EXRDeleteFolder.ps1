@@ -26,9 +26,9 @@ function Invoke-EXRDeleteFolder
 			$confirmation = Read-Host "Are you Sure You Want To proceed with deleting Folder"
 			if ($confirmation -eq 'y')
 			{
-				$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
+				$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 				$RequestURL = $Folder.FolderRestURI
-				return Invoke-EXRRestDELETE -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+				return Invoke-RestDELETE -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 			}
 			else
 			{

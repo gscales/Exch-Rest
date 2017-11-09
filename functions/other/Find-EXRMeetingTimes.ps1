@@ -12,8 +12,8 @@ function  Find-EXRMeetingTimes {
         {
               $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
         }        
-        $HttpClient =  Get-EXRHTTPClient -MailboxName $MailboxName
-        $EndPoint =  Get-EXREndPoint -AccessToken $AccessToken -Segment "users"
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
         $RequestURL =  $EndPoint + "('" + $MailboxName + "')/findMeetingTimes"
         if(![String]::IsNullOrEmpty($filter)){
                 $RequestURL =  $EndPoint + "('" + $MailboxName + "')/people?`$Top=1000&`$filter=" + $filter
@@ -23,7 +23,7 @@ function  Find-EXRMeetingTimes {
         }
         Write-Host $RequestURL
         do{
-            $JSONOutput = Invoke-EXRRestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+            $JSONOutput = Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {
                 Write-Output $Message
             }           

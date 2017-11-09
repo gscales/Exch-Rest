@@ -13,9 +13,9 @@ function Invoke-EXRDecodeToken
 	Begin
 	{
 		$parts = $Token.Split('.');
-		$headers = [System.Text.Encoding]::UTF8.GetString((Convert-EXRFromBase64StringWithNoPadding $parts[0]))
-		$claims = [System.Text.Encoding]::UTF8.GetString((Convert-EXRFromBase64StringWithNoPadding $parts[1]))
-		$signature = (Convert-EXRFromBase64StringWithNoPadding $parts[2])
+		$headers = [System.Text.Encoding]::UTF8.GetString((Convert-FromBase64StringWithNoPadding $parts[0]))
+		$claims = [System.Text.Encoding]::UTF8.GetString((Convert-FromBase64StringWithNoPadding $parts[1]))
+		$signature = (Convert-FromBase64StringWithNoPadding $parts[2])
 		
 		$customObject = [PSCustomObject]@{
 			headers  = ($headers | ConvertFrom-Json)

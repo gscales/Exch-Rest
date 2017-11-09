@@ -38,11 +38,11 @@ function Get-EXRAccessToken
 	Begin
 	{
 		Add-Type -AssemblyName System.Web
-		$HttpClient = Get-EXRHTTPClient -MailboxName $MailboxName
-		$AppSetting = Get-EXRAppSettings
+		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
+		$AppSetting = Get-AppSettings
 		if ([String]::IsNullOrEmpty($ClientId))
 		{
-			$ReturnToken = Get-EXRProfiledToken -MailboxName $MailboxName
+			$ReturnToken = Get-ProfiledToken -MailboxName $MailboxName
 			if($ReturnToken -eq $null){
 				Write-Error ("No Access Token for " + $MailboxName)
 			}
@@ -72,7 +72,7 @@ function Get-EXRAccessToken
 				$Prompt = "refresh_session"
 			}
 			
-			$Phase1auth = Show-EXROAuthWindow -Url "https://login.microsoftonline.com/common/oauth2/authorize?resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&response_type=code&redirect_uri=$redirectUrl&prompt=$Prompt"
+			$Phase1auth = Show-OAuthWindow -Url "https://login.microsoftonline.com/common/oauth2/authorize?resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&response_type=code&redirect_uri=$redirectUrl&prompt=$Prompt"
 			$code = $Phase1auth["code"]
 			$AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&grant_type=authorization_code&code=$code&redirect_uri=$redirectUrl"
 			if (![String]::IsNullOrEmpty($ClientSecret))
@@ -84,15 +84,15 @@ function Get-EXRAccessToken
 			$JsonObject = ConvertFrom-Json -InputObject $ClientReesult.Result.Content.ReadAsStringAsync().Result
 			if ([bool]($JsonObject.PSobject.Properties.name -match "refresh_token"))
 			{
-				$JsonObject.refresh_token = (Get-EXRProtectedToken -PlainToken $JsonObject.refresh_token)
+				$JsonObject.refresh_token = (Get-ProtectedToken -PlainToken $JsonObject.refresh_token)
 			}
 			if ([bool]($JsonObject.PSobject.Properties.name -match "access_token"))
 			{
-				$JsonObject.access_token = (Get-EXRProtectedToken -PlainToken $JsonObject.access_token)
+				$JsonObject.access_token = (Get-ProtectedToken -PlainToken $JsonObject.access_token)
 			}
 			if ([bool]($JsonObject.PSobject.Properties.name -match "id_token"))
 			{
-				$JsonObject.id_token = (Get-EXRProtectedToken -PlainToken $JsonObject.id_token)
+				$JsonObject.id_token = (Get-ProtectedToken -PlainToken $JsonObject.id_token)
 			}
 			Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
 			Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
