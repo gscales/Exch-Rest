@@ -8,8 +8,8 @@ function ConvertFrom-SecureStringCustom
 	)
 	process
 	{
-		$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureToken)
-		$Token = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+		#$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($SecureToken)
+		$Token = Unprotect-String -String $SecureToken
 		return, $Token
 	}
 }

@@ -8,13 +8,7 @@ function Get-ProtectedToken
 	)
 	begin
 	{
-		$SecureString = New-Object System.Security.SecureString
-		for ($i = 0; $i -lt $PlainToken.length; $i++)
-		{
-			$SecureString.AppendChar($PlainToken[$i])
-		}
-		$EncryptedToken = ConvertFrom-SecureString -SecureString $SecureString
-		$SecureEncryptedToken = ConvertTo-SecureString -String $EncryptedToken
+		$SecureEncryptedToken = Protect-String -String $PlainToken
 		return, $SecureEncryptedToken
 	}
 }

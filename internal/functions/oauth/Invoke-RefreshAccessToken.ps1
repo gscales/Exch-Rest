@@ -48,11 +48,11 @@ function Invoke-RefreshAccessToken
 				$JsonObject.access_token = (Get-ProtectedToken -PlainToken $JsonObject.access_token)
 			}
 			$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
-			if(!$MyInvocation.MyCommand.Module.PrivateData['EXRTokens'].ContainsKey($HostDomain)){			
-				$MyInvocation.MyCommand.Module.PrivateData['EXRTokens'].Add($HostDomain,$JsonObject)
+			if(!$Script:TokenCache.ContainsKey($HostDomain)){			
+				$Script:TokenCache.Add($HostDomain,$JsonObject)
 			}
 			else{
-				$MyInvocation.MyCommand.Module.PrivateData['EXRTokens'][$HostDomain] = $JsonObject
+				$Script:TokenCache[$HostDomain] = $JsonObject
 			}
 			return $JsonObject
 		}

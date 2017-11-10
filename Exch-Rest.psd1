@@ -120,7 +120,6 @@
 		'Get-EXRMailboxSettingsReport',
 		'Get-EXRMailboxTimeZone',
 		'Get-EXRMailboxUsage',
-		'Get-EXRMailboxUsageUserDetail',
 		'Get-EXRMailboxUser',
 		'Get-EXRModernGroups',
 		'Get-EXRNamedProperty',
@@ -162,6 +161,7 @@
 		'Invoke-EXROneDriveFolderPicker',
 		'Invoke-EXRReadEmail',
 		'Invoke-EXRUploadOneDriveItemToPath',
+		'Connect-EXRMailbox',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
 		'New-EXRCalendarEventREST',
@@ -229,7 +229,7 @@
 			
 			
 		} # End of PSData hashtable
-		EXRTokens = @{}
+		
 		
 	} # End of PrivateData hashtable
 	

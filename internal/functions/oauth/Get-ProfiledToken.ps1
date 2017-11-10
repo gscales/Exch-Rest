@@ -9,9 +9,9 @@ function Get-ProfiledToken
 	Process
 	{
 		$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
-		if ($MyInvocation.MyCommand.Module.PrivateData['EXRTokens'].ContainsKey($HostDomain))
+		if ($Script:TokenCache.ContainsKey($HostDomain))
 		{
-			return $MyInvocation.MyCommand.Module.PrivateData['EXRTokens'][$HostDomain]
+			return $Script:TokenCache[$HostDomain]
 		}
 	}
 }
