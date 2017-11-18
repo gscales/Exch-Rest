@@ -146,6 +146,7 @@
 		'Get-EXRWellKnownFolder',
 		'Get-EXRWellKnownFolderItems',
 		'Get-EXRWellKnownFolderList',
+		'Get-EXRPinnedItemsInFolder',
 		'Import-EXRAccessToken',
 		'Invoke-EXRCreateSelfSignedCert',
 		'Invoke-EXRDecodeToken',
