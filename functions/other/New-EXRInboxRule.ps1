@@ -44,7 +44,7 @@ function New-EXRInboxRule{
     #>
     [CmdletBinding()]
     param(
-        [Parameter(Position=0, Mandatory=$True)]
+        [Parameter(Position=0, Mandatory=$false)]
         [string]$MailboxName,
         
         [Parameter(Position=1, Mandatory=$False)]
@@ -54,10 +54,17 @@ function New-EXRInboxRule{
         [psobject]$Rule
     )
     Begin{
-        if($AccessToken -eq $null){
-              $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName -Beta
-        }
-        elseif(!$AccessToken.Beta){
+		if($AccessToken -eq $null)
+		{
+			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+			if($AccessToken -eq $null){
+				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+			}                 
+		}
+		if([String]::IsNullOrEmpty($MailboxName)){
+			$MailboxName = $AccessToken.mailbox
+		}  
+        if(!$AccessToken.Beta){
             Throw("This function requires a beta access token. Use the '-Beta' switch with Get-EXRAccessToken to create a beta access token.")
         }
         

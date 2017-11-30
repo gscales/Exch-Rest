@@ -2,7 +2,7 @@ function New-EXRFolder
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
@@ -21,10 +21,16 @@ function New-EXRFolder
 	)
 	Begin
 	{
-		if ($AccessToken -eq $null)
+		if($AccessToken -eq $null)
 		{
-			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
+			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+			if($AccessToken -eq $null){
+				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+			}                 
 		}
+		if([String]::IsNullOrEmpty($MailboxName)){
+			$MailboxName = $AccessToken.mailbox
+		}  
 		$ParentFolder = Get-EXRFolderFromPath -FolderPath $ParentFolderPath -AccessToken $AccessToken -MailboxName $MailboxName
 		if ($ParentFolder -ne $null)
 		{

@@ -1,17 +1,23 @@
 function  Get-EXROffice365ActiveUsers {
     [CmdletBinding()]
     param(
-        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=0, Mandatory=$false)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$true)] [String]$ViewType,
         [Parameter(Position=3, Mandatory=$true)] [String]$PeriodType   
     )
     Begin{
         
-        if($AccessToken -eq $null)
-        {
-              $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
-        }        
+		if($AccessToken -eq $null)
+		{
+			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+			if($AccessToken -eq $null){
+				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+			}                 
+		}
+		if([String]::IsNullOrEmpty($MailboxName)){
+			$MailboxName = $AccessToken.mailbox
+		}        
         $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "reports"
         $RequestURL =  $EndPoint + "/Office365ActiveUsers(view='$ViewType',period='$PeriodType')/content"

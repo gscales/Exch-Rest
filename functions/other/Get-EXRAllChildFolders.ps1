@@ -16,10 +16,16 @@ function Get-EXRAllChildFolders
 	)
 	Begin
 	{
-		if ($AccessToken -eq $null)
+		if($AccessToken -eq $null)
 		{
-			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
+			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+			if($AccessToken -eq $null){
+				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+			}                 
 		}
+		if([String]::IsNullOrEmpty($MailboxName)){
+			$MailboxName = $AccessToken.mailbox
+		}  
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $Folder.FolderRestURI + "/childfolders/?`$Top=1000"

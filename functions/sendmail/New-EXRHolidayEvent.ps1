@@ -2,7 +2,7 @@ function New-EXRHolidayEvent
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
@@ -89,10 +89,16 @@ function New-EXRHolidayEvent
 	Begin
 	{
 		
-		if ($AccessToken -eq $null)
+		if($AccessToken -eq $null)
 		{
-			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
+			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+			if($AccessToken -eq $null){
+				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+			}                 
 		}
+		if([String]::IsNullOrEmpty($MailboxName)){
+			$MailboxName = $AccessToken.mailbox
+		}  
 		if ([String]::IsNullOrEmpty($TimeZone))
 		{
 			$TimeZone = [TimeZoneInfo]::Local.Id

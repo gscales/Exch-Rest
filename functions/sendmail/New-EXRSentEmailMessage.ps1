@@ -2,7 +2,7 @@ function New-EXRSentEmailMessage
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
@@ -53,10 +53,16 @@ function New-EXRSentEmailMessage
 	Begin
 	{
 		
-		if ($AccessToken -eq $null)
+		if($AccessToken -eq $null)
 		{
-			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
+			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+			if($AccessToken -eq $null){
+				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+			}                 
 		}
+		if([String]::IsNullOrEmpty($MailboxName)){
+			$MailboxName = $AccessToken.mailbox
+		}  
 		$SentFlag = Get-EXRTaggedProperty -DataType "Integer" -Id "0x0E07" -Value "1"
 		$SentTime = Get-EXRTaggedProperty -DataType "SystemTime" -Id "0x0039" -Value $SentDate.ToString("yyyy-MM-ddTHH:mm:ss.ffffzzz")
 		$RcvdTime = Get-EXRTaggedProperty -DataType "SystemTime" -Id "0x0E06" -Value $SentDate.ToString("yyyy-MM-ddTHH:mm:ss.ffffzzz")

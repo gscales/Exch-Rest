@@ -3,7 +3,7 @@ function Get-EXRContacts{
 	   [CmdletBinding()] 
     param( 
 		[Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
-	    [Parameter(Position=2, Mandatory=$true)] [string]$MailboxName,
+	    [Parameter(Position=2, Mandatory=$false)] [string]$MailboxName,
 		[Parameter(Position=3, Mandatory=$false)] [string]$ContactsFolderName
 		
 
@@ -12,8 +12,14 @@ function Get-EXRContacts{
 	{
 			if($AccessToken -eq $null)
 			{
-				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
-			}   
+				$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+				if($AccessToken -eq $null){
+					$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+				}                 
+			}
+			if([String]::IsNullOrEmpty($MailboxName)){
+				$MailboxName = $AccessToken.mailbox
+			}  
 			if([String]::IsNullOrEmpty($ContactsFolderName)){
 			    $Contacts = Get-EXRDefaultContactsFolder -MailboxName $MailboxName -AccessToken $AccessToken
 			}

@@ -2,7 +2,7 @@ function Set-EXRFolderRetentionTag
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
@@ -28,10 +28,16 @@ function Set-EXRFolderRetentionTag
 	)
 	Begin
 	{
-		if ($AccessToken -eq $null)
+		if($AccessToken -eq $null)
 		{
-			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
+			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+			if($AccessToken -eq $null){
+				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+			}                 
 		}
+		if([String]::IsNullOrEmpty($MailboxName)){
+			$MailboxName = $AccessToken.mailbox
+		}  
 		$Folder = Get-EXRFolderFromPath -FolderPath $FolderPath -AccessToken $AccessToken -MailboxName $MailboxName
 		if ($Folder -ne $null)
 		{
