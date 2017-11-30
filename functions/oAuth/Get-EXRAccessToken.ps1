@@ -32,7 +32,7 @@ function Get-EXRAccessToken
 
 		[Parameter(Position = 7, Mandatory = $false)]
 		[switch]
-		$SaveToPrivateData
+		$CacheCredentials
 		
 	)
 	Begin
@@ -96,11 +96,12 @@ function Get-EXRAccessToken
 			}
 			Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
 			Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
+			Add-Member -InputObject $JsonObject -NotePropertyName mailbox -NotePropertyValue $MailboxName
 			if ($Beta.IsPresent)
 			{
 				Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
 			}
-			if($SaveToPrivateData.IsPresent){
+			if($CacheCredentials.IsPresent){
 				$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
 				if(!$Script:TokenCache.ContainsKey($HostDomain)){			
 					$Script:TokenCache.Add($HostDomain,$JsonObject)

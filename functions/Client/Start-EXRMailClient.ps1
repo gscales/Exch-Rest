@@ -12,6 +12,16 @@ function Start-EXRMailClient
 	)
 	Process
 	{
+		if($AccessToken -eq $null)
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		[System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
 		[System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms")
 		$Script:form = new-object System.Windows.Forms.form

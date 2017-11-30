@@ -2,7 +2,7 @@ function Move-EXRMessage
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
@@ -24,10 +24,16 @@ function Move-EXRMessage
 	)
 	Begin
 	{
-		if ($AccessToken -eq $null)
-		{
-			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
-		}
+		if($AccessToken -eq $null)
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		if (![String]::IsNullOrEmpty($TargetFolderPath))
 		{
 			$Folder = Get-EXRFolderFromPath -FolderPath $TargetFolderPath -AccessToken $AccessToken -MailboxName $MailboxName

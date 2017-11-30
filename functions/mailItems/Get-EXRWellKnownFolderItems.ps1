@@ -1,7 +1,7 @@
 function Get-EXRWellKnownFolderItems{
     [CmdletBinding()]
     param( 
-        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=0, Mandatory=$false)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [string]$WellKnownFolder,
         [Parameter(Position=4, Mandatory=$false)] [switch]$ReturnSize,
@@ -13,10 +13,16 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList
     )
     Begin{
-        if($AccessToken -eq $null)
+		if($AccessToken -eq $null)
         {
-              $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
-        }  
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+        if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
         if(![String]::IsNullorEmpty($Filter)){
             $Filter = "`&`$filter=" + $Filter
         }

@@ -2,7 +2,7 @@ function Invoke-EXRReadEmail
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
@@ -16,10 +16,16 @@ function Invoke-EXRReadEmail
 	)
 	Process
 	{
-		if ($AccessToken -eq $null)
-		{
-			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
-		}
+		if($AccessToken -eq $null)
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		$msMessage = Get-EXREmail -MailboxName $MailboxName -ItemRESTURI $ItemRESTURI -AccessToken $AccessToken
         $msgform = new-object System.Windows.Forms.form 
         $msgform.Text = $msMessage.Subject

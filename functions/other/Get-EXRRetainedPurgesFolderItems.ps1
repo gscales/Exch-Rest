@@ -1,14 +1,20 @@
 function Get-EXRRetainedPurgesFolderItems{
     [CmdletBinding()]
     param( 
-        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=0, Mandatory=$false)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken
     )
     Begin{
-        if($AccessToken -eq $null)
+		if($AccessToken -eq $null)
         {
-              $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
-        }  
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
         $PR_POLICY_TAG = Get-EXRTaggedProperty -DataType "Binary" -Id "0x3019"  
         $PR_RETENTION_FLAGS =  Get-EXRTaggedProperty -DataType "Integer" -Id "0x301D" 
         $PR_RETENTION_PERIOD = Get-EXRTaggedProperty -DataType "Integer" -Id "0x301A"   

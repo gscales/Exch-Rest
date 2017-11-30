@@ -13,6 +13,16 @@ function Invoke-EXRNewMessagesForm
 	)
 	Process
 	{
+		if($AccessToken -eq $null)
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		
 		$script:newmsgform = new-object System.Windows.Forms.form
 		$script:newmsgform.Text = $MailboxName

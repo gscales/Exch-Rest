@@ -2,7 +2,7 @@ function Invoke-EXRFolderPicker
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
@@ -24,7 +24,16 @@ function Invoke-EXRFolderPicker
 	)
 	Begin
 	{
-		
+		if($AccessToken -eq $null)
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		[void][System.Reflection.Assembly]::LoadWithPartialName("System.Drawing")
 		[void][System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms")
 		$Treeinfo = @{ }

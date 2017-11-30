@@ -1,7 +1,7 @@
 function Get-EXRPinnedItemsInFolder{
     [CmdletBinding()]
     param( 
-        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=0, Mandatory=$false)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [psobject]$Folder,
         [Parameter(Position=4, Mandatory=$false)] [switch]$ReturnSize,
@@ -13,10 +13,16 @@ function Get-EXRPinnedItemsInFolder{
         [Parameter(Position=11, Mandatory=$false)] [string]$Search
     )
     Begin{
-        if($AccessToken -eq $null)
+		if($AccessToken -eq $null)
         {
-              $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
-        }  
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
         $Filter = "SingleValueExtendedProperties/Any(ep: ep/Id eq 'SystemTime 0x301C' and ep/Value eq '" + [DateTime]::Parse("4500-9-1").ToString("yyyy-MM-ddTHH:mm:ssZ") + "')"
         if(![String]::IsNullorEmpty($Filter)){
             $Filter = "`&`$filter=" + $Filter

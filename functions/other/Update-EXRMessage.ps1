@@ -2,7 +2,7 @@ function Update-EXRMessage
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
@@ -41,10 +41,16 @@ function Update-EXRMessage
 	)
 	Begin
 	{
-		if ($AccessToken -eq $null)
-		{
-			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
-		}
+		if($AccessToken -eq $null)
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $ItemURI
 		$UpdateItemPatch = Get-MessageJSONFormat -Subject $Subject -Body $Body -Attachments $Attachments -ExPropList $ExPropList -StandardPropList $StandardPropList

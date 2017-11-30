@@ -2,7 +2,7 @@ function Get-EXREmail
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
@@ -20,10 +20,16 @@ function Get-EXREmail
 	)
 	Process
 	{
-		if ($AccessToken -eq $null)
-		{
-			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
-		}
+		if($AccessToken -eq $null)
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $ItemRESTURI
 		if($PropList -ne $null){

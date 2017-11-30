@@ -2,7 +2,7 @@ function New-EXRReferanceAttachment
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $true)]
+		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$Name,
 		
@@ -25,6 +25,16 @@ function New-EXRReferanceAttachment
 	)
 	Begin
 	{
+		if($AccessToken -eq $null)
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		$ReferanceAttachment = "" | Select-Object Name, SourceUrl, ProviderType, Permission, IsFolder
 		$ReferanceAttachment.IsFolder = "False"
 		$ReferanceAttachment.ProviderType = "oneDriveBusiness"

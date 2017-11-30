@@ -32,7 +32,7 @@ function Connect-EXRMailbox
 
 		[Parameter(Position = 7, Mandatory = $false)]
 		[switch]
-		$SaveToPrivateData,
+		$CacheCredentials,
 
 		[Parameter(Position = 8, Mandatory = $false)]
 		[switch]
@@ -48,14 +48,14 @@ function Connect-EXRMailbox
 				$Resource = ""
 			}
 			if($beta.IsPresent){
-				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -beta -Prompt $Prompt -SaveToPrivateData                  
+				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -beta -Prompt $Prompt -CacheCredentials                  
 			}
 			else{
-				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -Prompt $Prompt -SaveToPrivateData     
+				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -Prompt $Prompt -CacheCredentials   
 			}
 		}
 		else{
-			return Get-AccessToken -ClientId $ClientId -MailboxName $MailboxName -redirectUrl $redirectUrl -ClientSecret $ClientSecret -ResourceURL $ResourceURL -Beta:$beta.IsPresent -prompt $Prompt -SaveToPrivateData:$SaveToPrivateData.isPresent
+			return Get-AccessToken -ClientId $ClientId -MailboxName $MailboxName -redirectUrl $redirectUrl -ClientSecret $ClientSecret -ResourceURL $ResourceURL -Beta:$beta.IsPresent -prompt $Prompt -CacheCredentials:$CacheCredentials.isPresent
 		}
 	}
 }

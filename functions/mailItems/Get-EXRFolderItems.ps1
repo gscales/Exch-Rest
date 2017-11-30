@@ -1,7 +1,7 @@
 function Get-EXRFolderItems{
     [CmdletBinding()]
     param( 
-        [Parameter(Position=0, Mandatory=$true)] [string]$MailboxName,
+        [Parameter(Position=0, Mandatory=$false)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [psobject]$Folder,
         [Parameter(Position=4, Mandatory=$false)] [switch]$ReturnSize,
@@ -15,10 +15,16 @@ function Get-EXRFolderItems{
         [Parameter(Position=12, Mandatory=$false)] [switch]$TrackStatus
     )
     Begin{
-        if($AccessToken -eq $null)
+		if($AccessToken -eq $null)
         {
-              $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName          
-        }  
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+        if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
         if(![String]::IsNullorEmpty($Filter)){
             $Filter = "`&`$filter=" + $Filter
         }
