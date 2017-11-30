@@ -9,7 +9,7 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=6, Mandatory=$false)] [string]$Filter,
         [Parameter(Position=7, Mandatory=$false)] [string]$Top,
         [Parameter(Position=8, Mandatory=$false)] [string]$OrderBy,
-        [Parameter(Position=9, Mandatory=$false)] [bool]$TopOnly,
+        [Parameter(Position=9, Mandatory=$false)] [switch]$TopOnly,
         [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList
     )
     Begin{
