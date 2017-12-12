@@ -20,7 +20,8 @@ function  Get-EXRMailboxUsage {
 		}      
         $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "reports"
-        $RequestURL =  $EndPoint + "/MailboxUsage(view='$ViewType',period='$PeriodType')/content"
+        $RequestURL = $EndPoint + "/getMailboxUsageDetail(period='$PeriodType')?`$format=text/csv"
+       # $RequestURL =  $EndPoint + "/MailboxUsage(view='$ViewType',period='$PeriodType')/content"
         Write-Host $RequestURL
         $Output = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
         $OutPutStream = $Output.ReadAsStreamAsync().Result

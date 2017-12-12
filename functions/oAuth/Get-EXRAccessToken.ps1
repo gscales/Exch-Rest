@@ -46,7 +46,7 @@ function Get-EXRAccessToken
 			if($ReturnToken -eq $null){
 				Write-Error ("No Access Token for " + $MailboxName)
 			}
-			else{
+			else{				
 				return $ReturnToken
 			}
 		}
@@ -99,9 +99,10 @@ function Get-EXRAccessToken
 			Add-Member -InputObject $JsonObject -NotePropertyName mailbox -NotePropertyValue $MailboxName
 			if ($Beta.IsPresent)
 			{
-				Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
+				Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue $True
 			}
 			if($CacheCredentials.IsPresent){
+				Add-Member -InputObject $JsonObject -NotePropertyName Cached -NotePropertyValue $true				
 				$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
 				if(!$Script:TokenCache.ContainsKey($HostDomain)){			
 					$Script:TokenCache.Add($HostDomain,$JsonObject)
@@ -109,6 +110,7 @@ function Get-EXRAccessToken
 				else{
 					$Script:TokenCache[$HostDomain] = $JsonObject
 				}
+				write-host ("Cached Token for " + $HostDomain)
 			}
 			return $JsonObject
 		}

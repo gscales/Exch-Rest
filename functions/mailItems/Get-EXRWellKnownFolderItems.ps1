@@ -10,7 +10,9 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=7, Mandatory=$false)] [string]$Top,
         [Parameter(Position=8, Mandatory=$false)] [string]$OrderBy,
         [Parameter(Position=9, Mandatory=$false)] [switch]$TopOnly,
-        [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList
+        [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList,
+        [Parameter(Position=11, Mandatory=$false)] [psobject]$ClientFilter,
+        [Parameter(Position=12, Mandatory=$false)] [string]$ClientFilterTop
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -24,7 +26,7 @@ function Get-EXRWellKnownFolderItems{
             $MailboxName = $AccessToken.mailbox
         } 
         if(![String]::IsNullorEmpty($Filter)){
-            $Filter = "`&`$filter=" + $Filter
+            $Filter = "`&`$filter=" + [System.Web.HttpUtility]::UrlEncode($Filter)
         }
         if(![String]::IsNullorEmpty($Orderby)){
             $OrderBy = "`&`$OrderBy=" + $OrderBy
@@ -33,8 +35,11 @@ function Get-EXRWellKnownFolderItems{
         if(![String]::IsNullorEmpty($Top)){
             $TopValue = $Top
         }      
+        if(![String]::IsNullOrEmpty($ClientFilterTop)){
+            $TopOnly = $false
+        }
         if([String]::IsNullorEmpty($SelectProperties)){
-            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead"
+            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification"
         }
         else{
             $SelectProperties = "`$select=" + $SelectProperties
@@ -57,6 +62,7 @@ function Get-EXRWellKnownFolderItems{
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
             $RequestURL += $Filter + $OrderBy
+            $clientReturnCount = 0;
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
@@ -64,7 +70,31 @@ function Get-EXRWellKnownFolderItems{
                     if($PropList -ne $null){
                         Expand-ExtendedProperties -Item $Message
                     }
-                    Write-Output $Message
+                    if($ClientFilter -ne $null){
+                        switch($ClientFilter.Operator){
+                            "eq" {
+                                if($Message.($ClientFilter.Property) -eq $ClientFilter.Value){
+                                     Write-Output $Message
+                                     $clientReturnCount++
+                                }   
+                            }
+                            "ne" {
+                                if($Message.($ClientFilter.Property) -ne $ClientFilter.Value){
+                                     Write-Output $Message
+                                     $clientReturnCount++
+                                }
+                            }
+                        }
+                        if(![String]::IsNullOrEmpty($ClientFilterTop)){
+                            if([Int]::Parse($ClientFilterTop) -ge $clientReturnCount){
+                                return 
+                            }
+                        }
+
+                    }
+                    else{
+                        Write-Output $Message
+                    }                    
                 }           
                 $RequestURL = $JSONOutput.'@odata.nextLink'
             }while(![String]::IsNullOrEmpty($RequestURL) -band (!$TopOnly))     

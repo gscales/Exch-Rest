@@ -2,31 +2,36 @@ function Invoke-EXRReadEmail
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $false)]
+        [parameter(ValueFromPipeline=$True)]
+        [object[]]$msMessage,
+        
+		[Parameter(Position = 1, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
-		[Parameter(Position = 1, Mandatory = $false)]
+		[Parameter(Position = 2, Mandatory = $false)]
 		[psobject]
 		$AccessToken,
 
-		[Parameter(Position = 2, Mandatory = $false)]
+		[Parameter(Position = 3, Mandatory = $false)]
 		[psobject]
 		$ItemRESTURI
 	)
 	Process
 	{
-		if($AccessToken -eq $null)
-        {
-            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
-            if($AccessToken -eq $null){
-                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
-            }                 
+        if($msMessage -eq $null){
+            if($AccessToken -eq $null)
+            {
+                $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+                if($AccessToken -eq $null){
+                    $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+                }                 
+            }
+            if([String]::IsNullOrEmpty($MailboxName)){
+                $MailboxName = $AccessToken.mailbox
+            } 
+            $msMessage = Get-EXREmail -MailboxName $MailboxName -ItemRESTURI $ItemRESTURI -AccessToken $AccessToken
         }
-         if([String]::IsNullOrEmpty($MailboxName)){
-            $MailboxName = $AccessToken.mailbox
-        } 
-		$msMessage = Get-EXREmail -MailboxName $MailboxName -ItemRESTURI $ItemRESTURI -AccessToken $AccessToken
         $msgform = new-object System.Windows.Forms.form 
         $msgform.Text = $msMessage.Subject
         $msgform.size = new-object System.Drawing.Size(1000,800) 

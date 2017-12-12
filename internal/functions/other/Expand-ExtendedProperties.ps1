@@ -35,6 +35,9 @@ function Expand-ExtendedProperties
 		             "String {403fc56b-cd30-47c5-86f8-ede9e35a022b} Name ComplianceTag" {
                         Add-Member -InputObject $Item -NotePropertyName "ComplianceTag" -NotePropertyValue $Prop.Value
                     }
+                    "Integer {23239608-685D-4732-9C55-4C95CB4E8E33} Name InferenceClassificationResult" {
+                        Add-Member -InputObject $Item -NotePropertyName "InferenceClassificationResult" -NotePropertyValue $Prop.Value
+                    }
                     "Integer 0xe08" {
                         Add-Member -InputObject $Item -NotePropertyName "Size" -NotePropertyValue $Prop.Value
                     }

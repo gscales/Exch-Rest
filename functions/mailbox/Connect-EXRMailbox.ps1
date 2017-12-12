@@ -43,15 +43,34 @@ function Connect-EXRMailbox
 	{
 		if ([String]::IsNullOrEmpty($ClientId))
 		{
+			$ProceedOkay = $false
+			Do {
+				Write-Host "
+				---Default ClientId Selection ----------
+				1 = Mailbox Access Only
+				2 = Full Access to all Graph API functions
+				--------------------------"
+				$choice1 = read-host -prompt "Select number & press enter"
+				switch($choice1){
+					"1"{
+						$ProceedOkay = $true
+						$ClientId = "1d236c67-7e0b-42bc-88fd-d0b70a3df50a"
+					}
+					"2" {
+						$ProceedOkay = $true
+						$ClientId = "5471030d-f311-4c5d-91ef-74ca885463a7"
+					}
+				}
+			} until ($ProceedOkay)
 			$Resource = "graph.microsoft.com"
 			if($Outlook.IsPresent){
 				$Resource = ""
 			}
 			if($beta.IsPresent){
-				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -beta -Prompt $Prompt -CacheCredentials                  
+				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId  -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -beta -Prompt $Prompt -CacheCredentials                  
 			}
 			else{
-				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId 5471030d-f311-4c5d-91ef-74ca885463a7 -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -Prompt $Prompt -CacheCredentials   
+				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -Prompt $Prompt -CacheCredentials   
 			}
 		}
 		else{

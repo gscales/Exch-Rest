@@ -17,6 +17,7 @@ function Invoke-RefreshAccessToken
 		$ClientId = $AccessToken.clientid
 		# $redirectUrl = [System.Web.HttpUtility]::UrlEncode($AccessToken.redirectUrl)
 		$redirectUrl = $AccessToken.redirectUrl
+		$Cached = $AccessToken.Cached
 		$RefreshToken = (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.refresh_token)
 		$AuthorizationPostRequest = "client_id=$ClientId&refresh_token=$RefreshToken&grant_type=refresh_token&redirect_uri=$redirectUrl"
 		$content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
@@ -33,12 +34,6 @@ function Invoke-RefreshAccessToken
 		else
 		{
 			$JsonObject = ConvertFrom-Json -InputObject $ClientResult.Result.Content.ReadAsStringAsync().Result
-			Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $AccessToken.clientid
-			Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $AccessToken.redirectUrl
-			if ([bool]($AccessToken.PSobject.Properties.name -match "Beta"))
-			{
-				Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
-			}
 			if ([bool]($JsonObject.PSobject.Properties.name -match "refresh_token"))
 			{
 				$JsonObject.refresh_token = (Get-ProtectedToken -PlainToken $JsonObject.refresh_token)
@@ -47,15 +42,30 @@ function Invoke-RefreshAccessToken
 			{
 				$JsonObject.access_token = (Get-ProtectedToken -PlainToken $JsonObject.access_token)
 			}
-			$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
-			if(!$Script:TokenCache.ContainsKey($HostDomain)){			
-				$Script:TokenCache.Add($HostDomain,$JsonObject)
+			if ([bool]($JsonObject.PSobject.Properties.name -match "id_token"))
+			{
+				$JsonObject.id_token = (Get-ProtectedToken -PlainToken $JsonObject.id_token)
 			}
-			else{
-				$Script:TokenCache[$HostDomain] = $JsonObject
+			Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
+			Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
+			Add-Member -InputObject $JsonObject -NotePropertyName mailbox -NotePropertyValue $MailboxName
+			if ($AccessToken.Beta)
+			{
+				Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
 			}
-			return $JsonObject
+			if($Cached){
+				Add-Member -InputObject $JsonObject -NotePropertyName Cached -NotePropertyValue $true
+				$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
+				if(!$Script:TokenCache.ContainsKey($HostDomain)){			
+					$Script:TokenCache.Add($HostDomain,$JsonObject)
+				}
+				else{
+					$Script:TokenCache[$HostDomain] = $JsonObject
+				}
+				write-host ("Cached Token for " + $HostDomain)
+			}
+
 		}
-		
+		return $JsonObject		
 	}
 }

@@ -16,7 +16,7 @@ function Get-ProfiledToken
 		{
 			$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
 			if ($Script:TokenCache.ContainsKey($HostDomain))
-			{
+			{				
 				return $Script:TokenCache[$HostDomain]
 			}
 		}
