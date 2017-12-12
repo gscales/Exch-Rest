@@ -43,45 +43,61 @@ function Connect-EXRMailbox
 	{
 		if ([String]::IsNullOrEmpty($ClientId))
 		{
-			$ProceedOkay = $false
-			Do {
-				Write-Host "
-				---Default ClientId Selection ----------
-				1 = Mailbox Access Only
-				2 = Mailbox Contacts Access Only
-				3 = Full Access to all Graph API functions
-				4 = Reporting Access Only
-				--------------------------"
-				$choice1 = read-host -prompt "Select number & press enter"
-				switch($choice1){
-					"1"{
-						$ProceedOkay = $true
-						$ClientId = "1d236c67-7e0b-42bc-88fd-d0b70a3df50a"
+			$redirectUrl = "urn:ietf:wg:oauth:2.0:oob"
+			$defaultAppReg = Get-EXRDefaultAppRegistration
+			if($defaultAppReg -eq $null){
+				$ProceedOkay = $false
+				Do {
+					Write-Host "
+					---Default ClientId Selection ----------
+					1 = Mailbox Access Only
+					2 = Mailbox Contacts Access Only
+					3 = Full Access to all Graph API functions
+					4 = Reporting Access Only
+					5 = Set Default Application Registration
+					--------------------------"
+					$choice1 = read-host -prompt "Select number & press enter"
+					switch($choice1){
+						"1"{
+							$ProceedOkay = $true
+							$ClientId = "1d236c67-7e0b-42bc-88fd-d0b70a3df50a"
+						}
+						"2" {
+							$ProceedOkay = $true
+							$ClientId = "9149e700-47a9-4ba6-b01e-20716509fac7"
+							
+						}
+						"3" {
+							$ProceedOkay = $true
+							$ClientId = "5471030d-f311-4c5d-91ef-74ca885463a7"
+						}
+						"4" {
+							$ProceedOkay = $true
+							$ClientId = "e9a8cb7e-9630-4313-8705-9d6f3181bf01"
+						}
+						"5" {
+							New-EXRDefaultAppRegistration
+							$ProceedOkay = $true
+							$defaultAppReg = Get-EXRDefaultAppRegistration
+							$ClientId = $defaultAppReg.ClientId
+							$redirectUrl = $defaultAppReg.RedirectUrl 
+						}
 					}
-					"2" {
-						$ProceedOkay = $true
-						$ClientId = "9149e700-47a9-4ba6-b01e-20716509fac7"
-						
-					}
-					"3" {
-						$ProceedOkay = $true
-						$ClientId = "5471030d-f311-4c5d-91ef-74ca885463a7"
-					}
-					"4" {
-						$ProceedOkay = $true
-						$ClientId = "e9a8cb7e-9630-4313-8705-9d6f3181bf01"
-					}
-				}
-			} until ($ProceedOkay)
+				} until ($ProceedOkay)
+			}
+			else{
+				$ClientId = $defaultAppReg.ClientId
+				$redirectUrl = $defaultAppReg.RedirectUrl 
+			}
 			$Resource = "graph.microsoft.com"
 			if($Outlook.IsPresent){
 				$Resource = ""
 			}
 			if($beta.IsPresent){
-				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId  -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -beta -Prompt $Prompt -CacheCredentials                  
+				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId  -redirectUrl $redirectUrl   -ResourceURL $Resource -beta -Prompt $Prompt -CacheCredentials                  
 			}
 			else{
-				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId -redirectUrl urn:ietf:wg:oauth:2.0:oob -ResourceURL $Resource -Prompt $Prompt -CacheCredentials   
+				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $Resource -Prompt $Prompt -CacheCredentials   
 			}
 		}
 		else{
