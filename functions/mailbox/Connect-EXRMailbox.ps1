@@ -2,7 +2,7 @@ function Connect-EXRMailbox
 {
 	[CmdletBinding()]
 	param (
-		[Parameter(Position = 0, Mandatory = $false)]
+		[Parameter(Position = 0, Mandatory = $true)]
 		[string]
 		$MailboxName,
 		
@@ -48,7 +48,9 @@ function Connect-EXRMailbox
 				Write-Host "
 				---Default ClientId Selection ----------
 				1 = Mailbox Access Only
-				2 = Full Access to all Graph API functions
+				2 = Mailbox Contacts Access Only
+				3 = Full Access to all Graph API functions
+				4 = Reporting Access Only
 				--------------------------"
 				$choice1 = read-host -prompt "Select number & press enter"
 				switch($choice1){
@@ -58,7 +60,16 @@ function Connect-EXRMailbox
 					}
 					"2" {
 						$ProceedOkay = $true
+						$ClientId = "9149e700-47a9-4ba6-b01e-20716509fac7"
+						
+					}
+					"3" {
+						$ProceedOkay = $true
 						$ClientId = "5471030d-f311-4c5d-91ef-74ca885463a7"
+					}
+					"4" {
+						$ProceedOkay = $true
+						$ClientId = "e9a8cb7e-9630-4313-8705-9d6f3181bf01"
 					}
 				}
 			} until ($ProceedOkay)

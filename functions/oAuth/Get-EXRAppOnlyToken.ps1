@@ -80,6 +80,7 @@ function Get-EXRAppOnlyToken
 		}
 		Add-Member -InputObject $JsonObject -NotePropertyName tenantid -NotePropertyValue $TenantId
 		Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
+                Add-Member -InputObject $JsonObject -NotePropertyName mailbox -NotePropertyValue $MailboxName
 		Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
 		if ($Beta.IsPresent)
 		{
