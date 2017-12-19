@@ -52,7 +52,7 @@ function Get-EXRLastInboxEmail{
 	    Get-EXREmail -ItemRESTURI $Items[0].ItemRESTURI -MailboxName $MailboxName -AccessToken $AccessToken
     }
     else{
-        Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder Inbox -TopOnly:$true -Top $Top  -Filter $Filter -ClientFilter $ClientFilter -ClientFilterTop $ClientFilterTop
+        Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder Inbox -TopOnly:$true -Top $Top -Filter $Filter -ClientFilter $ClientFilter -ClientFilterTop $ClientFilterTop
     }
     }
 }

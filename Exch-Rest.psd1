@@ -181,6 +181,7 @@
 		'New-EXRSentEmailMessage',
 		'New-EXRDefaultAppRegistration',
 		'Remove-EXRInboxRule',
+		'Remove-EXRDefaultAppRegistration',
 		'Rename-EXRFolder',
 		'Send-EXRMessageREST',
 		'Send-EXRMessage',

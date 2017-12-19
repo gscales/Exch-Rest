@@ -36,7 +36,11 @@ function Connect-EXRMailbox
 
 		[Parameter(Position = 8, Mandatory = $false)]
 		[switch]
-		$Outlook
+		$Outlook,
+
+		[Parameter(Position = 8, Mandatory = $false)]
+		[switch]
+		$ShowMenu
 		
 	)
 	Begin
@@ -45,7 +49,7 @@ function Connect-EXRMailbox
 		{
 			$redirectUrl = "urn:ietf:wg:oauth:2.0:oob"
 			$defaultAppReg = Get-EXRDefaultAppRegistration
-			if($defaultAppReg -eq $null){
+			if($defaultAppReg -eq $null -bor $ShowMenu.IsPresent){
 				$ProceedOkay = $false
 				Do {
 					Write-Host "
@@ -55,6 +59,8 @@ function Connect-EXRMailbox
 					3 = Full Access to all Graph API functions
 					4 = Reporting Access Only
 					5 = Set Default Application Registration
+					6 = Delete Default Application Registration
+					7 = Exit
 					--------------------------"
 					$choice1 = read-host -prompt "Select number & press enter"
 					switch($choice1){
@@ -82,6 +88,14 @@ function Connect-EXRMailbox
 							$ClientId = $defaultAppReg.ClientId
 							$redirectUrl = $defaultAppReg.RedirectUrl 
 						}
+						"6"{
+							Remove-EXRDefaultAppRegistration
+							Write-Host "Removed Default Registration"
+							$ProceedOkay = $true
+						}
+						"7"{return}
+							
+
 					}
 				} until ($ProceedOkay)
 			}

@@ -86,7 +86,7 @@ function Get-EXRWellKnownFolderItems{
                             }
                         }
                         if(![String]::IsNullOrEmpty($ClientFilterTop)){
-                            if([Int]::Parse($ClientFilterTop) -ge $clientReturnCount){
+                            if($clientReturnCount -ge [Int]::Parse($ClientFilterTop)){
                                 return 
                             }
                         }
