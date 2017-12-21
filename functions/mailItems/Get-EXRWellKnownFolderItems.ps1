@@ -70,7 +70,8 @@ function Get-EXRWellKnownFolderItems{
                     if($PropList -ne $null){
                         Expand-ExtendedProperties -Item $Message
                     }
-                    if($ClientFilter -ne $null){
+                    Expand-MessageProperties -Item $Message
+                    if(![String]::IsNullOrEmpty($ClientFilter)){
                         switch($ClientFilter.Operator){
                             "eq" {
                                 if($Message.($ClientFilter.Property) -eq $ClientFilter.Value){

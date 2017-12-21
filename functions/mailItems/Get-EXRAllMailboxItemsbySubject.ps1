@@ -1,4 +1,4 @@
-function Get-EXRAllMailboxItems
+function Get-EXRAllMailboxItemsBySubject
 {
 	[CmdletBinding()]
 	param (
@@ -11,9 +11,7 @@ function Get-EXRAllMailboxItems
         [Parameter(Position=7, Mandatory=$false)] [string]$Top,
         [Parameter(Position=8, Mandatory=$false)] [string]$OrderBy,
         [Parameter(Position=9, Mandatory=$false)] [switch]$TopOnly,
-        [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList,
-        [Parameter(Position=11, Mandatory=$false)] [psobject]$ClientFilter,
-        [Parameter(Position=12, Mandatory=$false)] [string]$ClientFilterTop
+        [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList
 	)
 	Process
 	{
@@ -27,7 +25,7 @@ function Get-EXRAllMailboxItems
 		if([String]::IsNullOrEmpty($MailboxName)){
 			$MailboxName = $AccessToken.mailbox
 		}  
-		Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly.IsPresent -PropList $PropList
+		Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize $ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly $TopOnly.IsPresent -PropList $PropList
 		
 		
 	}
