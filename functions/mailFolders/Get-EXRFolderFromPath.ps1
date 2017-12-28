@@ -12,7 +12,11 @@ function Get-EXRFolderFromPath
 		
 		[Parameter(Position = 2, Mandatory = $false)]
 		[psobject]
-		$AccessToken
+		$AccessToken,
+
+		[Parameter(Position = 3, Mandatory = $false)]
+		[psobject]
+		$PropList
 	)
 	process
 	{
@@ -46,6 +50,10 @@ function Get-EXRFolderFromPath
 				#Perform search based on the displayname of each folder level
 				$FolderName = $fldArray[$lint];
 				$RequestURL = $RequestURL += "`$filter=DisplayName eq '$FolderName'"
+        		if($PropList -ne $null){
+           			 $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
+           			 $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
+       			}
 				$tfTargetFolder = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 				if ($tfTargetFolder.Value.displayname -match $FolderName)
 				{
@@ -61,6 +69,7 @@ function Get-EXRFolderFromPath
 			{
 				$folderId = $tfTargetFolder.Value.Id.ToString()
 				Add-Member -InputObject $tfTargetFolder.Value -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
+				Expand-ExtendedProperties -Item $tfTargetFolder.Value
 				return, $tfTargetFolder.Value
 			}
 			else
