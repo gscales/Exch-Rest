@@ -1,4 +1,4 @@
-# Exch-Rest
+# Exch-Rest Getting Started Guide
 The Exch-Rest module is a PowerShell module for the Office 365 and Exchange 2016 REST API that allows you to access the functionality provided by the [Graph API](https://developer.microsoft.com/en-us/graph) 
 
 ## Setup
@@ -37,13 +37,13 @@ Or you can use the following to download and use the following steps can be used
 
 ## Connecting and Authenticating ##
 
-To connect to a Mailbox which will start the authentication proces that will allows you to then use the rest of the cmdlets defined in the module use the following 
+To connect to a Mailbox which will start the authentication proces that will allow you to then use the cmdlets defined in the module use the following 
 
     Connect-EXRMailbox -Mailbox gscales@datarumble.com
 
 
 #### Application registration
-The Office 365 / Exchange 2016 REST API uses OAuth 2.0 to authenticate users. This means that people using your app do not need to give you their username/password. Instead, they authenticate against a central authentication system (e.g. Azure AD, Active Directory) and you get back a token. You can then give your application permission to use that token to do a limited number of things for a specific period of time.
+The Office 365 / Exchange 2016 REST API uses OAuth 2.0 to authenticate users. This means that people using an application that use this API do not need to give you their username/password. Instead, they authenticate against a central authentication system (e.g. Azure AD, Active Directory) and you get back a token which is then passed to the API endpoint for authentication. You can then give your application permission to use that token to do a limited number of things for a specific period of time.
 
 However, to use OAuth tokens you must register an application in Azure before you can use the Exch-Rest functions.
 
@@ -58,7 +58,8 @@ If you select one of these Id's the first time you run this in a Tennant it will
 If you want to create you own Application regisration and permissions grants (which is recommended) there is a good walk through of the application registration process is provided by Jason Johnston at [https://github.com/jasonjoh/office365-azure-guides/blob/master/RegisterAnAppInAzure.md](https://github.com/jasonjoh/office365-azure-guides/blob/master/RegisterAnAppInAzure.md).
 
 The following is an overview of the steps you can take to create an application registration:
-  * Browse to [http://dev.office.com/app-registration](http://dev.office.com/app-registration) and login into your Azure tenant
+  
+* Browse to [http://dev.office.com/app-registration](http://dev.office.com/app-registration) and login into your Azure tenant
   * Click `+ New application registration`, fill out the options, and click `Create`
     * Name: `<Name-of-app-users-will-see>`
     * Application type: `Native`

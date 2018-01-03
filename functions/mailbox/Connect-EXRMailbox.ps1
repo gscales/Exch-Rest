@@ -38,7 +38,7 @@ function Connect-EXRMailbox
 		[switch]
 		$Outlook,
 
-		[Parameter(Position = 8, Mandatory = $false)]
+		[Parameter(Position = 9, Mandatory = $false)]
 		[switch]
 		$ShowMenu
 		
