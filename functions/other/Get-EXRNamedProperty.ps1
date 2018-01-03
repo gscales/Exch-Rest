@@ -29,7 +29,7 @@ function Get-EXRNamedProperty
 		$Property.DataType = $DataType
 		$Property.PropertyType = "Named"
 		$Property.Guid = $Guid
-		if ($Type = "String")
+		if ($Type -eq "String")
 		{
 			$Property.Type = "String"
 		}

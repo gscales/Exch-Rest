@@ -193,6 +193,7 @@
 		'Send-EXRMessageREST',
 		'Send-EXRMessage',
 		'Send-EXRSimpleMeetingRequest',
+		'Send-EXRVoteEmail',
 		'New-EXRDefaultAppRegistration',
 		'Set-EXRFolderRetentionTag',
 		'Set-EXRInboxRule',

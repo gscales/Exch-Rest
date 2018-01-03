@@ -55,7 +55,7 @@ If you select one of these Id's the first time you run this in a Tennant it will
 
 ![](https://gscales.github.io/Exch-Rest/GetttingStarted/AppRegCapture.PNG)
 
-If you want to create you own Application regisration and permissions grants (which is recommended) there is a good walk through of the application registration process is provided by Jason Johnston at [https://github.com/jasonjoh/office365-azure-guides/blob/master/RegisterAnAppInAzure.md](https://github.com/jasonjoh/office365-azure-guides/blob/master/RegisterAnAppInAzure.md).
+If you want to create your own Application registration and permission grants (which is recommended) there is a good walk through of the application registration process is provided by Jason Johnston at [https://github.com/jasonjoh/office365-azure-guides/blob/master/RegisterAnAppInAzure.md](https://github.com/jasonjoh/office365-azure-guides/blob/master/RegisterAnAppInAzure.md).
 
 The following is an overview of the steps you can take to create an application registration:
   
