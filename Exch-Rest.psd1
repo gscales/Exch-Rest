@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.0'
+	ModuleVersion	   = '3.01'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()

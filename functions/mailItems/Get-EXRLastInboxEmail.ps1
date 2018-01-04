@@ -37,7 +37,7 @@ function Get-EXRLastInboxEmail{
         $ClientFilter.Value = "focused"
         $ClientFilter.Operator = "eq"
         $ClientFilterTop = $Top 
-        $Top = 1000;
+        $Top = 100;
     }
     if($Other.IsPresent){
         $ClientFilter = "" | Select Property,Value,Operator
@@ -45,7 +45,7 @@ function Get-EXRLastInboxEmail{
         $ClientFilter.Value = "other"
         $ClientFilter.Operator = "eq"
         $ClientFilterTop = $Top 
-        $Top = 1000;
+        $Top = 100;
     }
     if($Top -eq 1){
 	    $Items = Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder Inbox -TopOnly:$true -Top $Top -Filter $Filter -ClientFilter $ClientFilter -ClientFilterTop $ClientFilterTop
