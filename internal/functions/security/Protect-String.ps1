@@ -15,6 +15,7 @@
 	
 		Encrypts the content stored in $secret and returns it.
 #>
+	[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSAvoidUsingConvertToSecureStringWithPlainText", "")]
 	[CmdletBinding()]
 	Param (
 		[Parameter(ValueFromPipeline = $true)]
