@@ -25,6 +25,10 @@ function Get-EXRRootMailFolder
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/MailFolders/msgfolderroot"
-		return Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+		$tfTargetFolder = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+		$folderId = $tfTargetFolder.Id.ToString()
+		Add-Member -InputObject $tfTargetFolder -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
+		Expand-ExtendedProperties -Item $tfTargetFolder
+		return, $tfTargetFolder
 	}
 }

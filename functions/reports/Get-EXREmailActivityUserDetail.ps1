@@ -17,7 +17,9 @@ function  Get-EXREmailActivityUserDetail{
 		}
 		if([String]::IsNullOrEmpty($MailboxName)){
 			$MailboxName = $AccessToken.mailbox
-		}       
+        }else{
+            $Filter = $MailboxName
+        }   
         $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "reports"
         if(![String]::IsNullOrEmpty($date)){
@@ -28,6 +30,10 @@ function  Get-EXREmailActivityUserDetail{
         Write-Host $RequestURL
         $Output = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
         $OutPutStream = $Output.ReadAsStreamAsync().Result
-        return ConvertFrom-Csv ([System.Text.Encoding]::UTF8.GetString($OutPutStream.ToArray()))
+        if([String]::IsNullOrEmpty($Filter)){
+            return ConvertFrom-Csv ([System.Text.Encoding]::UTF8.GetString($OutPutStream.ToArray()))
+        }else{
+            return ConvertFrom-Csv ([System.Text.Encoding]::UTF8.GetString($OutPutStream.ToArray())) | Where-Object {$_.'User Principal Name' -eq $MailboxName}
+        }    
     }
 }

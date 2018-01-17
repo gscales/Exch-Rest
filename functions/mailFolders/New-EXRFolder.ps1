@@ -10,13 +10,21 @@ function New-EXRFolder
 		[psobject]
 		$AccessToken,
 		
-		[Parameter(Position = 2, Mandatory = $true)]
+		[Parameter(Position = 2, Mandatory = $false)]
 		[string]
 		$ParentFolderPath,
+
+		[Parameter(Position = 3, Mandatory = $false)]
+		[switch]
+		$RootFolder,
 		
-		[Parameter(Position = 3, Mandatory = $true)]
+		[Parameter(Position = 4, Mandatory = $true)]
 		[string]
-		$DisplayName
+		$DisplayName,
+
+		[Parameter(Position = 5, Mandatory = $false)]
+		[string]
+		$FolderClass
 		
 	)
 	Begin
@@ -31,12 +39,24 @@ function New-EXRFolder
 		if([String]::IsNullOrEmpty($MailboxName)){
 			$MailboxName = $AccessToken.mailbox
 		}  
-		$ParentFolder = Get-EXRFolderFromPath -FolderPath $ParentFolderPath -AccessToken $AccessToken -MailboxName $MailboxName
+		if($RootFolder.IsPresent){
+			$ParentFolder = Get-EXRRootMailFolder -AccessToken $AccessToken -MailboxName $MailboxName
+		}else{
+			$ParentFolder = Get-EXRFolderFromPath -FolderPath $ParentFolderPath -AccessToken $AccessToken -MailboxName $MailboxName
+		}
+		
 		if ($ParentFolder -ne $null)
 		{
 			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $ParentFolder.FolderRestURI + "/childfolders"
-			$NewFolderPost = "{`"DisplayName`": `"" + $DisplayName + "`"}"
+			if([String]::IsNullOrEmpty($FolderClass)){
+				$NewFolderPost = "{`"DisplayName`": `"" + $DisplayName + "`"}"
+			}
+			else{
+				$NewFolderPost = "{`"DisplayName`": `"" + $DisplayName + "`"," +"`r`n"
+				$NewFolderPost += "`"SingleValueExtendedProperties`": [{`"PropertyId`":`"String 0x3613`",`"Value`":`"" + $FolderClass + "`"}]}"
+			}
+			
 			write-host $NewFolderPost
 			return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewFolderPost
 			
