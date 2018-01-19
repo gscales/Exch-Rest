@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.01'
+	ModuleVersion	   = '3.02'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -159,6 +159,8 @@
 		'Get-EXRMailboxUsageMailboxCounts',
 		'Get-EXRMailboxUsageQuotaStatusMailboxCounts',
 		'Get-EXREmailAppUsageVersionsUserCounts',
+		'Get-EXREmailAppUsageUserCounts',
+		'Get-EXREmailAppUsageAppsUserCounts'
 		'Import-EXRAccessToken',
 		'Invoke-EXRCreateSelfSignedCert',
 		'Invoke-EXRDecodeToken',
