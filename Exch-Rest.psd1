@@ -200,6 +200,7 @@
 		'Send-EXRMessage',
 		'Send-EXRSimpleMeetingRequest',
 		'Send-EXRVoteEmail',
+		'Search-EXRMessage',
 		'New-EXRDefaultAppRegistration',
 		'Set-EXRFolderRetentionTag',
 		'Set-EXRInboxRule',

@@ -34,7 +34,7 @@ function Get-EXRFolderFromId
 		 if($PropList -ne $null){
             $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
             $RequestURL += "`?`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
-            Write-Host $RequestURL
+            
         }
 		$tfTargetFolder = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		$folderId = $tfTargetFolder.Id.ToString()

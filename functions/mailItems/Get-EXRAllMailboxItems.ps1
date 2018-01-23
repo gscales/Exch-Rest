@@ -8,9 +8,9 @@ function Get-EXRAllMailboxItems
         [Parameter(Position=4, Mandatory=$false)] [switch]$ReturnSize,
         [Parameter(Position=5, Mandatory=$false)] [string]$SelectProperties,
         [Parameter(Position=6, Mandatory=$false)] [string]$Filter,
-        [Parameter(Position=7, Mandatory=$false)] [string]$Top,
+        [Parameter(Position=7, Mandatory=$false)] [string]$PageSize,
         [Parameter(Position=8, Mandatory=$false)] [string]$OrderBy,
-        [Parameter(Position=9, Mandatory=$false)] [switch]$TopOnly,
+        [Parameter(Position=9, Mandatory=$false)] [switch]$First,
         [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList,
         [Parameter(Position=11, Mandatory=$false)] [psobject]$ClientFilter,
         [Parameter(Position=12, Mandatory=$false)] [string]$ClientFilterTop
@@ -27,7 +27,7 @@ function Get-EXRAllMailboxItems
 		if([String]::IsNullOrEmpty($MailboxName)){
 			$MailboxName = $AccessToken.mailbox
 		}  
-		Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly.IsPresent -PropList $PropList
+		Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $PageSize -OrderBy $OrderBy -TopOnly:$First.IsPresent -PropList $PropList
 		
 		
 	}

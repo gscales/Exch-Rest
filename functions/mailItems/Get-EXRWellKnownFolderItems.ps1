@@ -13,7 +13,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList,
         [Parameter(Position=11, Mandatory=$false)] [psobject]$ClientFilter,
         [Parameter(Position=12, Mandatory=$false)] [string]$ClientFilterTop,
-        [Parameter(Position=13, Mandatory=$false)] [string]$Search
+        [Parameter(Position=13, Mandatory=$false)] [string]$Search,
+        [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnFolderPath
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -48,6 +49,7 @@ function Get-EXRWellKnownFolderItems{
         if(![String]::IsNullorEmpty($Search)){
             $Search = "`&`$Search=" + $Search
         }
+        $ParentFolderCollection = New-Object 'system.collections.generic.dictionary[[string],[string]]'
         if($WellKnownFolder -ne $null)
         {
             $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
@@ -75,6 +77,16 @@ function Get-EXRWellKnownFolderItems{
                         Expand-ExtendedProperties -Item $Message
                     }
                     Expand-MessageProperties -Item $Message
+                    if($ReturnFolderPath.IsPresent){
+                        if($ParentFolderCollection.ContainsKey($Message.parentFolderId)){
+                            add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]
+                        }
+                        else{
+                            $Folder = Get-EXRFolderFromId -MailboxName $MailboxName -AccessToken $AccessToken -FolderId $Message.parentFolderId
+                            $ParentFolderCollection.Add($Message.parentFolderId,$Folder.PR_Folder_Path)
+                            add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]
+                        }
+                    }
                     if(![String]::IsNullOrEmpty($ClientFilter)){
                         switch($ClientFilter.Operator){
                             "eq" {
