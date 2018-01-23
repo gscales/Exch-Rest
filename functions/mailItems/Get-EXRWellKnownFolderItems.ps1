@@ -12,7 +12,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=9, Mandatory=$false)] [switch]$TopOnly,
         [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList,
         [Parameter(Position=11, Mandatory=$false)] [psobject]$ClientFilter,
-        [Parameter(Position=12, Mandatory=$false)] [string]$ClientFilterTop
+        [Parameter(Position=12, Mandatory=$false)] [string]$ClientFilterTop,
+        [Parameter(Position=13, Mandatory=$false)] [string]$Search
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -39,10 +40,13 @@ function Get-EXRWellKnownFolderItems{
             $TopOnly = $false
         }
         if([String]::IsNullorEmpty($SelectProperties)){
-            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification"
+            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,parentFolderId"
         }
         else{
             $SelectProperties = "`$select=" + $SelectProperties
+        }
+        if(![String]::IsNullorEmpty($Search)){
+            $Search = "`&`$Search=" + $Search
         }
         if($WellKnownFolder -ne $null)
         {
@@ -61,7 +65,7 @@ function Get-EXRWellKnownFolderItems{
                $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
-            $RequestURL += $Filter + $OrderBy
+            $RequestURL += $Filter + $Search + $OrderBy
             $clientReturnCount = 0;
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName

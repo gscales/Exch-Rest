@@ -50,6 +50,9 @@ function Expand-ExtendedProperties
                     "SystemTime 0xF01"{
                         Add-Member -InputObject $Item -NotePropertyName "PR_RENEWTIME2" -NotePropertyValue ([DateTime]::Parse($Prop.Value))
                     }
+                    {"String 0x66b5"}{
+                          Add-Member -InputObject $Item -NotePropertyName "PR_Folder_Path" -NotePropertyValue $Prop.Value.Replace("￾","\")
+                    }
                     default {Write-Host $Prop.Id}
                 }
             }
