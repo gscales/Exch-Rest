@@ -4,6 +4,7 @@ function Get-EXRFolderItems{
         [Parameter(Position=0, Mandatory=$false)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [psobject]$Folder,
+ 	[Parameter(Position=3, Mandatory=$false)] [String]$FolderPath,
         [Parameter(Position=4, Mandatory=$false)] [switch]$ReturnSize,
         [Parameter(Position=5, Mandatory=$false)] [string]$SelectProperties,
         [Parameter(Position=6, Mandatory=$false)] [string]$Filter,
@@ -44,6 +45,10 @@ function Get-EXRFolderItems{
         else{
             $SelectProperties = "`$select=" + $SelectProperties
         }
+	if(![String]::IsNullorEmpty($FolderPath))
+	{
+		$Folder = Get-ExrFolderFromPath -MailboxName $MailboxName -AccessToken $AccessToken -FolderPath $FolderPath	
+	}
         if($Folder -ne $null)
         {
             $HttpClient =  Get-HTTPClient -MailboxName $MailboxName

@@ -14,7 +14,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=11, Mandatory=$false)] [psobject]$ClientFilter,
         [Parameter(Position=12, Mandatory=$false)] [string]$ClientFilterTop,
         [Parameter(Position=13, Mandatory=$false)] [string]$Search,
-        [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnFolderPath
+        [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnFolderPath,
+        [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnStats
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -50,6 +51,8 @@ function Get-EXRWellKnownFolderItems{
             $Search = "`&`$Search=" + $Search
         }
         $ParentFolderCollection = New-Object 'system.collections.generic.dictionary[[string],[string]]'
+        $stats = "" | Select TotalItems
+        $stats.TotalItems = 0;
         if($WellKnownFolder -ne $null)
         {
             $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
@@ -72,6 +75,7 @@ function Get-EXRWellKnownFolderItems{
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
+                    $stats.TotalItems++
                     Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($EndPoint + "('" + $MailboxName + "')/messages('" + $Message.Id + "')")
                     if($PropList -ne $null){
                         Expand-ExtendedProperties -Item $Message
@@ -114,7 +118,10 @@ function Get-EXRWellKnownFolderItems{
                     }                    
                 }           
                 $RequestURL = $JSONOutput.'@odata.nextLink'
-            }while(![String]::IsNullOrEmpty($RequestURL) -band (!$TopOnly))     
+            }while(![String]::IsNullOrEmpty($RequestURL) -band (!$TopOnly))  
+            if($ReturnStats.IsPresent){
+                Write-Host $stats -ForegroundColor Green
+            }   
        } 
    
 
