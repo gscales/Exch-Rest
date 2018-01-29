@@ -37,9 +37,11 @@ function Get-EXRFolderFromId
             
         }
 		$tfTargetFolder = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
-		$folderId = $tfTargetFolder.Id.ToString()
-		Add-Member -InputObject $tfTargetFolder -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
-		Expand-ExtendedProperties -Item $tfTargetFolder
-		return, $tfTargetFolder
+		if($tfTargetFolder -ne $null){
+			$folderId = $tfTargetFolder.Id.ToString()
+			Add-Member -InputObject $tfTargetFolder -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
+			Expand-ExtendedProperties -Item $tfTargetFolder
+			return, $tfTargetFolder	
+		}else{return,$null}
 	}
 }

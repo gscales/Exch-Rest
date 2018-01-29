@@ -48,7 +48,7 @@ function Get-EXRWellKnownFolderItems{
             $SelectProperties = "`$select=" + $SelectProperties
         }
         if(![String]::IsNullorEmpty($Search)){
-            $Search = "`&`$Search=" + $Search
+            $Search = "`&`$Search=`"" + $Search + "`""
         }
         $ParentFolderCollection = New-Object 'system.collections.generic.dictionary[[string],[string]]'
         $stats = "" | Select TotalItems
@@ -87,8 +87,14 @@ function Get-EXRWellKnownFolderItems{
                         }
                         else{
                             $Folder = Get-EXRFolderFromId -MailboxName $MailboxName -AccessToken $AccessToken -FolderId $Message.parentFolderId
-                            $ParentFolderCollection.Add($Message.parentFolderId,$Folder.PR_Folder_Path)
-                            add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]
+                            if($Folder -ne $null){
+                                 $ParentFolderCollection.Add($Message.parentFolderId,$Folder.PR_Folder_Path)
+                                 
+                            }else{
+                                $ParentFolderCollection.Add($Message.parentFolderId,"Unavailable")
+                            }
+                            add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]                       
+
                         }
                     }
                     if(![String]::IsNullOrEmpty($ClientFilter)){
