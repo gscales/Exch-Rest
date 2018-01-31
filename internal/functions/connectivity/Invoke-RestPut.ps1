@@ -29,6 +29,9 @@ function Invoke-RestPut
 	)
 	Begin
 	{
+		if($Script:TraceRequest){
+			write-host $RequestURL
+		}
 		#Check for expired Token
 		$minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0, [System.DateTimeKind]::Utc);
 		$expiry = $minTime.AddSeconds($AccessToken.expires_on)
@@ -36,7 +39,6 @@ function Invoke-RestPut
 		{
 			write-host "Refresh Token"
 			$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
-			Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
 		}
 		$method = New-Object System.Net.Http.HttpMethod("PUT")
 		$HttpRequestMessage = New-Object System.Net.Http.HttpRequestMessage($method, [Uri]$RequestURL)
@@ -54,7 +56,7 @@ function Invoke-RestPut
 		{
 			if ($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created)
 			{
-				write-Host ($ClientResult.Result)
+				write-Output ($ClientResult.Result)
 			}
 			if ($ClientResult.Result.Content -ne $null)
 			{

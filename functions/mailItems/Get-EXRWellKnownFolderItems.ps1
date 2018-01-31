@@ -65,22 +65,24 @@ function Get-EXRWellKnownFolderItems{
                     $PidTagMessageSize = Get-EXRTaggedProperty -DataType "Integer" -Id "0x0E08"  
                     $PropList += $PidTagMessageSize
                 }
+                else{
+                    $PidTagMessageSize = Get-EXRTaggedProperty -DataType "Integer" -Id "0x0E08"  
+                    $PropList += $PidTagMessageSize
+                }
             }
+            $RequestURL += $Filter + $Search + $OrderBy
             if($PropList -ne $null){
                $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
-            $RequestURL += $Filter + $Search + $OrderBy
             $clientReturnCount = 0;
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
                     $stats.TotalItems++
                     Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($EndPoint + "('" + $MailboxName + "')/messages('" + $Message.Id + "')")
-                    if($PropList -ne $null){
-                        Expand-ExtendedProperties -Item $Message
-                    }
                     Expand-MessageProperties -Item $Message
+                    Expand-ExtendedProperties -Item $Message
                     if($ReturnFolderPath.IsPresent){
                         if($ParentFolderCollection.ContainsKey($Message.parentFolderId)){
                             add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]
@@ -93,7 +95,7 @@ function Get-EXRWellKnownFolderItems{
                             }else{
                                 $ParentFolderCollection.Add($Message.parentFolderId,"Unavailable")
                             }
-                            add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]                       
+                            add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]                      
 
                         }
                     }

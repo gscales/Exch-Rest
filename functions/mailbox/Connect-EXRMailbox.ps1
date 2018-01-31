@@ -40,7 +40,12 @@ function Connect-EXRMailbox
 
 		[Parameter(Position = 9, Mandatory = $false)]
 		[switch]
-		$ShowMenu
+		$ShowMenu,
+
+		[Parameter(Position = 10, Mandatory = $false)]
+		[switch]
+		$EnableTracing
+
 		
 	)
 	Begin
@@ -106,6 +111,9 @@ function Connect-EXRMailbox
 			$Resource = "graph.microsoft.com"
 			if($Outlook.IsPresent){
 				$Resource = ""
+			}
+			if($EnableTracing.IsPresent){
+				$Script:TraceRequest = $true
 			}
 			if($beta.IsPresent){
 				return  Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId  -redirectUrl $redirectUrl   -ResourceURL $Resource -beta -Prompt $Prompt -CacheCredentials                  

@@ -39,6 +39,7 @@ function Get-EXREmail
 		$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		Add-Member -InputObject $JSONOutput -NotePropertyName ItemRESTURI -NotePropertyValue $ItemRESTURI
 		Expand-ExtendedProperties -Item $JSONOutput
+		Expand-MessageProperties -Item $JSONOutput
 		return $JSONOutput 
 		
 	}

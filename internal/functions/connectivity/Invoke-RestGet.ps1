@@ -40,14 +40,16 @@ function Invoke-RestGet
 			if ([bool]($AccessToken.PSobject.Properties.name -match "refresh_token"))
 			{
 				write-host "Refresh Token"
-				$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
-				Set-Variable -Name "AccessToken" -Value $AccessToken -Scope Script -Visibility Public
+				$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken	
 			}
 			else
 			{
 				throw "App Token has expired"
 			}
 			
+		}
+		if($Script:TraceRequest){
+			write-host $RequestURL
 		}
 		$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
 		$HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`""))

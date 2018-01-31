@@ -17,7 +17,9 @@ function Search-EXRMessage
 		[Parameter(Position=10, Mandatory=$false)] [DateTime]$ReceivedtimeFromKQL,
 		[Parameter(Position=11, Mandatory=$false)] [DateTime]$ReceivedtimeToKQL,
 		[Parameter(Position=12, Mandatory=$false)] [int]$First,
-        [Parameter(Position=13, Mandatory=$false)] [PSCustomObject]$PropList     
+		[Parameter(Position=13, Mandatory=$false)] [PSCustomObject]$PropList,
+		[Parameter(Position=15, Mandatory=$false)] [switch]$ReturnStats
+		     
 	)
 	Process
 	{
@@ -57,7 +59,7 @@ function Search-EXRMessage
 				$Search = "Received:" + $ReceivedtimeFromKQL.ToString("yyyy-MM-dd") + ".." + $ReceivedtimeToKQL.ToString("yyyy-MM-dd")
 			}
 			else{
-				$Search += "And Received:" + $ReceivedtimeFromKQL.ToString("yyyy-MM-dd") + ".." + $ReceivedtimeToKQL.ToString("yyyy-MM-dd")
+				$Search += " And Received:" + $ReceivedtimeFromKQL.ToString("yyyy-MM-dd") + ".." + $ReceivedtimeToKQL.ToString("yyyy-MM-dd")
 			}
 		}
 		if($First -ne 0){
@@ -67,7 +69,22 @@ function Search-EXRMessage
 		else{
 			$TopOnly = $false
 		}
-		Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats
+		if($ReturnStats.IsPresent){
+			$DetailedStats = "" | Select TotalItems,TotalSize,TotalFolders,FolderStats
+			$DetailedStats.TotalItems = 0
+			$DetailedStats.TotalSize = 0 
+			$DetailedStats.TotalFolders = 0
+			$DetailedStats.FolderStats =  New-Object 'system.collections.generic.dictionary[[string],[Int32]]'
+			Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$true -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats | ForEach-Object{
+				$DetailedStats.TotalItems++
+				$DetailedStats.TotalSize += $_.Size 
+			}
+			return $DetailedStats
+		}
+		else{
+			Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats
+		}
+		
 		
 		
 	}
