@@ -6,7 +6,9 @@ function Get-EXRLastInboxEmail{
         [Parameter(Position=3, Mandatory=$false)] [String]$First,
         [Parameter(Position=4, Mandatory=$false)] [switch]$Unread,
         [Parameter(Position=5, Mandatory=$false)] [switch]$Focused,
-        [Parameter(Position=6, Mandatory=$false)] [switch]$Other
+        [Parameter(Position=6, Mandatory=$false)] [switch]$Other,
+	[Parameter(Position=12, Mandatory=$false)] [switch]$ReturnSize,
+	[Parameter(Position=13, Mandatory=$false)] [switch]$ReturnAttachments
 
     )
     Process{
@@ -52,7 +54,7 @@ function Get-EXRLastInboxEmail{
 	    Get-EXREmail -ItemRESTURI $Items[0].ItemRESTURI -MailboxName $MailboxName -AccessToken $AccessToken
     }
     else{
-        Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder Inbox -TopOnly:$true -Top $First -Filter $Filter -ClientFilter $ClientFilter -ClientFilterTop $ClientFilterTop
+        Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder Inbox -TopOnly:$true -Top $First -Filter $Filter -ClientFilter $ClientFilter -ClientFilterTop $ClientFilterTop -ReturnAttachments:$ReturnAttachments.IsPresent -ReturnSize:$ReturnSize.IsPresent
     }
     }
 }

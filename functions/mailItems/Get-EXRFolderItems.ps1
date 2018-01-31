@@ -13,7 +13,8 @@ function Get-EXRFolderItems{
         [Parameter(Position=9, Mandatory=$false)] [bool]$TopOnly,
         [Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList,
         [Parameter(Position=11, Mandatory=$false)] [string]$Search,
-        [Parameter(Position=12, Mandatory=$false)] [switch]$TrackStatus
+        [Parameter(Position=12, Mandatory=$false)] [switch]$TrackStatus,
+        [Parameter(Position=13, Mandatory=$false)] [switch]$ReturnAttachments
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -72,6 +73,17 @@ function Get-EXRFolderItems{
                 foreach ($Message in $JSONOutput.Value) {
                     Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($folderURI  + "/messages('" + $Message.Id + "')")
                     Expand-ExtendedProperties -Item $Message
+                    Expand-MessageProperties -Item $Message
+                    if($ReturnAttachments.IsPresent -band $Message.hasAttachments){
+                        $AttachmentNames = @()
+                        $AttachmentDetails = @()
+                        Get-EXRAttachments -MailboxName $MailboxName -AccessToken $AccessToken -ItemURI $Message.ItemRESTURI | ForEach-Object{
+                            $AttachmentNames += $_.name
+                            $AttachmentDetails += $_    
+                        }
+                        add-Member -InputObject $Message -NotePropertyName AttachmentNames -NotePropertyValue $AttachmentNames
+                        add-Member -InputObject $Message -NotePropertyName AttachmentDetails -NotePropertyValue $AttachmentDetails
+                    }
                     Write-Output $Message
                 }           
                 $RequestURL = $JSONOutput.'@odata.nextLink'

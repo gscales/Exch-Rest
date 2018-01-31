@@ -4,7 +4,7 @@ function Expand-MessageProperties
     param (
 		[Parameter(Position = 1, Mandatory = $false)]
 		[psobject]
-		$Item
+        $Item
 	)
 	
  	process
@@ -18,6 +18,7 @@ function Expand-MessageProperties
                     Add-Member -InputObject $Item -NotePropertyName "SenderEmailAddress" -NotePropertyValue $SenderProp.emailaddress.address
                     Add-Member -InputObject $Item -NotePropertyName "SenderName" -NotePropertyValue $SenderProp.emailaddress.name
                 }
+                
             }
         }
         catch{

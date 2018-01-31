@@ -14,11 +14,13 @@ function Search-EXRMessage
 		[Parameter(Position=7, Mandatory=$false)] [string]$BodyKQL,  
 		[Parameter(Position=8, Mandatory=$false)] [string]$BodyContains, 
 		[Parameter(Position=9, Mandatory=$false)] [string]$KQL,
-		[Parameter(Position=10, Mandatory=$false)] [DateTime]$ReceivedtimeFromKQL,
-		[Parameter(Position=11, Mandatory=$false)] [DateTime]$ReceivedtimeToKQL,
-		[Parameter(Position=12, Mandatory=$false)] [int]$First,
-		[Parameter(Position=13, Mandatory=$false)] [PSCustomObject]$PropList,
-		[Parameter(Position=15, Mandatory=$false)] [switch]$ReturnStats
+		[Parameter(Position=11, Mandatory=$false)] [string]$AttachmentKQL,
+		[Parameter(Position=12, Mandatory=$false)] [DateTime]$ReceivedtimeFromKQL,
+		[Parameter(Position=13, Mandatory=$false)] [DateTime]$ReceivedtimeToKQL,
+		[Parameter(Position=14, Mandatory=$false)] [int]$First,
+		[Parameter(Position=15, Mandatory=$false)] [PSCustomObject]$PropList,
+		[Parameter(Position=16, Mandatory=$false)] [switch]$ReturnStats,
+		[Parameter(Position=15, Mandatory=$false)] [switch]$ReturnAttachments
 		     
 	)
 	Process
@@ -48,8 +50,23 @@ function Search-EXRMessage
 		if(![String]::IsNullOrEmpty($BodyContains)){
 			$Filter = "contains(Body,'" + $BodyContains + "')"
 		}
+		if(![String]::IsNullOrEmpty($AttachmentKQL)){
+			if([String]::IsNullOrEmpty($Search)){
+				$Search = "attachment: '" + $AttachmentKQL + "'"
+			}
+			else{
+				$Search = " And attachment: '" + $AttachmentKQL + "'"
+			}
+			
+		}
 		if(![String]::IsNullOrEmpty($BodyKQL)){
-			$Search = "Body:\`"" + $BodyKQL + "\`""
+			if([String]::IsNullOrEmpty($Search)){
+				$Search = "Body:\`"" + $BodyKQL + "\`""
+			}
+			else{
+				$Search = " And Body:\`"" + $BodyKQL + "\`""
+			}
+			
 		}
 		if(![String]::IsNullOrEmpty($KQL)){
 			$Search = $KQL
@@ -75,14 +92,14 @@ function Search-EXRMessage
 			$DetailedStats.TotalSize = 0 
 			$DetailedStats.TotalFolders = 0
 			$DetailedStats.FolderStats =  New-Object 'system.collections.generic.dictionary[[string],[Int32]]'
-			Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$true -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats | ForEach-Object{
+			Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$true -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats  -ReturnAttachments:$ReturnAttachments.IsPresent | ForEach-Object{
 				$DetailedStats.TotalItems++
 				$DetailedStats.TotalSize += $_.Size 
 			}
 			return $DetailedStats
 		}
 		else{
-			Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats
+			Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats -ReturnAttachments:$ReturnAttachments.IsPresent
 		}
 		
 		

@@ -15,7 +15,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=12, Mandatory=$false)] [string]$ClientFilterTop,
         [Parameter(Position=13, Mandatory=$false)] [string]$Search,
         [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnFolderPath,
-        [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnStats
+        [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnStats,
+        [Parameter(Position=15, Mandatory=$false)] [switch]$ReturnAttachments
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -42,7 +43,7 @@ function Get-EXRWellKnownFolderItems{
             $TopOnly = $false
         }
         if([String]::IsNullorEmpty($SelectProperties)){
-            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,parentFolderId"
+            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,parentFolderId,hasAttachments"
         }
         else{
             $SelectProperties = "`$select=" + $SelectProperties
@@ -98,6 +99,16 @@ function Get-EXRWellKnownFolderItems{
                             add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]                      
 
                         }
+                    }
+                    if($ReturnAttachments.IsPresent -band $Message.hasAttachments){
+                        $AttachmentNames = @()
+                        $AttachmentDetails = @()
+                        Get-EXRAttachments -MailboxName $MailboxName -AccessToken $AccessToken -ItemURI $Message.ItemRESTURI | ForEach-Object{
+                            $AttachmentNames += $_.name
+                            $AttachmentDetails += $_    
+                        }
+                        add-Member -InputObject $Message -NotePropertyName AttachmentNames -NotePropertyValue $AttachmentNames
+                        add-Member -InputObject $Message -NotePropertyName AttachmentDetails -NotePropertyValue $AttachmentDetails
                     }
                     if(![String]::IsNullOrEmpty($ClientFilter)){
                         switch($ClientFilter.Operator){
