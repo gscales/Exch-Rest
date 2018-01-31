@@ -162,7 +162,9 @@
 		'Get-EXRMailboxUsageQuotaStatusMailboxCounts',
 		'Get-EXREmailAppUsageVersionsUserCounts',
 		'Get-EXREmailAppUsageUserCounts',
-		'Get-EXREmailAppUsageAppsUserCounts'
+		'Get-EXREmailAppUsageAppsUserCounts',
+		'Get-EXRChildFolders',
+		'Get-EXRSearchFolders',
 		'Import-EXRAccessToken',
 		'Invoke-EXRCreateSelfSignedCert',
 		'Invoke-EXRDecodeToken',

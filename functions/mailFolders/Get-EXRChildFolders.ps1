@@ -1,4 +1,4 @@
-function Get-EXRAllChildFolders
+function Get-EXRChildFolders
 {
 	[CmdletBinding()]
 	param (
@@ -10,13 +10,17 @@ function Get-EXRAllChildFolders
 		[psobject]
 		$AccessToken,
 		
-		[Parameter(Position = 3, Mandatory = $false)]
+		[Parameter(Position = 2, Mandatory = $false)]
 		[PSCustomObject]
 		$PropList,
 
-		[Parameter(Position = 2, Mandatory = $false)]
+		[Parameter(Position = 3, Mandatory = $false)]
 		[PSCustomObject]
-		$MailboxName
+		$MailboxName,
+
+		[Parameter(Position = 4, Mandatory = $false)]
+		[switch]
+		$Recurse
 	)
 	Begin
 	{
@@ -48,15 +52,17 @@ function Get-EXRAllChildFolders
 				Add-Member -InputObject $ChildFolder -NotePropertyName FolderRestURI -NotePropertyValue ($EndPoint + "('$MailboxName')/MailFolders('$folderId')")
 				Expand-ExtendedProperties -Item $ChildFolder
 				Write-Output $ChildFolder
-				if ($ChildFolder.ChildFolderCount -gt 0)
-				{
-					if ($PropList -ne $null)
+				if($Recurse.IsPresent){
+					if ($ChildFolder.ChildFolderCount -gt 0)
 					{
-						Get-EXRAllChildFolders -Folder $ChildFolder -AccessToken $AccessToken -PropList $PropList -MailboxName $MailboxName
-					}
-					else
-					{
-						Get-EXRAllChildFolders -Folder $ChildFolder -AccessToken $AccessToken -MailboxName $MailboxName
+						if ($PropList -ne $null)
+						{
+							Get-EXRAllChildFolders -Folder $ChildFolder -AccessToken $AccessToken -PropList $PropList -MailboxName $MailboxName
+						}
+						else
+						{
+							Get-EXRAllChildFolders -Folder $ChildFolder -AccessToken $AccessToken -MailboxName $MailboxName
+						}
 					}
 				}
 			}
