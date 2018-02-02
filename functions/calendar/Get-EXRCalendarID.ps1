@@ -1,17 +1,23 @@
-function Get-CalendarID {
+function Get-EXRCalendarID {
 	param(
-		[Parameter(Position = 0, Mandatory = $true)] [string]$MailboxName,
+		[Parameter(Position = 0, Mandatory = $false)] [string]$MailboxName,
 		[Parameter(Position = 1, Mandatory = $false)] [psobject]$AccessToken,
 		[Parameter(Position = 2, Mandatory = $true)] [psobject]$CalendarName
 	)
 	Begin {
-		if ($AccessToken -eq $null) {
-			$AccessToken = Get-AccessToken -MailboxName $MailboxName
-		}
+		if($AccessToken -eq $null)
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		$HttpClient = Get-HTTPClient($MailboxName)
 		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 		$RequestURL = $EndPoint + "('$MailboxName')/calendars"
-		Write-Host $RequestURL
 		do {
 			$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 			foreach ($Message in $JSONOutput.Value) {

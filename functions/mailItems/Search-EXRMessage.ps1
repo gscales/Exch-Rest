@@ -4,23 +4,29 @@ function Search-EXRMessage
 	param (
         [Parameter(Position=0, Mandatory=$false)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
-        [Parameter(Position=2, Mandatory=$false)] [string]$WellKnownFolder,
+		[Parameter(Position=2, Mandatory=$false)] [string]$WellKnownFolder,
+		[Parameter(Position=3, Mandatory=$false)] [string]$FolderPath,
         [Parameter(Position=4, Mandatory=$false)] [switch]$ReturnSize,
 		[Parameter(Position=5, Mandatory=$false)] [string]$SelectProperties,
 		[Parameter(Position=6, Mandatory=$false)] [string]$MessageId,
+		[Parameter(Position=7, Mandatory=$false)] [string]$Subject,  
 		[Parameter(Position=7, Mandatory=$false)] [string]$SubjectKQL,  
 		[Parameter(Position=8, Mandatory=$false)] [string]$SubjectContains,  
 		[Parameter(Position=8, Mandatory=$false)] [string]$SubjectStartsWith,
 		[Parameter(Position=7, Mandatory=$false)] [string]$BodyKQL,  
 		[Parameter(Position=8, Mandatory=$false)] [string]$BodyContains, 
 		[Parameter(Position=9, Mandatory=$false)] [string]$KQL,
+		[Parameter(Position=9, Mandatory=$false)] [string]$From,
 		[Parameter(Position=11, Mandatory=$false)] [string]$AttachmentKQL,
 		[Parameter(Position=12, Mandatory=$false)] [DateTime]$ReceivedtimeFromKQL,
 		[Parameter(Position=13, Mandatory=$false)] [DateTime]$ReceivedtimeToKQL,
-		[Parameter(Position=14, Mandatory=$false)] [int]$First,
-		[Parameter(Position=15, Mandatory=$false)] [PSCustomObject]$PropList,
-		[Parameter(Position=16, Mandatory=$false)] [switch]$ReturnStats,
-		[Parameter(Position=15, Mandatory=$false)] [switch]$ReturnAttachments
+		[Parameter(Position=14, Mandatory=$false)] [DateTime]$ReceivedtimeFrom,
+		[Parameter(Position=15, Mandatory=$false)] [DateTime]$ReceivedtimeTo,
+		[Parameter(Position=16, Mandatory=$false)] [int]$First,
+		[Parameter(Position=17, Mandatory=$false)] [PSCustomObject]$PropList,
+		[Parameter(Position=18, Mandatory=$false)] [switch]$ReturnStats,
+		[Parameter(Position=19, Mandatory=$false)] [switch]$ReturnAttachments,
+		[Parameter(Position=208, Mandatory=$false)] [string]$Filter
 		     
 	)
 	Process
@@ -32,17 +38,46 @@ function Search-EXRMessage
 				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
 			}                 
 		}
+		if(![String]::IsNullOrEmpty($KQL)){
+			$Search = $KQL
+		}
 		if([String]::IsNullOrEmpty($MailboxName)){
 			$MailboxName = $AccessToken.mailbox
 		}  
 		if(![String]::IsNullOrEmpty($MessageId)){
 			$Filter = "internetMessageId eq '" + $MessageId + "'"
 		}
+		if(![String]::IsNullOrEmpty($Subject)){
+			if([String]::IsNullOrEmpty($Filter)){
+				$Filter = "Subject eq '" + $Subject + "'"
+			}
+			else{
+				$Filter += " And Subject eq '" + $Subject + "'"
+			}			
+		}
 		if(![String]::IsNullOrEmpty($SubjectContains)){
-			$Filter = "contains(Subject,'" + $SubjectContains + "')"
+			if([String]::IsNullOrEmpty($Filter)){
+				$Filter = "contains(Subject,'" + $SubjectContains + "')"
+			}
+			else{
+				$Filter += " And contains(Subject,'" + $SubjectContains + "')"
+			}			
 		}
 		if(![String]::IsNullOrEmpty($SubjectStartsWith)){
-			$Filter = "startwith(Subject,'" + $SubjectStartsWith + "')"
+			if([String]::IsNullOrEmpty($Filter)){
+				$Filter = "startwith(Subject,'" + $SubjectStartsWith + "')"
+			}
+			else{
+				$Filter += " And startwith(Subject,'" + $SubjectStartsWith + "')"
+			}				
+		}
+		if(![String]::IsNullOrEmpty($From)){
+			if([String]::IsNullOrEmpty($Filter)){
+				$Filter = "from/emailAddress/address eq '" + $From + "'"
+			}
+			else{
+				$Filter += " And from/emailAddress/address eq '" + $From + "'"
+			}			
 		}
 		if(![String]::IsNullOrEmpty($SubjectKQL)){
 			$Search = "Subject: \`"" + $SubjectKQL + "\`""
@@ -55,22 +90,39 @@ function Search-EXRMessage
 				$Search = "attachment: '" + $AttachmentKQL + "'"
 			}
 			else{
-				$Search = " And attachment: '" + $AttachmentKQL + "'"
+				$Search += " And attachment: '" + $AttachmentKQL + "'"
 			}
 			
+		}
+		if(![String]::IsNullOrEmpty($ReceivedtimeFrom)){
+			if([String]::IsNullOrEmpty($Filter)){
+				$Filter = "receivedDateTime ge " + $ReceivedtimeFrom.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+			}
+			else{
+				$Filter += " And receivedDateTime ge " + $ReceivedtimeFrom.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+			}
+		}		
+		if(![String]::IsNullOrEmpty($ReceivedtimeTo)){
+			if([String]::IsNullOrEmpty($Filter)){
+				$Filter = "receivedDateTime le " + $ReceivedtimeTo.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+			}
+			else{
+				$Filter += " And receivedDateTime le " + $ReceivedtimeTo.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+			}
+		}	
+		if([String]::IsNullOrEmpty($WellKnownFolder)){
+			$WellKnownFolder = "AllItems"
 		}
 		if(![String]::IsNullOrEmpty($BodyKQL)){
 			if([String]::IsNullOrEmpty($Search)){
 				$Search = "Body:\`"" + $BodyKQL + "\`""
 			}
 			else{
-				$Search = " And Body:\`"" + $BodyKQL + "\`""
+				$Search += " And Body:\`"" + $BodyKQL + "\`""
 			}
 			
 		}
-		if(![String]::IsNullOrEmpty($KQL)){
-			$Search = $KQL
-		}
+
 		if($ReceivedtimeFromKQL -ne $null -band $ReceivedtimeToKQL -ne $null){
 			if([String]::IsNullOrEmpty($Search)){
 				$Search = "Received:" + $ReceivedtimeFromKQL.ToString("yyyy-MM-dd") + ".." + $ReceivedtimeToKQL.ToString("yyyy-MM-dd")
@@ -92,14 +144,21 @@ function Search-EXRMessage
 			$DetailedStats.TotalSize = 0 
 			$DetailedStats.TotalFolders = 0
 			$DetailedStats.FolderStats =  New-Object 'system.collections.generic.dictionary[[string],[Int32]]'
-			Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$true -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats  -ReturnAttachments:$ReturnAttachments.IsPresent | ForEach-Object{
-				$DetailedStats.TotalItems++
-				$DetailedStats.TotalSize += $_.Size 
+			if([String]::IsNullOrEmpty($FolderPath)){
+				Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder -ReturnSize:$true -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats  -ReturnAttachments:$ReturnAttachments.IsPresent | ForEach-Object{
+					$DetailedStats.TotalItems++
+					$DetailedStats.TotalSize += $_.Size 
+				}
 			}
 			return $DetailedStats
 		}
 		else{
-			Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats -ReturnAttachments:$ReturnAttachments.IsPresent
+			if([String]::IsNullOrEmpty($FolderPath)){
+				Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats -ReturnAttachments:$ReturnAttachments.IsPresent
+			}
+			else{
+				Get-EXRFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -FolderPath $FolderPath -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnAttachments:$ReturnAttachments.IsPresent
+			}
 		}
 		
 		

@@ -31,7 +31,7 @@ function Get-EXRFolderItems{
             $Filter = "`&`$filter=" + $Filter
         }
         if(![String]::IsNullorEmpty($Search)){
-            $Search = "`&`$Search=" + $Search
+            $Search = "`&`$Search=`"" + $Search + "`""
         }
         if(![String]::IsNullorEmpty($Orderby)){
             $OrderBy = "`&`$OrderBy=" + $OrderBy

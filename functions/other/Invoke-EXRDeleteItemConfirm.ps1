@@ -1,6 +1,4 @@
-function Invoke-EXRDeleteItem
-{
-	[CmdletBinding()]
+function Invoke-EXRDeleteItem {
 	param (
 		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
@@ -12,10 +10,13 @@ function Invoke-EXRDeleteItem
 		
 		[Parameter(Position = 2, Mandatory = $true)]
 		[string]
-		$ItemURI
+		$ItemURI,
+		
+		[Parameter(Position = 3, Mandatory = $false)]
+		[string]
+		$confirmation
 	)
-	Begin
-	{
+	Begin {
 		if($AccessToken -eq $null)
 		{
 			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
@@ -26,18 +27,17 @@ function Invoke-EXRDeleteItem
 		if([String]::IsNullOrEmpty($MailboxName)){
 			$MailboxName = $AccessToken.mailbox
 		}  
-		$confirmation = Read-Host "Are you Sure You Want To proceed with deleting the Item"
-		if ($confirmation -eq 'y')
-		{
-			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
-			$RequestURL = $ItemURI
-			return Invoke-RestDELETE -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+		if ($confirmation -ne 'y') {
+			$confirmation = Read-Host "Are you Sure You Want To proceed with deleting the Item"
 		}
-		else
-		{
+		if ($confirmation -eq 'y') {
+			$HttpClient = Get-HTTPClient($MailboxName)
+			$RequestURL = $ItemURI
+			$results = & Invoke-RestDELETE -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+			return $results
+		}
+		else {
 			Write-Host "skipped deletion"
 		}
-		
-		
 	}
 }
