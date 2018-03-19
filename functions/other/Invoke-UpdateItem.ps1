@@ -23,7 +23,7 @@ function Invoke-UpdateItem {
 
 		$HttpClient = Get-HTTPClient($MailboxName)
 		$RequestURL = $ItemURI
-		$results = & Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $details
+		$results = Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $details
 		return $results		
 	}
 }

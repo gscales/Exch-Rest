@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.02'
+	ModuleVersion	   = '3.03'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -81,6 +81,7 @@
 		'Get-EXRAllCalendarFolders',
 		'Get-EXRAllChildFolders',
 		'Get-EXRAllContactFolders',
+		'Get-EXRContactGroups',
 		'Get-EXRAllMailboxItems',
 		'Get-EXRAllMailFolders',
 		'Get-EXRAllTaskfolders',
@@ -95,6 +96,8 @@
 		'Get-EXRChannelInformation',
 		'Get-EXRContacts',
 		'Get-EXRContactsFolder',
+		'Get-EXRContact',
+		'Get-EXRContactPhoto',
 		'Get-EXRDefaultCalendarFolder',
 		'Get-EXRDefaultContactsFolder',
 		'Get-EXRDefaultOneDrive',
@@ -173,6 +176,7 @@
 		'Invoke-EXRDecodeToken',
 		'Invoke-EXRDeleteFolder',
 		'Invoke-EXRDeleteItem',
+		'Invoke-EXRDeleteContact',
 		'Invoke-EXRDownloadAttachment',
 		'Invoke-EXREnumCalendarGroups',
 		'Invoke-EXREnumChildFolders',
@@ -190,6 +194,7 @@
 		'New-EXRCalendarEventREST',
 		'New-EXRCalendarFolder',
 		'New-EXRContactFolder',
+		'New-EXRContact',
 		'New-EXREmailAddress',
 		'New-EXRFolder',
 		'New-EXRHolidayEvent',
@@ -206,13 +211,15 @@
 		'Send-EXRSimpleMeetingRequest',
 		'Send-EXRVoteEmail',
 		'Search-EXRMessage',
+ 		'Search-EXRContacts',
 		'New-EXRDefaultAppRegistration',
 		'Set-EXRFolderRetentionTag',
 		'Set-EXRInboxRule',
 		'Set-EXRPinEmail',
 		'Set-EXRUnPinEmail',
 		'Set-EXRReadFlag',	
-		'Set-EXRTracing',	
+		'Set-EXRTracing',
+		'Set-EXRContact',	
 		'Start-EXRMailClient',
 		'Update-EXRFolder',
 		'Update-EXRFolderClass',
