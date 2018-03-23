@@ -96,12 +96,15 @@
 		'Get-EXRChannelInformation',
 		'Get-EXRContacts',
 		'Get-EXRContactsFolder',
+		'Get-EXRContactFolders',
+		'Get-EXRChildContactFolders',
 		'Get-EXRContact',
 		'Get-EXRContactPhoto',
 		'Get-EXRDefaultCalendarFolder',
 		'Get-EXRDefaultContactsFolder',
 		'Get-EXRDefaultOneDrive',
 		'Get-EXRDefaultOneDriveRootItems',
+		'Get-EXRDirectoryContact',
 		'Get-EXREmail',
 		'Get-EXREmailActivityUserCounts',
 		'Get-EXREmailHeaders',
@@ -138,6 +141,7 @@
 		'Get-EXROneDriveItem',
 		'Get-EXROneDriveItemFromPath',
 		'Get-EXROneDriveItemAsPDF',
+		'Get-EXRDirectoryContacts',
 		'Get-EXRPeople',
 		'Get-EXRPinnedEmailProperty',
 		'Get-EXRRecoverableItemsFolders',
@@ -219,11 +223,14 @@
 		'Set-EXRUnPinEmail',
 		'Set-EXRReadFlag',	
 		'Set-EXRTracing',
-		'Set-EXRContact',	
+		'Set-EXRContact',
+		'Set-EXRContactPhoto',	
 		'Start-EXRMailClient',
 		'Update-EXRFolder',
 		'Update-EXRFolderClass',
-		'Update-EXRMessage'
+		'Update-EXRMessage',
+		'Export-EXRContactToVcard',
+		'Export-EXRDirectoryContactToVcard'
 	)
 	
 	# Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

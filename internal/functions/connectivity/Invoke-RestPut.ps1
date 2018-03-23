@@ -46,6 +46,7 @@ function Invoke-RestPut
 		if (![String]::IsNullorEmpty($ContentHeader))
 		{
 			$HttpRequestMessage.Content = New-Object System.Net.Http.ByteArrayContent -ArgumentList @( ,$Content)
+			$HttpRequestMessage.Content.Headers.ContentType = new-object System.Net.Http.Headers.MediaTypeHeaderValue($ContentHeader);
 		}
 		else
 		{
@@ -56,33 +57,43 @@ function Invoke-RestPut
 		{
 			if ($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created)
 			{
-				write-Output ($ClientResult.Result)
+				write-Host ($ClientResult.Result)
 			}
 			if ($ClientResult.Result.Content -ne $null)
 			{
-				Write-Output ($ClientResult.Result.Content.ReadAsStringAsync());
+				Write-Host ($ClientResult.Result.Content.ReadAsStringAsync().Result);
 			}
+		}
+		else{
+			write-host $ClientResult.Result.StatusCode
 		}
 		if (!$ClientResult.Result.IsSuccessStatusCode)
 		{
-			Write-Output ("Error making REST PUT " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
-			Write-Output $ClientResult.Result
-			if ($ClientResult.Content -ne $null)
-			{
-				Write-Output ($ClientResult.Content.ReadAsStringAsync().Result);
-			}
+			Write-Host ("Error making REST Get " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
+			Write-Host ("RequestURL : " + $RequestURL)
 		}
 		else
 		{
-			# $JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
-			$JsonObject = ExpandPayload -response $ClientResult.Result.Content.ReadAsStringAsync().Result
-			if ([String]::IsNullOrEmpty($JsonObject))
+			if ($NoJSON)
 			{
-				Write-Output $ClientResult.Result
+				return $ClientResult.Result.Content
 			}
 			else
 			{
-				return $JsonObject
+				$JsonObject = ExpandPayload($ClientResult.Result.Content.ReadAsStringAsync().Result)
+				#$JsonObject = ConvertFrom-Json -InputObject  $ClientResult.Result.Content.ReadAsStringAsync().Result
+				if ([String]::IsNullOrEmpty($ClientResult))
+				{
+					write-host "No Value returned"
+				}
+				else
+				{
+					if($JsonObject -ne $null){
+						Add-Member -InputObject $JsonObject -NotePropertyName DateTimeRESTOperation -NotePropertyValue (Get-Date).ToString("s")
+					}
+					return $JsonObject
+				}
+				
 			}
 			
 		}

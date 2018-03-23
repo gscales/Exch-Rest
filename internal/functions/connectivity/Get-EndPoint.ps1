@@ -12,7 +12,11 @@ function Get-EndPoint
 		
 		[Parameter(Position = 2, Mandatory = $false)]
 		[bool]
-		$group
+		$group,
+
+		[Parameter(Position = 3, Mandatory = $false)]
+		[switch]
+		$beta
 	)
 	process
 	{
@@ -40,7 +44,12 @@ function Get-EndPoint
 				}
 				else
 				{
-					$EndPoint = "https://graph.microsoft.com/v1.0/" + $Segment
+					if($beta.IsPresent){
+						$EndPoint = "https://graph.microsoft.com/beta/" + $Segment	
+					}
+					else{
+						$EndPoint = "https://graph.microsoft.com/v1.0/" + $Segment				
+					}					
 				}
 			}
 		}

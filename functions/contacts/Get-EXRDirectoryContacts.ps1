@@ -1,12 +1,10 @@
-function Get-EXRContacts {
+function Get-EXRDirectoryContacts {
 
 	   [CmdletBinding()] 
     param( 
         [Parameter(Position = 1, Mandatory = $false)] [psobject]$AccessToken,
-        [Parameter(Position = 2, Mandatory = $false)] [string]$MailboxName,
-        [Parameter(Position = 3, Mandatory = $false)] [string]$ContactsFolderName,
-        [Parameter(Position = 4, Mandatory = $false)] [string]$ContactsFolderId
-		
+        [Parameter(Position = 2, Mandatory = $false)] [string]$MailboxName
+ 		
 
     )  
     Begin {
@@ -20,22 +18,15 @@ function Get-EXRContacts {
             $MailboxName = $AccessToken.mailbox
         }  
         if ([String]::IsNullOrEmpty($ContactsFolderName)) {
-            if(![String]::IsNullOrEmpty($ContactsFolderId)){
-                $Contacts = "" | Select id
-                $Contacts.id = $ContactsFolderId
-            }
-            else{
-                $Contacts = Get-EXRDefaultContactsFolder -MailboxName $MailboxName -AccessToken $AccessToken
-            }
-           
+            $Contacts = Get-EXRDefaultContactsFolder -MailboxName $MailboxName -AccessToken $AccessToken
         }
         else {
             $Contacts = Get-EXRContactsFolder -MailboxName $MailboxName -AccessToken $AccessToken -FolderName $ContactsFolderName
             if ([String]::IsNullOrEmpty($Contacts)) {throw "Error Contacts folder not found check the folder name this is case sensitive"}
         }    
         $HttpClient = Get-HTTPClient -MailboxName $MailboxName
-        $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users" 
-        $RequestURL = $EndPoint + "('" + $MailboxName + "')/contactFolders('" + $Contacts.id + "')/contacts/?`$Top=1000"
+        $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "Contacts" -beta
+        $RequestURL = $EndPoint
         do {
             $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {

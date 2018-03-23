@@ -12,7 +12,12 @@ function New-EXRContactFolder
 		
 		[Parameter(Position = 3, Mandatory = $true)]
 		[string]
-		$DisplayName
+		$DisplayName,
+
+		[Parameter(Position = 4, Mandatory = $false)]
+		[string]
+		$ParentFolderName
+		
 		
 	)
 	Begin
@@ -29,7 +34,14 @@ function New-EXRContactFolder
 		}  
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
-		$RequestURL = $EndPoint + "('$MailboxName')/ContactFolders"
+		if(![String]::IsNullOrEmpty($ParentFolderName)){
+			$prf = Get-EXRContactsFolder -FolderName $ParentFolderName -MailboxName $MailboxName
+			$RequestURL = $EndPoint + "('$MailboxName')/ContactFolders('" + $prf.id + "')/childFolders"
+		}
+		else{
+			$RequestURL = $EndPoint + "('$MailboxName')/ContactFolders"
+		}
+		
 		$NewFolderPost = "{`"DisplayName`": `"" + $DisplayName + "`"}"
 		write-host $NewFolderPost
 		return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewFolderPost

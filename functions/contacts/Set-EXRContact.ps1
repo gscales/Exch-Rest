@@ -84,9 +84,7 @@ function Set-EXRContact
 	
 	.PARAMETER EmailAddressDisplayAs
 		A description of the EmailAddressDisplayAs parameter.
-	
-	.PARAMETER useImpersonation
-		A description of the useImpersonation parameter.
+.
 	
 
 #>
@@ -193,9 +191,13 @@ function Set-EXRContact
 		[string]
 		$EmailAddressDisplayAs,
 
-		[Parameter(Position = 25, Mandatory = $true)]
+		[Parameter(Position = 26, Mandatory = $true)]
 		[string]
-		$id
+		$id,
+		
+		[Parameter(Position = 27, Mandatory = $false)]
+		[psobject]
+		$ExPropList
 		
 	
 		
@@ -254,6 +256,47 @@ function Set-EXRContact
 		if(![String]::IsNullOrEmpty($HomePhone)){
 			if ($NewMessage.Length -gt 5) { $NewMessage += "," }
 			$NewMessage += "`"homephones`": [`"" + $HomePhone + "`"]" + "`r`n"	
+		}
+		if ($ExPropList -ne $null)
+		{
+			if ($NewMessage.Length -gt 5) { $NewMessage += "," }
+			$NewMessage += "`"SingleValueExtendedProperties`": [" + "`r`n"
+			$propCount = 0
+			foreach ($Property in $ExPropList)
+			{
+				if ($propCount -eq 0)
+				{
+					$NewMessage += "{" + "`r`n"
+				}
+				else
+				{
+					$NewMessage += ",{" + "`r`n"
+				}
+				if ($Property.PropertyType -eq "Tagged")
+				{
+					$NewMessage += "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Id + "`", " + "`r`n"
+				}
+				else
+				{
+					if ($Property.Type -eq "String")
+					{
+						$NewMessage += "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Name " + $Property.Id + "`", " + "`r`n"
+					}
+					else
+					{
+						$NewMessage += "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Id " + $Property.Id + "`", " + "`r`n"
+					}
+				}
+				if($Property.Value -eq "null"){
+					$NewMessage += "`"Value`":null" + "`r`n"
+				}
+				else{
+					$NewMessage += "`"Value`":`"" + $Property.Value + "`"" + "`r`n"
+				}				
+				$NewMessage += " } " + "`r`n"
+				$propCount++
+			}
+			$NewMessage += "]" + "`r`n"
 		}
 		if(![String]::IsNullOrEmpty($Street)){
 		if ($NewMessage.Length -gt 5) { $NewMessage += "," }

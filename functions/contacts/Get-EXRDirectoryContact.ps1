@@ -1,11 +1,10 @@
-function Set-EXRContactPhoto {
+function Get-EXRDirectoryContact {
 
 	   [CmdletBinding()] 
     param( 
         [Parameter(Position = 1, Mandatory = $false)] [psobject]$AccessToken,
         [Parameter(Position = 2, Mandatory = $false)] [string]$MailboxName,
-        [Parameter(Position = 4, Mandatory = $true)] [string]$id,
-        [Parameter(Position = 6, Mandatory = $false)] [string]$FileName
+        [Parameter(Position = 4, Mandatory = $true)] [string]$id
     )  
     Begin {
         if ($AccessToken -eq $null) {
@@ -18,12 +17,9 @@ function Set-EXRContactPhoto {
             $MailboxName = $AccessToken.mailbox
         }  
         $HttpClient = Get-HTTPClient -MailboxName $MailboxName
-        $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users" 
-        $RequestURL = $EndPoint + "('" + $MailboxName + "')/Contacts('" + $id + "')/Photo/`$value"  
-        $Photo = [System.IO.File]::ReadAllBytes($FileName)
-        return Invoke-RestPut -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $Photo -ContentHeader 'image/jpeg'
-
-		
+        $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "" -beta
+        $RequestURL = $EndPoint + "/Contacts('" + $id + "')"
+	return  Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 
     } 
 }

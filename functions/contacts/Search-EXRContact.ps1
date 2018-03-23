@@ -8,19 +8,15 @@ function Search-EXRContacts
         [Parameter(Position=4, Mandatory=$false)] [switch]$ReturnSize,
 		[Parameter(Position=5, Mandatory=$false)] [string]$SelectProperties,
 		[Parameter(Position=6, Mandatory=$false)] [string]$MessageId,
-		[Parameter(Position=7, Mandatory=$false)] [string]$Subject,  
-		[Parameter(Position=7, Mandatory=$false)] [string]$SubjectKQL,  
-		[Parameter(Position=8, Mandatory=$false)] [string]$SubjectContains,  
-		[Parameter(Position=8, Mandatory=$false)] [string]$SubjectStartsWith,
+		[Parameter(Position=7, Mandatory=$false)] [string]$DisplayName,  
+		[Parameter(Position=7, Mandatory=$false)] [string]$DisplayNameKQL,  
+		[Parameter(Position=8, Mandatory=$false)] [string]$DisplayNameContains,  
+		[Parameter(Position=8, Mandatory=$false)] [string]$DisplayNameStartsWith,
+		[Parameter(Position=9, Mandatory=$false)] [string]$EmailAddress,
+		[Parameter(Position=9, Mandatory=$false)] [string]$EmailAddressKQL,
 		[Parameter(Position=7, Mandatory=$false)] [string]$BodyKQL,  
 		[Parameter(Position=8, Mandatory=$false)] [string]$BodyContains, 
 		[Parameter(Position=9, Mandatory=$false)] [string]$KQL,
-		[Parameter(Position=9, Mandatory=$false)] [string]$From,
-		[Parameter(Position=11, Mandatory=$false)] [string]$AttachmentKQL,
-		[Parameter(Position=12, Mandatory=$false)] [DateTime]$ReceivedtimeFromKQL,
-		[Parameter(Position=13, Mandatory=$false)] [DateTime]$ReceivedtimeToKQL,
-		[Parameter(Position=14, Mandatory=$false)] [DateTime]$ReceivedtimeFrom,
-		[Parameter(Position=15, Mandatory=$false)] [DateTime]$ReceivedtimeTo,
 		[Parameter(Position=16, Mandatory=$false)] [int]$First,
 		[Parameter(Position=17, Mandatory=$false)] [PSCustomObject]$PropList,
 		[Parameter(Position=18, Mandatory=$false)] [switch]$ReturnStats,
@@ -46,40 +42,48 @@ function Search-EXRContacts
 		if(![String]::IsNullOrEmpty($MessageId)){
 			$Filter = "internetMessageId eq '" + $MessageId + "'"
 		}
-		if(![String]::IsNullOrEmpty($Subject)){
+		if(![String]::IsNullOrEmpty($DisplayName)){
 			if([String]::IsNullOrEmpty($Filter)){
-				$Filter = "Subject eq '" + $Subject + "'"
+				$Filter = "DisplayName eq '" + $DisplayName + "'"
 			}
 			else{
-				$Filter += " And Subject eq '" + $Subject + "'"
+				$Filter += " And DisplayName eq '" + $DisplayName + "'"
 			}			
 		}
-		if(![String]::IsNullOrEmpty($SubjectContains)){
+		if(![String]::IsNullOrEmpty($DisplayNameContains)){
 			if([String]::IsNullOrEmpty($Filter)){
-				$Filter = "contains(Subject,'" + $SubjectContains + "')"
+				$Filter = "contains(DisplayName,'" + $DisplayNameContains + "')"
 			}
 			else{
-				$Filter += " And contains(Subject,'" + $SubjectContains + "')"
+				$Filter += " And contains(DisplayName,'" + $DisplayNameContains + "')"
 			}			
 		}
-		if(![String]::IsNullOrEmpty($SubjectStartsWith)){
+		if(![String]::IsNullOrEmpty($DisplayNameStartsWith)){
 			if([String]::IsNullOrEmpty($Filter)){
-				$Filter = "startwith(Subject,'" + $SubjectStartsWith + "')"
+				$Filter = "startwith(DisplayName,'" + $DisplayNameStartsWith + "')"
 			}
 			else{
-				$Filter += " And startwith(Subject,'" + $SubjectStartsWith + "')"
+				$Filter += " And startwith(DisplayName,'" + $DisplayNameStartsWith + "')"
 			}				
 		}
-		if(![String]::IsNullOrEmpty($From)){
-			if([String]::IsNullOrEmpty($Filter)){
-				$Filter = "from/emailAddress/address eq '" + $From + "'"
+		if(![String]::IsNullOrEmpty($EmailAddressKQL)){
+			if([String]::IsNullOrEmpty($Search)){
+				$Search = "emailaddress:" + $EmailAddressKQL 
 			}
 			else{
-				$Filter += " And from/emailAddress/address eq '" + $From + "'"
+				 $Search +=" And emailaddress:" + $EmailAddressKQL
 			}			
 		}
-		if(![String]::IsNullOrEmpty($SubjectKQL)){
-			$Search = "Subject: \`"" + $SubjectKQL + "\`""
+		if(![String]::IsNullOrEmpty($EmailAddress)){
+			if([String]::IsNullOrEmpty($Filter)){
+				$Filter = "emailAddresses/any(a:a/address eq '" + $EmailAddress + "')"
+			}
+			else{
+				$Filter += " And emailAddresses/any(a:a/address eq '" + $EmailAddress + "')"
+			}				
+		}
+		if(![String]::IsNullOrEmpty($DisplayNameKQL)){
+			$Search = "DisplayName: \`"" + $DisplayNameKQL + "\`""
 		}
 		if(![String]::IsNullOrEmpty($BodyContains)){
 			$Filter = "contains(Body,'" + $BodyContains + "')"
@@ -134,15 +138,17 @@ function Search-EXRContacts
 		else{
 			$TopOnly = $false
 		}
+		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users" 
         if ([String]::IsNullOrEmpty($ContactsFolderName)) {
-            $Contacts = Get-EXRDefaultContactsFolder -MailboxName $MailboxName -AccessToken $AccessToken
+			$RequestURL = $EndPoint + "('" + $MailboxName + "')/contacts/?`$Top=1000"
         }
         else {
             $Contacts = Get-EXRContactsFolder -MailboxName $MailboxName -AccessToken $AccessToken -FolderName $ContactsFolderName
-            if ([String]::IsNullOrEmpty($Contacts)) {throw "Error Contacts folder not found check the folder name this is case sensitive"}
+			if ([String]::IsNullOrEmpty($Contacts)) {throw "Error Contacts folder not found check the folder name this is case sensitive"}
+			$RequestURL = $EndPoint + "('" + $MailboxName + "')/contactFolders('" + $Contacts.id + "')/contacts/?`$Top=1000"
         }    
-        $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users" 
-        $RequestURL = $EndPoint + "('" + $MailboxName + "')/contactFolders('" + $Contacts.id + "')/contacts/?`$Top=1000"
+        
+        
         if(![String]::IsNullorEmpty($Filter)){
             $Filter = "`&`$filter=" + $Filter
         }
@@ -157,7 +163,7 @@ function Search-EXRContacts
             $TopValue = $Top
         }      
         if([String]::IsNullorEmpty($SelectProperties)){
-            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,hasAttachments"
+            $SelectProperties = "`$select=ReceivedDateTime,Sender,DisplayName,IsRead,hasAttachments"
         }
         else{
             $SelectProperties = "`$select=" + $SelectProperties

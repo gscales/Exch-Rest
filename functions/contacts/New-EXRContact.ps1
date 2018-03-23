@@ -2,12 +2,10 @@ function New-EXRContact
 {
 <#
 	.SYNOPSIS
-		Creates a Contact in a Contact folder in a Mailbox using the  Exchange Web Services API
+		Creates a Contact in a Contact folder in a Mailbox 
 	
 	.DESCRIPTION
-		Creates a Contact in a Contact folder in a Mailbox using the  Exchange Web Services API
-		
-		Requires the EWS Managed API from https://www.microsoft.com/en-us/download/details.aspx?id=42951
+
 	
 	.PARAMETER MailboxName
 		A description of the MailboxName parameter.
@@ -87,22 +85,6 @@ function New-EXRContact
 	.PARAMETER EmailAddressDisplayAs
 		A description of the EmailAddressDisplayAs parameter.
 	
-	.PARAMETER useImpersonation
-		A description of the useImpersonation parameter.
-	
-	.EXAMPLE
-		Example 1 To create a contact in the default contacts folder
-		New-EXCContact -Mailboxname mailbox@domain.com -EmailAddress contactEmai@domain.com -FirstName John -LastName Doe -DisplayName "John Doe"
-		
-	.EXAMPLE
-		Example 2 To create a contact and add a contact picture
-		New-EXCContact -Mailboxname mailbox@domain.com -EmailAddress contactEmai@domain.com -FirstName John -LastName Doe -DisplayName "John Doe" -photo 'c:\photo\Jdoe.jpg'
-		
-	.EXAMPLE
-		Example 3 To create a contact in a user created subfolder
-		New-EXCContact -Mailboxname mailbox@domain.com -EmailAddress contactEmai@domain.com -FirstName John -LastName Doe -DisplayName "John Doe" -Folder "\MyCustomContacts"
-		
-		This cmdlet uses the EmailAddress as unique key so it wont let you create a contact with that email address if one already exists.
 #>
 	[CmdletBinding()]
 	param (
@@ -201,11 +183,15 @@ function New-EXRContact
 		
 		[Parameter(Position = 24, Mandatory = $false)]
 		[string]
-		$Folder,
+		$ContactsFolder,
 		
 		[Parameter(Position = 25, Mandatory = $false)]
 		[string]
-		$EmailAddressDisplayAs
+		$EmailAddressDisplayAs,
+
+		[Parameter(Position = 26, Mandatory = $false)]
+		[psobject]
+		$ExPropList
 		
 	
 		
@@ -231,10 +217,8 @@ function New-EXRContact
 			$RequestURL = $EndPoint + "('$MailboxName')/Contacts/"
 		}
 		else{
-			$RequestURL = $EndPoint + "('$MailboxName')/Contacts/" + $ContactsFolder.Id + "/"
-		}
-		if(![String]::IsNullOrEmpty($DisplayName)){
-			$Subject = $DisplayName
+			$cntFolder = Get-EXRContactsFolder -MailboxName $MailboxName -FolderName $ContactsFolder
+			$RequestURL = $EndPoint + "('$MailboxName')/contactFolders('" + $cntFolder.Id + "')/Contacts/"
 		}
 		$NewMessage = "{" + "`r`n"
 		if(![String]::IsNullOrEmpty($FirstName)){
@@ -272,6 +256,47 @@ function New-EXRContact
 		if(![String]::IsNullOrEmpty($HomePhone)){
 			if ($NewMessage.Length -gt 5) { $NewMessage += "," }
 			$NewMessage += "`"homephones`": [`"" + $HomePhone + "`"]" + "`r`n"	
+		}
+		if ($ExPropList -ne $null)
+		{
+			if ($NewMessage.Length -gt 5) { $NewMessage += "," }
+			$NewMessage += "`"SingleValueExtendedProperties`": [" + "`r`n"
+			$propCount = 0
+			foreach ($Property in $ExPropList)
+			{
+				if ($propCount -eq 0)
+				{
+					$NewMessage += "{" + "`r`n"
+				}
+				else
+				{
+					$NewMessage += ",{" + "`r`n"
+				}
+				if ($Property.PropertyType -eq "Tagged")
+				{
+					$NewMessage += "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Id + "`", " + "`r`n"
+				}
+				else
+				{
+					if ($Property.Type -eq "String")
+					{
+						$NewMessage += "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Name " + $Property.Id + "`", " + "`r`n"
+					}
+					else
+					{
+						$NewMessage += "`"PropertyId`":`"" + $Property.DataType + " " + $Property.Guid + " Id " + $Property.Id + "`", " + "`r`n"
+					}
+				}
+				if($Property.Value -eq "null"){
+					$NewMessage += "`"Value`":null" + "`r`n"
+				}
+				else{
+					$NewMessage += "`"Value`":`"" + $Property.Value + "`"" + "`r`n"
+				}				
+				$NewMessage += " } " + "`r`n"
+				$propCount++
+			}
+			$NewMessage += "]" + "`r`n"
 		}
 		if(![String]::IsNullOrEmpty($Street)){
 		if ($NewMessage.Length -gt 5) { $NewMessage += "," }
@@ -318,8 +343,11 @@ function New-EXRContact
 		}
 		$NewMessage += "}"
 		Write-Host "Contact Created"
-        return Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
-
+        $Contact = Invoke-RestPOST -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $NewMessage
+		if(![String]::IsNullOrEmpty($Photo)){
+			Set-EXRContactPhoto -id $Contact.id -Filename $Photo
+		}
+		return $Contact
 		
 	}
 }

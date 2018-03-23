@@ -53,6 +53,12 @@ function Expand-ExtendedProperties
                     "String 0x66b5"{
                           Add-Member -InputObject $Item -NotePropertyName "PR_Folder_Path" -NotePropertyValue $Prop.Value.Replace("￾","\") -Force
                     }
+                    "Short 0x3a4d"{
+                          Add-Member -InputObject $Item -NotePropertyName "PR_Gender" -NotePropertyValue $Prop.Value -Force
+                    }
+                    "Integer 0x6638"{
+                          Add-Member -InputObject $Item -NotePropertyName "PR_FOLDER_CHILD_COUNT" -NotePropertyValue $Prop.Value -Force
+                    }
                     default {Write-Host $Prop.Id}
                 }
             }
