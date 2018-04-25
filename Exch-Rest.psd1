@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.03'
+	ModuleVersion	   = '3.04'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -72,6 +72,7 @@
 	# Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 	FunctionsToExport  = @(
 		'Copy-EXRMessage',
+		'Copy-EXROneDriveItem',
 		'Export-EXRContactFolderToCSV',
 		'Find-EXRMeetingTimes',
 		'Find-EXRRooms',
@@ -174,6 +175,8 @@
 		'Get-EXRSearchFolders',
 		'Get-EXRCalendarID',
 		'Get-EXRNamedCalendarView',
+		'Get-EXRExcelRange',
+		'Get-EXRBatchItems',
 		'New-EXRCalendarEvent',
 		'Import-EXRAccessToken',
 		'Invoke-EXRCreateSelfSignedCert',
@@ -190,8 +193,10 @@
 		'Invoke-EXRNewMessagesForm',
 		'Invoke-EXROneDriveFolderPicker',
 		'Invoke-EXRReadEmail',
+		'Invoke-EXREnumOneDriveItems',
 		'Invoke-EXRUploadOneDriveItemToPath',
 		'Invoke-EXRFillMailboxFolder',
+		'Invoke-EXRProcessSentiment',
 		'Connect-EXRMailbox',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
@@ -207,6 +212,8 @@
 		'New-EXRReferanceAttachment',
 		'New-EXRSentEmailMessage',
 		'New-EXRDefaultAppRegistration',
+		'New-EXRExcelWorkBookSession',
+		'New-EXRExcelWorkSheet',
 		'Remove-EXRInboxRule',
 		'Remove-EXRDefaultAppRegistration',
 		'Rename-EXRFolder',
@@ -229,6 +236,7 @@
 		'Update-EXRFolder',
 		'Update-EXRFolderClass',
 		'Update-EXRMessage',
+		'Update-EXRExcelRange',
 		'Export-EXRContactToVcard',
 		'Export-EXRDirectoryContactToVcard'
 	)

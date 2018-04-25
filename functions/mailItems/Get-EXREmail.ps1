@@ -16,7 +16,10 @@ function Get-EXREmail
 
 		[Parameter(Position = 3, Mandatory = $false)]
 		[psobject]
-		$PropList
+		$PropList,
+		[Parameter(Position = 4, Mandatory = $false)]
+		[switch]
+		$ReturnSentiment
 	)
 	Process
 	{
@@ -32,10 +35,22 @@ function Get-EXREmail
         } 
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$RequestURL = $ItemRESTURI
+		if($ReturnSentiment.IsPresent){
+                if($PropList -eq $null){
+                    $PropList = @()
+                    $Sentiment = Get-EXRNamedProperty -DataType "String" -Id "EntityExtraction/Sentiment1.0" -Type String -Guid "00062008-0000-0000-C000-000000000046"
+                    $PropList += $Sentiment
+                }
+                else{
+                    $Sentiment = Get-EXRNamedProperty -DataType "String" -Id "EntityExtraction/Sentiment1.0" -Type String -Guid "00062008-0000-0000-C000-000000000046"
+                    $PropList += $Sentiment
+                }
+        }
 		if($PropList -ne $null){
                $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "?`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
-        }
+		}
+
 		$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		Add-Member -InputObject $JSONOutput -NotePropertyName ItemRESTURI -NotePropertyValue $ItemRESTURI
 		Expand-ExtendedProperties -Item $JSONOutput

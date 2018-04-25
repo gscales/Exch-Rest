@@ -16,7 +16,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=13, Mandatory=$false)] [string]$Search,
         [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnFolderPath,
         [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnStats,
-        [Parameter(Position=15, Mandatory=$false)] [switch]$ReturnAttachments
+        [Parameter(Position=15, Mandatory=$false)] [switch]$ReturnAttachments,
+        [Parameter(Position=16, Mandatory=$false)] [switch]$ReturnSentiment
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -51,6 +52,7 @@ function Get-EXRWellKnownFolderItems{
         if(![String]::IsNullorEmpty($Search)){
             $Search = "`&`$Search=`"" + $Search + "`""
         }
+        $BatchReturn = $false
         $ParentFolderCollection = New-Object 'system.collections.generic.dictionary[[string],[string]]'
         $stats = "" | Select TotalItems
         $stats.TotalItems = 0;
@@ -71,73 +73,128 @@ function Get-EXRWellKnownFolderItems{
                     $PropList += $PidTagMessageSize
                 }
             }
+            if($ReturnSentiment.IsPresent){
+                $BatchReturn = $true
+                if($PropList -eq $null){
+                    $PropList = @()
+                    $Sentiment = Get-EXRNamedProperty -DataType "String" -Id "EntityExtraction/Sentiment1.0" -Type String -Guid "00062008-0000-0000-C000-000000000046"
+                    $PropList += $Sentiment
+                }
+                else{
+                    $Sentiment = Get-EXRNamedProperty -DataType "String" -Id "EntityExtraction/Sentiment1.0" -Type String -Guid "00062008-0000-0000-C000-000000000046"
+                    $PropList += $Sentiment
+                }
+            }
             $RequestURL += $Filter + $Search + $OrderBy
             if($PropList -ne $null){
                $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
             $clientReturnCount = 0;
+            $BatchItems = @()
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
-                    $stats.TotalItems++
-                    Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($EndPoint + "('" + $MailboxName + "')/messages('" + $Message.Id + "')")
-                    Expand-MessageProperties -Item $Message
-                    Expand-ExtendedProperties -Item $Message
-                    if($ReturnFolderPath.IsPresent){
-                        if($ParentFolderCollection.ContainsKey($Message.parentFolderId)){
-                            add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]
-                        }
-                        else{
-                            $Folder = Get-EXRFolderFromId -MailboxName $MailboxName -AccessToken $AccessToken -FolderId $Message.parentFolderId
-                            if($Folder -ne $null){
-                                 $ParentFolderCollection.Add($Message.parentFolderId,$Folder.PR_Folder_Path)
-                                 
-                            }else{
-                                $ParentFolderCollection.Add($Message.parentFolderId,"Unavailable")
-                            }
-                            add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]                      
-
-                        }
-                    }
-                    if($ReturnAttachments.IsPresent -band $Message.hasAttachments){
-                        $AttachmentNames = @()
-                        $AttachmentDetails = @()
-                        Get-EXRAttachments -MailboxName $MailboxName -AccessToken $AccessToken -ItemURI $Message.ItemRESTURI | ForEach-Object{
-                            $AttachmentNames += $_.name
-                            $AttachmentDetails += $_    
-                        }
-                        add-Member -InputObject $Message -NotePropertyName AttachmentNames -NotePropertyValue $AttachmentNames
-                        add-Member -InputObject $Message -NotePropertyName AttachmentDetails -NotePropertyValue $AttachmentDetails
-                    }
-                    if(![String]::IsNullOrEmpty($ClientFilter)){
-                        switch($ClientFilter.Operator){
-                            "eq" {
-                                if($Message.($ClientFilter.Property) -eq $ClientFilter.Value){
-                                     Write-Output $Message
-                                     $clientReturnCount++
-                                }   
-                            }
-                            "ne" {
-                                if($Message.($ClientFilter.Property) -ne $ClientFilter.Value){
-                                     Write-Output $Message
-                                     $clientReturnCount++
+                    if($BatchReturn){
+                        if(![String]::IsNullOrEmpty($ClientFilter)){
+                            switch($ClientFilter.Operator){
+                                "eq" {
+                                    if($Message.($ClientFilter.Property) -eq $ClientFilter.Value){
+                                        $BatchItems += $Message
+                                        $clientReturnCount++
+                                    }   
+                                }
+                                "ne" {
+                                    if($Message.($ClientFilter.Property) -ne $ClientFilter.Value){
+                                        $BatchItems += $Message
+                                        $clientReturnCount++
+                                    }
                                 }
                             }
+                            if(![String]::IsNullOrEmpty($ClientFilterTop)){
+                                if($clientReturnCount -ge [Int]::Parse($ClientFilterTop)){
+                                    if($BatchItems.Count -gt 0){
+                                        Write-Host("Getting Batch of " + $BatchItems.Count)
+                                        Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList
+                                        $BatchItems = @()
+                                    }
+                                    return 
+                                }
+                            }
+
+                        }else{
+                            $BatchItems += $Message
+                        }                
+                        if($BatchItems.Count -eq 20){
+                            Write-Host("Getting Batch of 20")
+                            Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList
+                            $BatchItems = @()
                         }
-                        if(![String]::IsNullOrEmpty($ClientFilterTop)){
-                            if($clientReturnCount -ge [Int]::Parse($ClientFilterTop)){
-                                return 
+                    }else{
+                        $stats.TotalItems++
+                        Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($EndPoint + "('" + $MailboxName + "')/messages('" + $Message.Id + "')")
+                        Expand-MessageProperties -Item $Message
+                        Expand-ExtendedProperties -Item $Message
+                        if($ReturnFolderPath.IsPresent){
+                            if($ParentFolderCollection.ContainsKey($Message.parentFolderId)){
+                                add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]
+                            }
+                            else{
+                                $Folder = Get-EXRFolderFromId -MailboxName $MailboxName -AccessToken $AccessToken -FolderId $Message.parentFolderId
+                                if($Folder -ne $null){
+                                    $ParentFolderCollection.Add($Message.parentFolderId,$Folder.PR_Folder_Path)
+                                    
+                                }else{
+                                    $ParentFolderCollection.Add($Message.parentFolderId,"Unavailable")
+                                }
+                                add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]                      
+
                             }
                         }
+                        if($ReturnAttachments.IsPresent -band $Message.hasAttachments){
+                            $AttachmentNames = @()
+                            $AttachmentDetails = @()
+                            Get-EXRAttachments -MailboxName $MailboxName -AccessToken $AccessToken -ItemURI $Message.ItemRESTURI | ForEach-Object{
+                                $AttachmentNames += $_.name
+                                $AttachmentDetails += $_    
+                            }
+                            add-Member -InputObject $Message -NotePropertyName AttachmentNames -NotePropertyValue $AttachmentNames
+                            add-Member -InputObject $Message -NotePropertyName AttachmentDetails -NotePropertyValue $AttachmentDetails
+                        }
+                        if(![String]::IsNullOrEmpty($ClientFilter)){
+                            switch($ClientFilter.Operator){
+                                "eq" {
+                                    if($Message.($ClientFilter.Property) -eq $ClientFilter.Value){
+                                        Write-Output $Message
+                                        $clientReturnCount++
+                                    }   
+                                }
+                                "ne" {
+                                    if($Message.($ClientFilter.Property) -ne $ClientFilter.Value){
+                                        Write-Output $Message
+                                        $clientReturnCount++
+                                    }
+                                }
+                            }
+                            if(![String]::IsNullOrEmpty($ClientFilterTop)){
+                                if($clientReturnCount -ge [Int]::Parse($ClientFilterTop)){
+                                    return 
+                                }
+                            }
 
-                    }
-                    else{
-                        Write-Output $Message
+                        }
+                        else{
+                            Write-Output $Message
+                        }
                     }                    
                 }           
                 $RequestURL = $JSONOutput.'@odata.nextLink'
             }while(![String]::IsNullOrEmpty($RequestURL) -band (!$TopOnly))  
+            if($BatchItems.Count -gt 0){
+                 Write-Host("Getting Batch of " + $BatchItems.Count)
+                 Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList
+                 $BatchItems = @()
+            }
             if($ReturnStats.IsPresent){
                 Write-Host $stats -ForegroundColor Green
             }   
