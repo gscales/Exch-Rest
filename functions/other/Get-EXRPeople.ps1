@@ -4,7 +4,8 @@ function  Get-EXRPeople {
         [Parameter(Position=0, Mandatory=$false)] [string]$MailboxName,
         [Parameter(Position=1, Mandatory=$false)] [psobject]$AccessToken,
         [Parameter(Position=2, Mandatory=$false)] [String]$filter,
-        [Parameter(Position=3, Mandatory=$false)] [String]$Search     
+        [Parameter(Position=3, Mandatory=$false)] [String]$Search,
+        [Parameter(Position=4, Mandatory=$false)] [String]$EmailAddress     
     )
     Begin{
         
@@ -21,6 +22,9 @@ function  Get-EXRPeople {
         $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
         $RequestURL =  $EndPoint + "('" + $MailboxName + "')/people?`$Top=1000"
+        if(![String]::IsNullOrEmpty($emailAddress)){
+             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/people?`$Top=2&`$filter=scoredemailAddresses/any(a:a/address eq '" + $EmailAddress + "')"
+        }
         if(![String]::IsNullOrEmpty($filter)){
                 $RequestURL =  $EndPoint + "('" + $MailboxName + "')/people?`$Top=1000&`$filter=" + $filter
         }

@@ -17,7 +17,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnFolderPath,
         [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnStats,
         [Parameter(Position=15, Mandatory=$false)] [switch]$ReturnAttachments,
-        [Parameter(Position=16, Mandatory=$false)] [switch]$ReturnSentiment
+        [Parameter(Position=16, Mandatory=$false)] [switch]$ReturnSentiment,
+        [Parameter(Position=17, Mandatory=$false)] [switch]$ReturnEntryId
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -44,7 +45,7 @@ function Get-EXRWellKnownFolderItems{
             $TopOnly = $false
         }
         if([String]::IsNullorEmpty($SelectProperties)){
-            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,parentFolderId,hasAttachments"
+            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,parentFolderId,hasAttachments,webLink"
         }
         else{
             $SelectProperties = "`$select=" + $SelectProperties
@@ -62,28 +63,15 @@ function Get-EXRWellKnownFolderItems{
             $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue 
             $folderURI =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder
-             if($ReturnSize.IsPresent){
-                if($PropList -eq $null){
-                    $PropList = @()
-                    $PidTagMessageSize = Get-EXRTaggedProperty -DataType "Integer" -Id "0x0E08"  
-                    $PropList += $PidTagMessageSize
-                }
-                else{
-                    $PidTagMessageSize = Get-EXRTaggedProperty -DataType "Integer" -Id "0x0E08"  
-                    $PropList += $PidTagMessageSize
-                }
+            if($ReturnSize.IsPresent){
+                $PropList = Get-EXRKnownProperty -PropertyName "MessageSize"
             }
             if($ReturnSentiment.IsPresent){
                 $BatchReturn = $true
-                if($PropList -eq $null){
-                    $PropList = @()
-                    $Sentiment = Get-EXRNamedProperty -DataType "String" -Id "EntityExtraction/Sentiment1.0" -Type String -Guid "00062008-0000-0000-C000-000000000046"
-                    $PropList += $Sentiment
-                }
-                else{
-                    $Sentiment = Get-EXRNamedProperty -DataType "String" -Id "EntityExtraction/Sentiment1.0" -Type String -Guid "00062008-0000-0000-C000-000000000046"
-                    $PropList += $Sentiment
-                }
+                $PropList = Get-EXRKnownProperty -PropList $PropList -PropertyName "Sentiment"
+            }
+            if($ReturnEntryId.IsPresent){
+                $PropList = Get-EXRKnownProperty -PropList $PropList -PropertyName "PR_ENTRYID"
             }
             $RequestURL += $Filter + $Search + $OrderBy
             if($PropList -ne $null){

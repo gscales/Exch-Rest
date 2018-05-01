@@ -234,7 +234,7 @@ function Get-MessageJSONFormat
 							{
 								$NewMessage += ","
 							}
-							$NewMessage += "`"" + $PropKeyValue.Name + "`": `"" + $PropKeyValue.Name + "`"" + "`r`n"
+							$NewMessage += "`"" + $PropKeyValue.Name + "`": `"" + $PropKeyValue.Value + "`"" + "`r`n"
 							$acCount++
 						}
 						if ($StandardProp.isArray)
@@ -261,7 +261,7 @@ function Get-MessageJSONFormat
 							$NewMessage += "`"" + $EnclosedStandardProp.PropertyName + "`": {" + "`r`n"
 							foreach ($PropKeyValue in $EnclosedStandardProp.PropertyList)
 							{
-								$NewMessage += "`"" + $PropKeyValue.Name + "`": `"" + $PropKeyValue.Name + "`"," + "`r`n"
+								$NewMessage += "`"" + $PropKeyValue.Name + "`": `"" + $PropKeyValue.Value + "`"," + "`r`n"
 							}
 							$NewMessage += "}" + "`r`n"
 						}

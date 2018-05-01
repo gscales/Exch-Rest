@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.04'
+	ModuleVersion	   = '3.05'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -177,6 +177,8 @@
 		'Get-EXRNamedCalendarView',
 		'Get-EXRExcelRange',
 		'Get-EXRBatchItems',
+		'Get-EXRKnownProperty',
+		'Get-EXRDigestEmailBody',
 		'New-EXRCalendarEvent',
 		'Import-EXRAccessToken',
 		'Invoke-EXRCreateSelfSignedCert',
@@ -197,6 +199,7 @@
 		'Invoke-EXRUploadOneDriveItemToPath',
 		'Invoke-EXRFillMailboxFolder',
 		'Invoke-EXRProcessSentiment',
+		'Update-EXRItem',
 		'Connect-EXRMailbox',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
@@ -231,7 +234,8 @@
 		'Set-EXRReadFlag',	
 		'Set-EXRTracing',
 		'Set-EXRContact',
-		'Set-EXRContactPhoto',	
+		'Set-EXRContactPhoto',
+		'Set-EXRItemCategory',	
 		'Start-EXRMailClient',
 		'Update-EXRFolder',
 		'Update-EXRFolderClass',

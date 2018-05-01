@@ -18,6 +18,9 @@
                     "Binary 0x3019" {
                         Add-Member -InputObject $Item -NotePropertyName "PR_POLICY_TAG" -NotePropertyValue ([System.GUID]([Convert]::FromBase64String($Prop.Value)))
                     }
+                    "Binary 0xfff" {
+                        Add-Member -InputObject $Item -NotePropertyName "PR_ENTRYID" -NotePropertyValue ([System.BitConverter]::ToString([Convert]::FromBase64String($Prop.Value)).Replace("-",""))
+                    }
                     "Binary 0x301B" {
                         $fileTime = [BitConverter]::ToInt64([Convert]::FromBase64String($Prop.Value), 4);
                         $StartTime = [DateTime]::FromFileTime($fileTime)

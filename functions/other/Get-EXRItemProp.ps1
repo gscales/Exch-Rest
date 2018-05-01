@@ -7,7 +7,7 @@ function Get-EXRItemProp
 		$Name,
 		
 		[Parameter(Position = 1, Mandatory = $true)]
-		[string]
+		[Object]
 		$Value,
 		
 		[Parameter(Position = 2, Mandatory = $false)]
