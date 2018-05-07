@@ -14,35 +14,51 @@ function Invoke-RestPOST
 		[System.Net.Http.HttpClient]
 		$HttpClient,
 		
-		[Parameter(Position = 3, Mandatory = $true)]
+		[Parameter(Position = 3, Mandatory = $false)]
 		[psobject]
 		$AccessToken,
 		
 		[Parameter(Position = 4, Mandatory = $true)]
 		[PSCustomObject]
-		$Content
+		$Content,
+
+		[Parameter(Position = 5, Mandatory = $false)]
+		[switch]
+		$BasicAuthentication,
+
+		[Parameter(Position = 6, Mandatory = $false)]
+		[System.Management.Automation.PSCredential]$Credentials
+	
+
+
 	)
 	process
 	{
 		if($Script:TraceRequest){
 			write-host $RequestURL
 		}
-		#Check for expired Token
-		$minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0, [System.DateTimeKind]::Utc);
-		$expiry = $minTime.AddSeconds($AccessToken.expires_on)
-		if ($expiry -le [DateTime]::Now.ToUniversalTime())
-		{
-			if ([bool]($AccessToken.PSobject.Properties.name -match "refresh_token"))
+		if($BasicAuthentication.IsPresent){
+			$psString = $Credentials.UserName.ToString() + ":" + $Credentials.GetNetworkCredential().password.ToString()
+			$psbyteArray = [System.Text.Encoding]::ASCII.($psString);
+            $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Basic", [System.Convert]::ToBase64String($psbyteArray));
+		}else{
+			#Check for expired Token
+			$minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0, [System.DateTimeKind]::Utc);
+			$expiry = $minTime.AddSeconds($AccessToken.expires_on)
+			if ($expiry -le [DateTime]::Now.ToUniversalTime())
 			{
-				write-host "Refresh Token"
-				$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
+				if ([bool]($AccessToken.PSobject.Properties.name -match "refresh_token"))
+				{
+					write-host "Refresh Token"
+					$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
+				}
+				else
+				{
+					throw "App Token has expired a new access token is required rerun get-apptoken"
+				}
 			}
-			else
-			{
-				throw "App Token has expired a new access token is required rerun get-apptoken"
-			}
+			$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
 		}
-		$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
 		$PostContent = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
 		$HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`""))
 		$ClientResult = $HttpClient.PostAsync([Uri]($RequestURL), $PostContent)

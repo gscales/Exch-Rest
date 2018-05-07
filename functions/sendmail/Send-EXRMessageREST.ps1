@@ -86,15 +86,15 @@ function Send-EXRMessageREST
 	{
 		
 		if($AccessToken -eq $null)
-		{
-			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
-			if($AccessToken -eq $null){
-				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
-			}                 
-		}
-		if([String]::IsNullOrEmpty($MailboxName)){
-			$MailboxName = $AccessToken.mailbox
-		}  
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		if (![String]::IsNullOrEmpty($ItemClass))
 		{
 			$ItemClassProp = Get-EXRTaggedProperty -DataType "String" -Id "0x001A" -Value $ItemClass

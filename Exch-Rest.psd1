@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.05'
+	ModuleVersion	   = '3.06'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -179,6 +179,8 @@
 		'Get-EXRBatchItems',
 		'Get-EXRKnownProperty',
 		'Get-EXRDigestEmailBody',
+		'Get-EXRMessageTrace',
+		'Get-EXRMessageTraceDetail',
 		'New-EXRCalendarEvent',
 		'Import-EXRAccessToken',
 		'Invoke-EXRCreateSelfSignedCert',
@@ -199,6 +201,7 @@
 		'Invoke-EXRUploadOneDriveItemToPath',
 		'Invoke-EXRFillMailboxFolder',
 		'Invoke-EXRProcessSentiment',
+		'Invoke-EXRProcessAntiSPAMHeader',
 		'Update-EXRItem',
 		'Connect-EXRMailbox',
 		'Move-EXRMessage',

@@ -63,15 +63,15 @@ function Send-EXRMessage
 	{
 		
 		if($AccessToken -eq $null)
-		{
-			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
-			if($AccessToken -eq $null){
-				$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
-			}                 
-		}
-		if([String]::IsNullOrEmpty($MailboxName)){
-			$MailboxName = $AccessToken.mailbox
-		}  
+        {
+            $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
+            if($AccessToken -eq $null){
+                $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
+            }                 
+        }
+         if([String]::IsNullOrEmpty($MailboxName)){
+            $MailboxName = $AccessToken.mailbox
+        } 
 		$SaveToSentFolder = "false"
 		if ($SaveToSentItems.IsPresent)
 		{
@@ -97,7 +97,7 @@ function Send-EXRMessage
 		if(![String]::IsNullOrEmpty($From)){
 			$SenderEmailAddress = (New-EXREmailAddress -Address $From)
 		}
-		$NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ReferanceAttachments $ReferanceAttachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList -CcRecipients $CCRecipients -bccRecipients $BCCRecipients -StandardPropList $StandardPropList -SaveToSentItems $SaveToSentFolder -SendMail -ReplyTo $ReplyTo -RequestReadRecipient $RequestReadRecipient.IsPresent -RequestDeliveryRecipient $RequestDeliveryRecipient.IsPresent
+		$NewMessage = Get-MessageJSONFormat -Subject $Subject -Body $Body.Replace("`"","\`"") -SenderEmailAddress $SenderEmailAddress -Attachments $Attachments -ReferanceAttachments $ReferanceAttachments -ToRecipients $ToRecipients -SentDate $SentDate -ExPropList $ExPropList -CcRecipients $CCRecipients -bccRecipients $BCCRecipients -StandardPropList $StandardPropList -SaveToSentItems $SaveToSentFolder -SendMail -ReplyTo $ReplyTo -RequestReadRecipient $RequestReadRecipient.IsPresent -RequestDeliveryRecipient $RequestDeliveryRecipient.IsPresent
 		if ($ShowRequest.IsPresent)
 		{
 			write-host $NewMessage

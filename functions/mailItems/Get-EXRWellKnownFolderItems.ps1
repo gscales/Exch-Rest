@@ -18,7 +18,9 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=14, Mandatory=$false)] [switch]$ReturnStats,
         [Parameter(Position=15, Mandatory=$false)] [switch]$ReturnAttachments,
         [Parameter(Position=16, Mandatory=$false)] [switch]$ReturnSentiment,
-        [Parameter(Position=17, Mandatory=$false)] [switch]$ReturnEntryId
+        [Parameter(Position=17, Mandatory=$false)] [switch]$ReturnEntryId,
+        [Parameter(Position=18, Mandatory=$false)] [switch]$BatchReturnItems,
+        [Parameter(Position=19, Mandatory=$false)] [switch]$ReturnInternetMessageHeaders
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -50,10 +52,16 @@ function Get-EXRWellKnownFolderItems{
         else{
             $SelectProperties = "`$select=" + $SelectProperties
         }
+        if($ReturnInternetMessageHeaders.IsPresent){
+            $SelectProperties += ",InternetMessageHeaders"
+        }
         if(![String]::IsNullorEmpty($Search)){
             $Search = "`&`$Search=`"" + $Search + "`""
         }
         $BatchReturn = $false
+        if($BatchReturnItems.IsPresent){
+            $BatchReturn = $true
+        }
         $ParentFolderCollection = New-Object 'system.collections.generic.dictionary[[string],[string]]'
         $stats = "" | Select TotalItems
         $stats.TotalItems = 0;

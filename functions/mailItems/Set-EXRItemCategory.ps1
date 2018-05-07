@@ -36,12 +36,12 @@ function Set-EXRItemCategory {
         } 
         $HttpClient = Get-HTTPClient -MailboxName $MailboxName
         $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
-        $RequestURL = $EndPoint + "('" + $MailboxName + "')/MailFolders/AllItems/messages"
+        $RequestURL = $EndPoint + "('" + $MailboxName + "')/messages"
         if ($Item -eq $null) {
-            $RequestURL = $EndPoint + "('" + $MailboxName + "')/MailFolders/AllItems/messages" + "('" + $ItemId + "')"
+            $RequestURL = $EndPoint + "('" + $MailboxName + "')/messages" + "('" + $ItemId + "')"
         }
         else {
-            $RequestURL = $EndPoint + "('" + $MailboxName + "')/MailFolders/AllItems/messages" + "('" + $Item.Id + "')"
+            $RequestURL = $EndPoint + "('" + $MailboxName + "')/messages" + "('" + $Item.Id + "')"
         }
         $Update = "{`r`n`"categories`":["
         $first = $true
