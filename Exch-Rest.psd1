@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.06'
+	ModuleVersion	   = '3.07'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -201,7 +201,7 @@
 		'Invoke-EXRUploadOneDriveItemToPath',
 		'Invoke-EXRFillMailboxFolder',
 		'Invoke-EXRProcessSentiment',
-		'Invoke-EXRProcessAntiSPAMHeader',
+		'Invoke-EXRProcessAntiSPAMHeaders',
 		'Update-EXRItem',
 		'Connect-EXRMailbox',
 		'Move-EXRMessage',

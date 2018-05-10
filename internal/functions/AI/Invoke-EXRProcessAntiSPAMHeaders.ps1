@@ -1,4 +1,4 @@
-function Invoke-EXRProcessAntiSPAMHeader {
+function Invoke-EXRProcessAntiSPAMHeaders {
     [CmdletBinding()] 
     param (
         [Parameter(Position = 1, Mandatory = $false)]
@@ -82,9 +82,24 @@ function Invoke-EXRProcessAntiSPAMHeader {
                     if($SRVResults.Groups.Count -gt 0){
                         $SRV =  $SRVResults.Groups[1].Value    
                     }
+                    $PTRResults = [regex]::Match($ASReport,("PTR\:(.*?)\;"))
+                    if($PTRResults.Groups.Count -gt 0){
+                        $PTR =  $PTRResults.Groups[1].Value    
+                    }   
+                    $CIPResults = [regex]::Match($ASReport,("CIP\:(.*?)\;"))
+                    if($CIPResults.Groups.Count -gt 0){
+                        $CIP =  $CIPResults.Groups[1].Value    
+                    }      
+                    $IPVResults = [regex]::Match($ASReport,("IPV\:(.*?)\;"))
+                    if($IPVResults.Groups.Count -gt 0){
+                        $IPV =  $IPVResults.Groups[1].Value    
+                    }                   
                     Add-Member -InputObject $Item -NotePropertyName "CTRY" -NotePropertyValue $CTRY  -Force
                     Add-Member -InputObject $Item -NotePropertyName "SFV" -NotePropertyValue $SFV  -Force
                     Add-Member -InputObject $Item -NotePropertyName "SRV" -NotePropertyValue $SRV  -Force
+                    Add-Member -InputObject $Item -NotePropertyName "PTR" -NotePropertyValue $PTR  -Force
+                    Add-Member -InputObject $Item -NotePropertyName "CIP" -NotePropertyValue $CIP  -Force
+                    Add-Member -InputObject $Item -NotePropertyName "IPV" -NotePropertyValue $IPV  -Force
                 }
                 
                 if ($Item.IndexedInternetMessageHeaders.ContainsKey("X-MS-Exchange-Organization-SCL")){

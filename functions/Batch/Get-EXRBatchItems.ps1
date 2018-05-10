@@ -22,7 +22,15 @@ function Get-EXRBatchItems
 		  
         [Parameter(Position = 5, Mandatory = $false)]
 		[psobject]
-		$URLString
+		$URLString,
+
+		[Parameter(Position=6, Mandatory=$false)] 
+		[switch]
+		$ReturnAttachments,
+
+		[Parameter(Position=7, Mandatory=$false)] 
+		[switch]
+		$ProcessAntiSPAMHeaders
 
 	)
 	Process
@@ -44,10 +52,10 @@ function Get-EXRBatchItems
         foreach($Item in $Items){
 		   $ItemURI = $URLString + "('" + $Item.Id + "')"
 		   $boolSelectProp = $false
-		   if(![String]::IsNullOrEmpty($SelectProperties)){
-				$ItemURI += "/?" +  $SelectProperties
-				$boolSelectProp = $true
-		   }
+		 #  if(![String]::IsNullOrEmpty($SelectProperties)){
+		 #		$ItemURI += "/?" +  $SelectProperties
+		 #		$boolSelectProp = $true
+		 #  }
 		   if($PropList -ne $null){
 			   $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
 			   if($boolSelectProp){
@@ -67,6 +75,19 @@ function Get-EXRBatchItems
 		foreach($BatchItem in $JSONOutput.responses){
 			Expand-ExtendedProperties -Item $BatchItem.Body
 			Expand-MessageProperties -Item $BatchItem.Body
+			if($ProcessAntiSPAMHeaders.IsPresent){
+				Invoke-EXRProcessAntiSPAMHeaders -Item $BatchItem.Body
+			}
+			if($ReturnAttachments.IsPresent -band $Message.hasAttachments){
+                $AttachmentNames = @()
+                $AttachmentDetails = @()
+                Get-EXRAttachments -MailboxName $MailboxName -AccessToken $AccessToken -ItemURI $Message.ItemRESTURI | ForEach-Object{
+                    $AttachmentNames += $_.name
+                    $AttachmentDetails += $_    
+                }
+                add-Member -InputObject $BatchItem.Body -NotePropertyName AttachmentNames -NotePropertyValue $AttachmentNames
+				add-Member -InputObject $BatchItem.Body -NotePropertyName AttachmentDetails -NotePropertyValue $AttachmentDetails
+            }
 			Write-Output $BatchItem.Body
 		}
 	

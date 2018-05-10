@@ -20,7 +20,9 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=16, Mandatory=$false)] [switch]$ReturnSentiment,
         [Parameter(Position=17, Mandatory=$false)] [switch]$ReturnEntryId,
         [Parameter(Position=18, Mandatory=$false)] [switch]$BatchReturnItems,
-        [Parameter(Position=19, Mandatory=$false)] [switch]$ReturnInternetMessageHeaders
+        [Parameter(Position=19, Mandatory=$false)] [switch]$ReturnInternetMessageHeaders,
+        [Parameter(Position=20, Mandatory=$false)]  [switch]$ProcessAntiSPAMHeaders
+        
     )
     Begin{
 		if($AccessToken -eq $null)
@@ -111,7 +113,7 @@ function Get-EXRWellKnownFolderItems{
                                 if($clientReturnCount -ge [Int]::Parse($ClientFilterTop)){
                                     if($BatchItems.Count -gt 0){
                                         Write-Host("Getting Batch of " + $BatchItems.Count)
-                                        Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList
+                                        Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
                                         $BatchItems = @()
                                     }
                                     return 
@@ -123,7 +125,7 @@ function Get-EXRWellKnownFolderItems{
                         }                
                         if($BatchItems.Count -eq 20){
                             Write-Host("Getting Batch of 20")
-                            Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList
+                            Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
                             $BatchItems = @()
                         }
                     }else{
@@ -131,6 +133,9 @@ function Get-EXRWellKnownFolderItems{
                         Add-Member -InputObject $Message -NotePropertyName ItemRESTURI -NotePropertyValue ($EndPoint + "('" + $MailboxName + "')/messages('" + $Message.Id + "')")
                         Expand-MessageProperties -Item $Message
                         Expand-ExtendedProperties -Item $Message
+                        if($ProcessAntiSPAMHeaders.IsPresent){
+                            Invoke-EXRProcessAntiSpamHeaders -Item $Message
+                        }
                         if($ReturnFolderPath.IsPresent){
                             if($ParentFolderCollection.ContainsKey($Message.parentFolderId)){
                                 add-Member -InputObject $Message -NotePropertyName FolderPath -NotePropertyValue $ParentFolderCollection[$Message.parentFolderId]
@@ -188,7 +193,7 @@ function Get-EXRWellKnownFolderItems{
             }while(![String]::IsNullOrEmpty($RequestURL) -band (!$TopOnly))  
             if($BatchItems.Count -gt 0){
                  Write-Host("Getting Batch of " + $BatchItems.Count)
-                 Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList
+                 Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
                  $BatchItems = @()
             }
             if($ReturnStats.IsPresent){
