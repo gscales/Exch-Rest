@@ -30,8 +30,13 @@ function Get-EXRBatchItems
 
 		[Parameter(Position=7, Mandatory=$false)] 
 		[switch]
-		$ProcessAntiSPAMHeaders
+		$ProcessAntiSPAMHeaders,
 
+		[Parameter(Position=8, Mandatory=$false)] 
+		[switch]
+		$RestrictProps
+
+		
 	)
 	Process
 	{
@@ -52,10 +57,12 @@ function Get-EXRBatchItems
         foreach($Item in $Items){
 		   $ItemURI = $URLString + "('" + $Item.Id + "')"
 		   $boolSelectProp = $false
-		 #  if(![String]::IsNullOrEmpty($SelectProperties)){
-		 #		$ItemURI += "/?" +  $SelectProperties
-		 #		$boolSelectProp = $true
-		 #  }
+			if($RestrictProps.IsPresent){
+				if(![String]::IsNullOrEmpty($SelectProperties)){
+						$ItemURI += "/?" +  $SelectProperties
+						$boolSelectProp = $true
+				}
+		   }
 		   if($PropList -ne $null){
 			   $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
 			   if($boolSelectProp){

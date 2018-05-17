@@ -35,7 +35,11 @@ function Invoke-RestGet
 		$BasicAuthentication,
 
 		[Parameter(Position = 8, Mandatory = $false)]
-		[System.Management.Automation.PSCredential]$Credentials
+		[System.Management.Automation.PSCredential]$Credentials,
+
+		[Parameter(Position = 9, Mandatory = $false)]
+		[switch]
+		$NoRetry
 	)
 	process
 	{
@@ -51,8 +55,25 @@ function Invoke-RestGet
 			{
 				if ([bool]($AccessToken.PSobject.Properties.name -match "refresh_token"))
 				{
-					write-host "Refresh Token"
-					$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken	
+					$refreshToken = $true
+					$CachedAccessToken = Get-ProfiledToken -MailboxName $MailboxName
+					if($CachedAccessToken -ne $null){
+						if($CachedAccessToken.Mailbox -eq $AccessToken.Mailbox){
+							$minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0, [System.DateTimeKind]::Utc);
+							$expiry = $minTime.AddSeconds($CachedAccessToken.expires_on)
+							if ($expiry -le [DateTime]::Now.ToUniversalTime()){
+								$refreshToken = $true
+							}
+							else{
+								$refreshToken = $false
+								$AccessToken = $CachedAccessToken
+							}
+						}
+					} 
+					if($refreshToken){
+						write-host "Refresh Token"
+						$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
+					}	
 				}
 				else
 				{
@@ -65,7 +86,7 @@ function Invoke-RestGet
 			}
 			$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
 		}
-		$HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`""))
+		$HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`""))		
 		$ClientResult = $HttpClient.GetAsync($RequestURL)
 		$exProgress = 0
 		if ($TrackStatus)
@@ -94,6 +115,13 @@ function Invoke-RestGet
 			if ($ClientResult.Result.Content -ne $null)
 			{
 				Write-Host ($ClientResult.Result.Content.ReadAsStringAsync().Result);
+			}
+		}
+		if ($ClientResult.Result.StatusCode -eq [System.Net.HttpStatusCode]::GatewayTimeout){
+			if(!$NoRetry.IsPresent){
+				write-host("Sleep and retry in 5 Seconds")
+				Start-Sleep -Seconds 5
+				Invoke-RestGet -RequestURL $RequestURL -MailboxName $MailboxName -HttpClient $HttpClient -AccessToken $AccessToken -NoRetry -NoJSON:$NoJSON.IsPresent -ProcessMessage $ProcessMessage
 			}
 		}
 		if (!$ClientResult.Result.IsSuccessStatusCode)
