@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.07'
+	ModuleVersion	   = '3.08'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -205,6 +205,7 @@
 		'Invoke-EXRProcessSentiment',
 		'Invoke-EXRProcessAntiSPAMHeaders',
 		'Invoke-EXRParseEmailBody',
+		'Invoke-EXRParseEmailBodyLinks',
 		'Update-EXRItem',
 		'Connect-EXRMailbox',
 		'Move-EXRMessage',

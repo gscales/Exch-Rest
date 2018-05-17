@@ -51,7 +51,7 @@ function Invoke-RestGet
 			#Check for expired Token
 			$minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0, [System.DateTimeKind]::Utc);
 			$expiry = $minTime.AddSeconds($AccessToken.expires_on)
-			if ($expiry -le [DateTime]::Now.ToUniversalTime())
+			if ($expiry -le [DateTime]::Now.ToUniversalTime().AddMinutes(10))
 			{
 				if ([bool]($AccessToken.PSobject.Properties.name -match "refresh_token"))
 				{
@@ -61,7 +61,7 @@ function Invoke-RestGet
 						if($CachedAccessToken.Mailbox -eq $AccessToken.Mailbox){
 							$minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0, [System.DateTimeKind]::Utc);
 							$expiry = $minTime.AddSeconds($CachedAccessToken.expires_on)
-							if ($expiry -le [DateTime]::Now.ToUniversalTime()){
+							if ($expiry -le [DateTime]::Now.ToUniversalTime().AddMinutes(10)){
 								$refreshToken = $true
 							}
 							else{

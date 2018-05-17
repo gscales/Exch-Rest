@@ -1,76 +1,24 @@
-
 function Get-EXREmailBodyLinks {
     [CmdletBinding()] 
     param (
-        [Parameter(Position = 1, Mandatory = $false)]
-        [psobject]$Item,
-        [Parameter(Position = 2, Mandatory = $false)]
-        [switch]$UseExtendedProperty
+        [Parameter(Position = 0, Mandatory = $false)] [string]$MailboxName,
+        [Parameter(Position = 1, Mandatory = $false)] [psobject]$AccessToken,
+        [Parameter(Position = 2, Mandatory = $false)] [string]$WellKnownFolder,
+        [Parameter(Position = 2, Mandatory = $false)] [psobject]$Folder,
+        [Parameter(Position = 3, Mandatory = $false)] [String]$FolderPath,
+        [Parameter(Position = 4, Mandatory = $false)] [String]$MessageCount
 
     )
 	
     process {
-        $ParsedLinksObject = "" | Select HasBaseURL, ParsedBaseURL, Links, Images
-        $ParsedLinksObject.HasBaseURL = $false
-        $ParsedLinksObject.Links = @()      
-        $ParsedLinksObject.Images = @()  
-        $RegExHtmlLinks = "<`(.*?)>"  
-        if($UseExtendedProperty.IsPresent){
-            $matchedItems = [regex]::matches($Item.PR_BODY_HTML, $RegExHtmlLinks,[system.Text.RegularExpressions.RegexOptions]::Singleline)
+        $Props = @()
+        $PR_BODY_HTML = Get-EXRTaggedProperty -DataType Binary -Id 0x1013
+        $Props += $PR_BODY_HTML
+        Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder -Folder $Folder -FolderPath $FolderPath -MessageCount $MessageCount -BatchReturnItems -SelectProperties Subject -PropList $Props | ForEach-Object{
+            Invoke-EXRParseEmailBodyLinks -Item $_ -UseExtendedProperty
+            Write-Output $_
         }
-        else{
-            $matchedItems = [regex]::matches($Item.Body.Content, $RegExHtmlLinks,[system.Text.RegularExpressions.RegexOptions]::Singleline)
-        }          
-        foreach($Match in $matchedItems){   
-            if(!$Match.Value.StartsWith("</")){
-                try{
-                    if($Match.Value.StartsWith("<base ",[System.StringComparison]::InvariantCultureIgnoreCase)){
-                        $ParsedLinksObject.HasBaseURL = $true
-                        $Attributes = $Match.Value.Split(" ")
-                        foreach($Attribute in $Attributes){
-                            if($Attribute.Length -gt 10){
-                                if($Attribute.StartsWith('href=',[System.StringComparison]::InvariantCultureIgnoreCase)){                                        
-                                    $ParsedLinksObject.ParsedBaseURL = ([URI]($Attribute.Substring(6,$Attribute.Length-7).Replace("`"","").Replace("'","").Replace("`r`n","")))   
-                                }   
-                            }                                
-                        }                                  
-                    }
-                    if($Match.Value.StartsWith("<a "),[System.StringComparison]::InvariantCultureIgnoreCase){
-                        $Attributes = $Match.Value.Split(" ")
-                        foreach($Attribute in $Attributes){
-                            if($Attribute.StartsWith('href=',[System.StringComparison]::InvariantCultureIgnoreCase)){     
-                                if($Attribute.Length -gt 10){
-                                    $hrefVal = ([URI]($Attribute.Substring(6,$Attribute.Length-7).Replace("`"","").Replace("'","").Replace("`r`n","`n")))
-                                    if($ParsedLinksObject.HasBaseURL){
-                                        if([String]::IsNullOrEmpty($hrefVal.DnsSafeHost)){
-                                            $newHost = $ParsedLinksObject.ParsedBaseURL.OriginalString +  $hrefVal.OriginalString
-                                            $hrefVal = ([URI]($newHost))
-                                        }
-                                    }
-                                    $ParsedLinksObject.Links += $hrefVal   
-                                }                                   
-                                
-                            }                                   
-                        }                                
-                    }
-                    if($Match.Value.StartsWith("<img ",[System.StringComparison]::InvariantCultureIgnoreCase)){
-                        $Attributes = $Match.Value.Split(" ")
-                        foreach($Attribute in $Attributes){
-                            if($Attribute.Length -gt 7){
-                                if($Attribute.StartsWith('src=',[System.StringComparison]::InvariantCultureIgnoreCase)){                                        
-                                    $ParsedLinksObject.Images += ([URI]($Attribute.Substring(5,$Attribute.Length-6).Replace("`"","").Replace("'","").Replace("`r`n","`n")))   
-                                } 
-                            }                                 
-                        
-                        }
-                    } 
-                }catch{
-                    Write-host ("Parse exception " + $_.Exception.Message + " on Message " + $Item.Subject)
-                    $Error.Clear()
-                }                       
-            }  
-        }            
-        $Item | Add-Member -Name "ParsedLinks" -Value $ParsedLinksObject -MemberType NoteProperty -Force          
+       
+       
     }
-
 }

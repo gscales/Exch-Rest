@@ -23,7 +23,8 @@ function Get-EXRFolderItems{
         [Parameter(Position=17, Mandatory=$false)] [switch]$ReturnEntryId,
         [Parameter(Position=18, Mandatory=$false)] [switch]$BatchReturnItems,
         [Parameter(Position=19, Mandatory=$false)] [switch]$ReturnInternetMessageHeaders,
-        [Parameter(Position=20, Mandatory=$false)]  [switch]$ProcessAntiSPAMHeaders
+        [Parameter(Position=20, Mandatory=$false)]  [switch]$ProcessAntiSPAMHeaders,
+        [Parameter(Position=21, Mandatory=$false)] [Int32]$MessageCount
         
     )
     Begin{
@@ -42,18 +43,22 @@ function Get-EXRFolderItems{
         }
         if(![String]::IsNullorEmpty($Orderby)){
             $OrderBy = "`&`$OrderBy=" + $OrderBy
-        }
+        }        
         $TopValue = "1000"    
         if(![String]::IsNullorEmpty($Top)){
-            $TopValue = $Top
+            if($Top -lt 1000){
+                $TopValue =$top
+            }           
         }      
         if(![String]::IsNullOrEmpty($ClientFilterTop)){
             $TopOnly = $false
         }
-        if([String]::IsNullorEmpty($SelectProperties)){
+        $restrictProps = $false
+        if([String]::IsNullorEmpty($SelectProperties)){            
             $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,parentFolderId,hasAttachments,webLink"
         }
         else{
+            $restrictProps = $true
             $SelectProperties = "`$select=" + $SelectProperties
         }
         if($ReturnInternetMessageHeaders.IsPresent){
@@ -103,11 +108,13 @@ function Get-EXRFolderItems{
                $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
+            $returnCount = 0
             $clientReturnCount = 0;
             $BatchItems = @()
             do{
                 $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
                 foreach ($Message in $JSONOutput.Value) {
+                    $returnCount++
                     if($BatchReturn){
                         if(![String]::IsNullOrEmpty($ClientFilter)){
                             switch($ClientFilter.Operator){
@@ -127,8 +134,8 @@ function Get-EXRFolderItems{
                             if(![String]::IsNullOrEmpty($ClientFilterTop)){
                                 if($clientReturnCount -ge [Int]::Parse($ClientFilterTop)){
                                     if($BatchItems.Count -gt 0){
-                                        Write-Host("Getting Batch of " + $BatchItems.Count)
-                                        Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
+                                       Write-Host("Getting Batch of " + $BatchItems.Count + " current Return Count " + $returnCount)
+                                        Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent -RestrictProps:$restrictProps
                                         $BatchItems = @()
                                     }
                                     return 
@@ -139,8 +146,8 @@ function Get-EXRFolderItems{
                             $BatchItems += $Message
                         }                
                         if($BatchItems.Count -eq 20){
-                            Write-Host("Getting Batch of 20")
-                            Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
+                           Write-Host("Getting Batch of " + $BatchItems.Count + " current Return Count " + $returnCount)
+                            Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent -RestrictProps:$restrictProps
                             $BatchItems = @()
                         }
                     }else{
@@ -202,13 +209,25 @@ function Get-EXRFolderItems{
                         else{
                             Write-Output $Message
                         }
-                    }                    
+                    }
+                    if([String]::IsNullOrEmpty($ClientFilter)){
+                        if($MessageCount -gt 0 ){
+                            if($returnCount -ge $MessageCount){
+                                if($BatchItems.Count -gt 0){
+                                    Write-Host("Getting Batch of " + $BatchItems.Count + " current Return Count " + $returnCount)
+                                    Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent -RestrictProps:$restrictProps
+                                    $BatchItems = @()
+                                }
+                                return
+                            }
+                        }
+                    }                                        
                 }           
                 $RequestURL = $JSONOutput.'@odata.nextLink'
             }while(![String]::IsNullOrEmpty($RequestURL) -band (!$TopOnly))  
             if($BatchItems.Count -gt 0){
                  Write-Host("Getting Batch of " + $BatchItems.Count)
-                 Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
+                 Get-EXRBatchItems -Items $BatchItems -SelectProperties $SelectProperties -URLString ("/users" + "('" + $MailboxName + "')" + "/messages") -PropList $PropList -ReturnAttachments:$ReturnAttachments.isPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent -RestrictProps:$restrictProps
                  $BatchItems = @()
             }
             if($ReturnStats.IsPresent){
