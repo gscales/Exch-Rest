@@ -123,7 +123,7 @@ function Connect-EXRMailbox
 			}
 		}
 		else{
-			$tkn = Get-AccessToken -ClientId $ClientId -MailboxName $MailboxName -redirectUrl $redirectUrl -ClientSecret $ClientSecret -ResourceURL $ResourceURL -Beta:$beta.IsPresent -prompt $Prompt -CacheCredentials:$CacheCredentials.isPresent
+			$tkn = Get-EXRAccessToken -ClientId $ClientId -MailboxName $MailboxName -redirectUrl $redirectUrl -ClientSecret $ClientSecret -ResourceURL $ResourceURL -Beta:$beta.IsPresent -prompt $Prompt -CacheCredentials
 		}
 		if($tkn.Mailbox -ne $null){write-host "connected to mailbox"}
 	}

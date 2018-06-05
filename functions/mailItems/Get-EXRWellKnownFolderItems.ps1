@@ -23,7 +23,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=17, Mandatory=$false)] [switch]$ReturnEntryId,
         [Parameter(Position=18, Mandatory=$false)] [switch]$BatchReturnItems,
         [Parameter(Position=19, Mandatory=$false)] [switch]$ReturnInternetMessageHeaders,
-        [Parameter(Position=20, Mandatory=$false)]  [switch]$ProcessAntiSPAMHeaders,
+        [Parameter(Position=20, Mandatory=$false)] [switch]$ProcessAntiSPAMHeaders,
+        [Parameter(Position=22, Mandatory=$false)] [switch]$Todays,
         [Parameter(Position=21, Mandatory=$false)] [Int32]$MessageCount
         
     )
@@ -34,6 +35,9 @@ function Get-EXRWellKnownFolderItems{
             if($AccessToken -eq $null){
                 $AccessToken = Get-EXRAccessToken -MailboxName $MailboxName       
             }                 
+        }
+        if($Todays.isPresent){
+            $Filter = "receivedDateTime ge " + (Get-Date).Date.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
         }
         if([String]::IsNullOrEmpty($MailboxName)){
             $MailboxName = $AccessToken.mailbox
@@ -55,7 +59,7 @@ function Get-EXRWellKnownFolderItems{
         }
         $restrictProps = $false
         if([String]::IsNullorEmpty($SelectProperties)){            
-            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,parentFolderId,hasAttachments,webLink"
+            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,InternetMessageId,parentFolderId,hasAttachments,webLink"
         }
         else{
             $restrictProps = $true

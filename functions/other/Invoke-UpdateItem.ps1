@@ -18,7 +18,7 @@ function Invoke-UpdateItem {
 	)
 	Begin {
 		if ($AccessToken -eq $null) {
-			$AccessToken = Get-AccessToken -MailboxName $MailboxName
+			$AccessToken = Get-EXRAccessToken -MailboxName $MailboxName
 		}
 
 		$HttpClient = Get-HTTPClient($MailboxName)
