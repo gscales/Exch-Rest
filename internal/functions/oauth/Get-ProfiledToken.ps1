@@ -4,21 +4,68 @@ function Get-ProfiledToken
 	param (
 		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
-		$MailboxName
+		$MailboxName,
+		[Parameter(Position = 0, Mandatory = $false)]
+		[string]
+		$ResourceURL
 	)
 	Process
 	{
-		if([String]::IsNullOrEmpty($MailboxName)){
-			$firstToken = $Script:TokenCache.GetEnumerator() | select -first 1
-			return $firstToken.Value
+		if([String]::IsNullOrEmpty($ResourceURL)){
+			$ResourceURL = "graph.microsoft.com" 
 		}
-		else
-		{
-			$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
-			if ($Script:TokenCache.ContainsKey($HostDomain))
-			{				
-				return $Script:TokenCache[$HostDomain]
+		if($Script:TokenCache.ContainsKey($ResourceURL)){
+			$AccessToken = $null
+			if([String]::IsNullOrEmpty($MailboxName)){
+				$firstToken = $Script:TokenCache[$ResourceURL].GetEnumerator() | select -first 1
+				$AccessToken =  $firstToken.Value
 			}
+			else
+			{
+				$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
+				if ($Script:TokenCache[$ResourceURL].ContainsKey($HostDomain))
+				{				
+					$AccessToken = $Script:TokenCache[$ResourceURL][$HostDomain]
+				}
+			}
+			if($AccessToken -ne $null){
+				$MailboxName = $AccessToken.mailbox
+				#Check for expired Token
+				$minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0, [System.DateTimeKind]::Utc);
+				$expiry = $minTime.AddSeconds($AccessToken.expires_on)
+				if ($expiry -le [DateTime]::Now.ToUniversalTime().AddMinutes(10))
+				{
+					if ([bool]($AccessToken.PSobject.Properties.name -match "refresh_token"))
+					{
+						$refreshToken = $true
+						$CachedAccessToken = Get-ProfiledToken -MailboxName $MailboxName
+						if($CachedAccessToken -ne $null){
+							if($CachedAccessToken.Mailbox -eq $AccessToken.Mailbox){
+								$minTime = new-object DateTime(1970, 1, 1, 0, 0, 0, 0, [System.DateTimeKind]::Utc);
+								$expiry = $minTime.AddSeconds($CachedAccessToken.expires_on)
+								if ($expiry -le [DateTime]::Now.ToUniversalTime().AddMinutes(10)){
+									$refreshToken = $true
+								}
+								else{
+									$refreshToken = $false
+									$AccessToken = $CachedAccessToken
+								}
+							}
+						} 
+						if($refreshToken){
+							write-host "Refresh Token"
+							$AccessToken = Invoke-RefreshAccessToken -MailboxName $MailboxName -AccessToken $AccessToken
+						}	
+					}
+					else
+					{
+						throw "App Token has expired"
+					}
+					
+				}
+				return $AccessToken
+			}
+			
 		}
 
 	}

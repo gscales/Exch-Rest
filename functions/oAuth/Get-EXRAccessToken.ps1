@@ -102,15 +102,19 @@ function Get-EXRAccessToken
 				Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue $True
 			}
 			if($CacheCredentials.IsPresent){
+				if(!$Script:TokenCache.ContainsKey($ResourceURL)){	
+					$ResourceTokens = @{}		
+					$Script:TokenCache.Add($ResourceURL,$ResourceTokens)
+				}
 				Add-Member -InputObject $JsonObject -NotePropertyName Cached -NotePropertyValue $true				
 				$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
-				if(!$Script:TokenCache.ContainsKey($HostDomain)){			
-					$Script:TokenCache.Add($HostDomain,$JsonObject)
+				if(!$Script:TokenCache[$ResourceURL].ContainsKey($HostDomain)){			
+					$Script:TokenCache[$ResourceURL].Add($HostDomain,$JsonObject)
 				}
 				else{
-					$Script:TokenCache[$HostDomain] = $JsonObject
+					$Script:TokenCache[$ResourceURL][$HostDomain] = $JsonObject
 				}
-				write-host ("Cached Token for " + $HostDomain)
+				write-host ("Cached Token for " + $ResourceURL + " " + $HostDomain)
 			}
 			return $JsonObject
 		}

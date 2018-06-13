@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.08'
+	ModuleVersion	   = '3.10.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -183,7 +183,20 @@
 		'Get-EXRMessageTrace',
 		'Get-EXRMessageTraceDetail',
 		'Get-EXREmailBodyLinks',
+		'Get-EXRMSubscriptions',
+		'Get-EXRMSubscriptionContent',
+		'Get-EXRMSubscriptionContentBlob',
+		'Get-EXRMDlpSensitiveTypes',
+		'Get-EXRTenantId',
+		'Get-EXRMCurrentStatus',
+		'Get-EXRMHistoricalStatus',
+		'Get-EXRMServiceMessages',
+		'Get-EXRMServices',
+		'Get-EXRAllChildFoldersBatch',
+		'Get-EXRAuditLogsSignIns',
+		'Get-EXRAuditLogsDirectoryAudits',
 		'New-EXRCalendarEvent',
+		'Invoke-EXRConvertId',
 		'Import-EXRAccessToken',
 		'Invoke-EXRCreateSelfSignedCert',
 		'Invoke-EXRDecodeToken',
@@ -206,6 +219,7 @@
 		'Invoke-EXRProcessAntiSPAMHeaders',
 		'Invoke-EXRParseEmailBody',
 		'Invoke-EXRParseEmailBodyLinks',
+		'Invoke-EXRMStopSubscription',
 		'Update-EXRItem',
 		'Connect-EXRMailbox',
 		'Move-EXRMessage',
@@ -224,6 +238,7 @@
 		'New-EXRDefaultAppRegistration',
 		'New-EXRExcelWorkBookSession',
 		'New-EXRExcelWorkSheet',
+		'New-EXRMSubscription',
 		'Remove-EXRInboxRule',
 		'Remove-EXRDefaultAppRegistration',
 		'Rename-EXRFolder',

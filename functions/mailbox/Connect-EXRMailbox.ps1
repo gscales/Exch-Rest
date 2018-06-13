@@ -44,12 +44,22 @@ function Connect-EXRMailbox
 
 		[Parameter(Position = 10, Mandatory = $false)]
 		[switch]
-		$EnableTracing
+		$EnableTracing,
+
+		[Parameter(Position = 11, Mandatory = $false)]
+		[switch]
+		$ManagementAPI
+
 
 		
 	)
 	Begin
 	{
+		if($ManagementAPI.IsPresent){
+			if ([String]::IsNullOrEmpty($ResourceURL)){
+				$ResourceURL = "manage.office.com"
+			}
+		}
 		if ([String]::IsNullOrEmpty($ClientId))
 		{
 			$redirectUrl = "urn:ietf:wg:oauth:2.0:oob"
@@ -63,9 +73,10 @@ function Connect-EXRMailbox
 					2 = Mailbox Contacts Access Only
 					3 = Full Access to all Graph API functions
 					4 = Reporting Access Only
-					5 = Set Default Application Registration
-					6 = Delete Default Application Registration
-					7 = Exit
+					5 = Management API Access Only
+					6 = Set Default Application Registration
+					7 = Delete Default Application Registration
+					8 = Exit
 					--------------------------"
 					$choice1 = read-host -prompt "Select number & press enter"
 					switch($choice1){
@@ -87,18 +98,22 @@ function Connect-EXRMailbox
 							$ClientId = "e9a8cb7e-9630-4313-8705-9d6f3181bf01"
 						}
 						"5" {
+							$ProceedOkay = $true
+							$ClientId = "2eba6dfc-2962-4242-acdc-acd6c4f5dea8"
+						}						
+						"6" {
 							New-EXRDefaultAppRegistration
 							$ProceedOkay = $true
 							$defaultAppReg = Get-EXRDefaultAppRegistration
 							$ClientId = $defaultAppReg.ClientId
 							$redirectUrl = $defaultAppReg.RedirectUrl 
 						}
-						"6"{
+						"7"{
 							Remove-EXRDefaultAppRegistration
 							Write-Host "Removed Default Registration"
 							$ProceedOkay = $true
 						}
-						"7"{return}
+						"8"{return}
 							
 
 					}
@@ -108,7 +123,11 @@ function Connect-EXRMailbox
 				$ClientId = $defaultAppReg.ClientId
 				$redirectUrl = $defaultAppReg.RedirectUrl 
 			}
-			$Resource = "graph.microsoft.com"
+			if([String]::IsNullOrEmpty($ResourceURL)){
+				$Resource = "graph.microsoft.com"
+			}else{
+				$Resource = $ResourceURL
+			}			
 			if($Outlook.IsPresent){
 				$Resource = ""
 			}

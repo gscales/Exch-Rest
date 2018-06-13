@@ -56,11 +56,13 @@ function Invoke-RefreshAccessToken
 			if($Cached){
 				Add-Member -InputObject $JsonObject -NotePropertyName Cached -NotePropertyValue $true
 				$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
-				if(!$Script:TokenCache.ContainsKey($HostDomain)){			
-					$Script:TokenCache.Add($HostDomain,$JsonObject)
+				$resourceURI = [URI]$JsonObject.resource
+				$resource = $resourceURI.Host
+				if(!$Script:TokenCache[$resource].ContainsKey($HostDomain)){			
+					$Script:TokenCache[$resource].Add($HostDomain,$JsonObject)
 				}
 				else{
-					$Script:TokenCache[$HostDomain] = $JsonObject
+					$Script:TokenCache[$resource][$HostDomain] = $JsonObject
 				}
 				write-host ("Cached Token for " + $HostDomain)
 			}
