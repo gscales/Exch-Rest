@@ -222,6 +222,7 @@
 		'Invoke-EXRMStopSubscription',
 		'Update-EXRItem',
 		'Connect-EXRMailbox',
+		'Connect-EXRManagementAPI',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
 		'New-EXRCalendarEventREST',

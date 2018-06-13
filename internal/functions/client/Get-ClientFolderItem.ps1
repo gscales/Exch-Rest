@@ -13,21 +13,21 @@
 		{
 			"Subject" {
 				$sfilter = "Subject eq '" + $sbSearchTextBox.Text.ToString() + "'"
-				$Items = Get-EXRFolderItems -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ReturnSize -Folder $folder -TopOnly:$true -Top 100 -Filter $sfilter -TrackStatus
+				$Items = Get-EXRFolderItems -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ReturnSize -Folder $folder -TopOnly:$true -Top 100 -Filter $sfilter 
 			}
 			"Body" {
 				$sfilter = "`"Body:'" + $sbSearchTextBox.Text.ToString() + "'`""
-				$Items = Get-EXRFolderItems -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ReturnSize -Folder $folder -TopOnly:$true -Top 100 -Search $sfilter -TrackStatus
+				$Items = Get-EXRFolderItems -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ReturnSize -Folder $folder -TopOnly:$true -Top 100 -Search $sfilter 
 			}
 			"From" {
 				$sfilter = "`"From:'" + $sbSearchTextBox.Text.ToString() + "'`""
-				$Items = Get-EXRFolderItems -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ReturnSize -Folder $folder -TopOnly:$true -Top 100 -Search $sfilter -TrackStatus
+				$Items = Get-EXRFolderItems -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ReturnSize -Folder $folder -TopOnly:$true -Top 100 -Search $sfilter 
 			}
 		}
 	}
 	else
 	{
-		$Items = Get-EXRFolderItems -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ReturnSize -Folder $folder -TopOnly:$true -Top 100 -TrackStatus
+		$Items = Get-EXRFolderItems -MailboxName $emEmailAddressTextBox.Text -AccessToken $Script:AccessToken -ReturnSize -Folder $folder -TopOnly:$true -Top 100 
 	}
 	foreach ($mail in $Items)
 	{
