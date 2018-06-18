@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.11.0'
+	ModuleVersion	   = '3.12.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -195,6 +195,8 @@
 		'Get-EXRAllChildFoldersBatch',
 		'Get-EXRAuditLogsSignIns',
 		'Get-EXRAuditLogsDirectoryAudits',
+		'Get-EXRMailTips',
+		'Get-EXRGroupMembers',
 		'New-EXRCalendarEvent',
 		'Invoke-EXRConvertId',
 		'Import-EXRAccessToken',
@@ -240,6 +242,8 @@
 		'New-EXRExcelWorkBookSession',
 		'New-EXRExcelWorkSheet',
 		'New-EXRMSubscription',
+		'New-EXRAdaptiveCard',
+		'New-EXRMessageCard',
 		'Remove-EXRInboxRule',
 		'Remove-EXRDefaultAppRegistration',
 		'Rename-EXRFolder',
@@ -247,6 +251,7 @@
 		'Send-EXRMessage',
 		'Send-EXRSimpleMeetingRequest',
 		'Send-EXRVoteEmail',
+		'Send-EXRAdaptiveCard',
 		'Search-EXRMessage',
  		'Search-EXRContacts',
 		'New-EXRDefaultAppRegistration',
