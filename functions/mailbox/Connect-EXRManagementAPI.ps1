@@ -55,6 +55,7 @@ function Connect-EXRManagementAPI
 	)
 	Begin
 	{
+		Write-host "Connecting To Management API"
 		Connect-EXRMailbox -MailboxName $UserName -ClientId $ClientId -redirectUrl $redirectUrl -ClientSecret $ClientSecret -ResourceURL $ResourceURL -Prompt $Prompt -ShowMenu:$ShowMenu.IsPresent -ManagementAPI
 	}
 }

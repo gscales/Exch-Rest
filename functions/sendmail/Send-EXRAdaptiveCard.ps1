@@ -101,6 +101,9 @@ function Send-EXRAdaptiveCard
 		if(![String]::IsNullOrEmpty($From)){
 			$SenderEmailAddress = (New-EXREmailAddress -Address $From)
 		}
+		if([String]::IsNullOrEmpty($Body)){
+			$Body = $Subject
+		}
 		$EmailBody = "<html>`r`n"
 		$EmailBody += "<head>`r`n"
 		$EmailBody += "<meta http-equiv=`"Content-Type`" content=`"text/html; charset=utf-8`">`r`n"
