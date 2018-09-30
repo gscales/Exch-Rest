@@ -116,7 +116,7 @@ New-EXRCalendarEventREST -MailboxName mailbox@datarumble.com -AcessToken $Access
 To create a Meeting you use the same REST message structure with the addition of the Attendees elements https://msdn.microsoft.com/en-us/office/office365/api/complex-types-for-mail-contacts-calendar#AttendeeBaseV2. Meeting Attendess can be Required, Optional or Resources. To pass attendees into the Meeting first create a collection
 $Attendees = @()
  
-Then Add Atteendess to that collection eg
+Then Add Attendees to that collection eg
 
 $Attendees += (New-EXRAttendee -Name 'fred smith' -Address 'fred@datarumble.com' -type 'Required')
 $Attendees += (New-EXRAttendee -Name 'barney jones' -Address 'barney@datarumble.com' -type 'Optional')
@@ -158,3 +158,31 @@ Return all Calendar folders
 Get-EXRAllCalendarFolders -MailboxName Mailbox@domain.com -AccessToken $AccessToken
 
 ```
+
+# Get-EXRNamedCalendarView
+Returns all events from the named calendar in the time range specified.
+
+Query all events in the default calendar for today
+
+```
+$StartTime = get-date -Hour 00 -Minute 01
+$EndTime = get-date -Hour 23 -Minute 59
+Get-EXRNamedCalendarView -StartTime $StartTime -EndTime $EndTime -CalendarName "calendar"
+
+```
+
+# Set-EXRCalendarEvent
+Change various attributes for the nominated event in the user's calendar. (The eventID is retrieved with Get-EXRNamedCalendarView)
+
+Disable the Reminder, set the importance to low and show the user as free
+```
+Set-EXRCalendarEvent -eventid AAMk<EDITED>AEjE9pAAA= -isReminderOn $false -importance low -ShowAs free
+
+```
+Set a new End time
+```
+Set-EXRCalendarEvent -eventid AAMk<EDITED>AEjE9pAAA= -end ([DateTime]::Parse("2018-09-30 13:00")) 
+
+```
+
+
