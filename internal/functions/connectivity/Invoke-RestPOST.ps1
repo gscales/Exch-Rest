@@ -27,7 +27,11 @@ function Invoke-RestPOST
 		$BasicAuthentication,
 
 		[Parameter(Position = 6, Mandatory = $false)]
-		[System.Management.Automation.PSCredential]$Credentials
+		[System.Management.Automation.PSCredential]$Credentials,
+
+		[Parameter(Position = 7, Mandatory = $true)]
+		[string]
+		$TimeZone
 	
 
 
@@ -60,7 +64,10 @@ function Invoke-RestPOST
 			$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
 		}
 		$PostContent = New-Object System.Net.Http.StringContent($Content, [System.Text.Encoding]::UTF8, "application/json")
-		$HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`""))
+		if([String]::IsNullOrEmpty($TimeZone)){
+			$TimeZone = [TimeZoneInfo]::Local.Id
+		}
+		$HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + $TimeZone + "`""))
 		$ClientResult = $HttpClient.PostAsync([Uri]($RequestURL), $PostContent)
 		if ($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK)
 		{

@@ -44,6 +44,9 @@
                     "Integer {23239608-685D-4732-9C55-4C95CB4E8E33} Name InferenceClassificationResult" {
                         Add-Member -InputObject $Item -NotePropertyName "InferenceClassificationResult" -NotePropertyValue $Prop.Value
                     }
+                    "Binary {e49d64da-9f3b-41ac-9684-c6e01f30cdfa} Name TeamChatFolderEntryId" {
+                        Add-Member -InputObject $Item -NotePropertyName "TeamChatFolderEntryId" -NotePropertyValue $Prop.Value
+                    }
                     "Integer 0xe08" {
                         Add-Member -InputObject $Item -NotePropertyName "Size" -NotePropertyValue $Prop.Value
                     }
@@ -61,6 +64,9 @@
                     }
                     "Short 0x3a4d"{
                           Add-Member -InputObject $Item -NotePropertyName "PR_Gender" -NotePropertyValue $Prop.Value -Force
+                    }
+                    "String 0x001a"{
+                          Add-Member -InputObject $Item -NotePropertyName "PR_MESSAGE_CLASS" -NotePropertyValue $Prop.Value -Force
                     }
                     "Integer 0x6638"{
                           Add-Member -InputObject $Item -NotePropertyName "PR_FOLDER_CHILD_COUNT" -NotePropertyValue $Prop.Value -Force

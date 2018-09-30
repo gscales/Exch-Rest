@@ -42,7 +42,11 @@ function Invoke-RestGet {
 
         [Parameter(Position = 9, Mandatory = $false)]
         [switch]
-        $RawResponse
+        $RawResponse,
+
+        [Parameter(Position = 10, Mandatory = $false)]
+        [String]
+        $TimeZone
     )
     process {
         if ($BasicAuthentication.IsPresent) {
@@ -86,7 +90,10 @@ function Invoke-RestGet {
             }
             $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
         }
-        $HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + [TimeZoneInfo]::Local.Id + "`""))		
+        if([String]::IsNullOrEmpty($TimeZone)){
+            $TimeZone = [TimeZoneInfo]::Local.Id;
+        }
+        $HttpClient.DefaultRequestHeaders.Add("Prefer", ("outlook.timezone=`"" + $TimeZone + "`""))		
         $ClientResult = $HttpClient.GetAsync($RequestURL)
         $exProgress = 0
         if ($TrackStatus) {

@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.12.0'
+	ModuleVersion	   = '3.14.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -172,6 +172,7 @@
 		'Get-EXREmailAppUsageUserCounts',
 		'Get-EXREmailAppUsageAppsUserCounts',
 		'Get-EXREmailLinkReport',
+		'Get-EXRNonIPMSubTreeRootFolder',
 		'Get-EXRChildFolders',
 		'Get-EXRSearchFolders',
 		'Get-EXRCalendarID',
@@ -197,6 +198,8 @@
 		'Get-EXRAuditLogsDirectoryAudits',
 		'Get-EXRMailTips',
 		'Get-EXRGroupMembers',
+		'Get-EXRTeamsToken',
+		'Get-EXRSchedule',
 		'New-EXRCalendarEvent',
 		'Invoke-EXRConvertId',
 		'Import-EXRAccessToken',
