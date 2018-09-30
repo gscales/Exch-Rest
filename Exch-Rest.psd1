@@ -71,9 +71,13 @@
 	
 	# Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
 	FunctionsToExport  = @(
+		'Connect-EXRMailbox',
+		'Connect-EXRManagementAPI',
 		'Copy-EXRMessage',
 		'Copy-EXROneDriveItem',
 		'Export-EXRContactFolderToCSV',
+		'Export-EXRContactToVcard',
+		'Export-EXRDirectoryContactToVcard',
 		'Find-EXRMeetingTimes',
 		'Find-EXRRooms',
 		'Find-EXRMessageFromMessageId',
@@ -197,9 +201,8 @@
 		'Get-EXRAuditLogsDirectoryAudits',
 		'Get-EXRMailTips',
 		'Get-EXRGroupMembers',
-		'New-EXRCalendarEvent',
-		'Invoke-EXRConvertId',
 		'Import-EXRAccessToken',
+		'Invoke-EXRConvertId',
 		'Invoke-EXRCreateSelfSignedCert',
 		'Invoke-EXRDecodeToken',
 		'Invoke-EXRDeleteFolder',
@@ -222,15 +225,14 @@
 		'Invoke-EXRParseEmailBody',
 		'Invoke-EXRParseEmailBodyLinks',
 		'Invoke-EXRMStopSubscription',
-		'Update-EXRItem',
-		'Connect-EXRMailbox',
-		'Connect-EXRManagementAPI',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
+		'New-EXRCalendarEvent',
 		'New-EXRCalendarEventREST',
 		'New-EXRCalendarFolder',
 		'New-EXRContactFolder',
 		'New-EXRContact',
+		'New-EXRDefaultAppRegistration',
 		'New-EXREmailAddress',
 		'New-EXRFolder',
 		'New-EXRHolidayEvent',
@@ -254,7 +256,7 @@
 		'Send-EXRAdaptiveCard',
 		'Search-EXRMessage',
  		'Search-EXRContacts',
-		'New-EXRDefaultAppRegistration',
+		'Set-EXRCalendarEvent',
 		'Set-EXRFolderRetentionTag',
 		'Set-EXRInboxRule',
 		'Set-EXRPinEmail',
@@ -267,10 +269,9 @@
 		'Start-EXRMailClient',
 		'Update-EXRFolder',
 		'Update-EXRFolderClass',
+		'Update-EXRItem',
 		'Update-EXRMessage',
-		'Update-EXRExcelRange',
-		'Export-EXRContactToVcard',
-		'Export-EXRDirectoryContactToVcard'
+		'Update-EXRExcelRange'
 	)
 	
 	# Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.

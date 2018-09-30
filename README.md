@@ -7,12 +7,13 @@ The Exch-Rest module is a PowerShell module for the Office 365 and Exchange 2016
 
 The Module is availble from the PowerShell Gallery at https://www.powershellgallery.com/packages/Exch-Rest and can be installed on Windows 10 and Windows 8 using 
 
-Install-Module Exch-Rest
+        Install-Module Exch-Rest
 
-Import-Module Exch-Rest
+        Import-Module Exch-Rest
 
 Or you can use the following to download and use the following steps can be used to install the module from the GitHub repo
-    # Set constants
+
+        # Set constants
 	$SourceCodeURL = "https://codeload.github.com/gscales/Exch-Rest/zip/master"
 	$UserModuleHome = "~\Documents\WindowsPowerShell\Modules"
 
