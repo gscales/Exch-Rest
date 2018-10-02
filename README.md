@@ -5,13 +5,13 @@ The Exch-Rest module is a PowerShell module for the Office 365 and Exchange 2016
 
 #### Module installation
 
-The Module is availble from the PowerShell Gallery at https://www.powershellgallery.com/packages/Exch-Rest and can be installed on Windows 10 and Windows 8 using 
+The Module is available from the PowerShell Gallery at https://www.powershellgallery.com/packages/Exch-Rest and can be installed on Windows 10 and Windows 8 using 
 
         Install-Module Exch-Rest
 
         Import-Module Exch-Rest
 
-Or you can use the following to download and use the following steps can be used to install the module from the GitHub repo
+Or you can use the following steps to download and install the module from the GitHub repo
 
         # Set constants
 	$SourceCodeURL = "https://codeload.github.com/gscales/Exch-Rest/zip/master"
@@ -38,7 +38,7 @@ Or you can use the following to download and use the following steps can be used
 
 ## Connecting and Authenticating ##
 
-To connect to a Mailbox which will start the authentication proces that will allow you to then use the cmdlets defined in the module use the following 
+To connect to a Mailbox which will start the authentication process that will allow you to then use the cmdlets defined in the module use the following 
 
     Connect-EXRMailbox -Mailbox gscales@datarumble.com
 
@@ -48,11 +48,11 @@ The Office 365 / Exchange 2016 REST API uses OAuth 2.0 to authenticate users. Th
 
 However, to use OAuth tokens you must register an application in Azure before you can use the Exch-Rest functions.
 
-You have two options when it comes to doing this, the most secure option is to register your own Application and assign just the permissions (or Permission Grants) you want the Module cmdlets to have based on what data you want to access using the module. The other option is to use one of the default Application registrations that have been registed for use in a Tenant that is owned by the modules Author Glen Scales, if no ClientId is specified when using Connect-exrMailbox a menu will be presented with the different Application Registration options and the permissions that thoses registration will need if used. eg
+You have two options when it comes to doing this, the most secure option is to register your own Application and assign just the permissions (or Permission Grants) you want the Module cmdlets to have based on what data you want to access using the module. The other option is to use one of the default Application registrations that have been registed for use in a Tenant that is owned by the module's Author Glen Scales. If no ClientId is specified when using Connect-EXRMailbox a menu will be presented with the different Application Registration options and the permissions they will need. eg
 
 ![](https://gscales.github.io/Exch-Rest/GetttingStarted/MenuCaptureGettingStarted.PNG)
 
-If you select one of these Id's the first time you run this in a Tennant it will prompt for [administrative consent](https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-devhowto-multi-tenant-overview#understanding-user-and-admin-consent) for the permissions that the cmdlet will need to access the Mailbox Items (or OneDrive, Directory,Report etc) eg you should see a screen simular to 
+If you select one of these Id's the first time you run this in a Tenant it will prompt for [administrative consent](https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-devhowto-multi-tenant-overview#understanding-user-and-admin-consent) for the permissions that the cmdlet will need to access the Mailbox Items (or OneDrive, Directory,Report etc) eg you should see a screen similar to 
 
 ![](https://gscales.github.io/Exch-Rest/GetttingStarted/AppRegCapture.PNG)
 
@@ -72,33 +72,33 @@ The following is an overview of the steps you can take to create an application 
   * Check off all the permissions that you wish to use, and then click `Select`. (Note: there seems to be a bug with the CheckAll button so you may have to individually check off each permission)
   * Click `Done`
 
-Once you have done this you can set the Id you created to be the default Appilcation registration everytime you use Connect-ExrMailbox (saving your from need to enter it again), to do this select the Number 5 Option from the below menu 
+Once you have done this you can set the Id you created to be the default Application registration everytime you use Connect-EXRMailbox (saving your from needing to enter it again). To do this select the Number 5 Option from the below menu 
 
-It will the prompt you to enter the clentId that was created when you create you application registration and the redirectURI (generally this will be urn:ietf:wg:oauth:2.0:oob if you have used a native app) eg
+It will the prompt you to enter the clientId that was created when you registered the application and the redirectURI (generally this will be urn:ietf:wg:oauth:2.0:oob if you have used a native app) eg
 
 ![](https://gscales.github.io/Exch-Rest/GetttingStarted/defaultappset.PNG)
 
-once the default Application has been set the console menu will no longer show when you use the Connect-EXRMailbox cmdlet, if you do what to show the menu you can use the -ShowMenu switch with this cmdlet eg
+Once the default Application has been set the console menu will no longer show when you use the Connect-EXRMailbox cmdlet. If you want to show the menu again, just add the -ShowMenu switch eg
 
     Connect-EXRMailbox -Mailbox gscales@datarumble.com -ShowMenu
 
 #Using the Module
 
-Once you have sucesfully authenticated and your token has been cached locally you can start using the cmdlets defined in the module.
+Once you have succesfully authenticated and your token has been cached locally you can start using the cmdlets defined in the module.
 
 ## The -MailboxName parameter ##
 
- Most cmdlets have a -MailboxName switch which will control which mailbox a cmdlet is run against eg lets look an example
+Most cmdlets have a -MailboxName switch which will control which mailbox a cmdlet is run against eg let's look an example
 
 ![](https://gscales.github.io/Exch-Rest/GetttingStarted/getInboxExampeNoMailbox.PNG)
 
-In the above example No MailboxName is used so the Mailbox that was used in the orginal Connect-ExrMailbox cmd will be used. This is because that MailboxName is cached in the AccessToken.
+In the above example No MailboxName is used so the Mailbox that was used in the orginal Connect-EXRMailbox cmd will be used. This is because that MailboxName is cached in the AccessToken.
 
-If you want to connect to a partcular Mailbox you should use the -MailboxName parameter as follows
+If you want to connect to a particular Mailbox you should use the -MailboxName parameter as follows
 
 ![](https://gscales.github.io/Exch-Rest/GetttingStarted/getInboxExampeMailbox.PNG)
 
-Cmdlets that don't connect to a specific Mailbox don't need the Mailboxname pass in eg like Get-EXRUsers which will retreive all the user objects in the Azure Directory eg
+Cmdlets that don't connect to a specific Mailbox don't need the Mailboxname passed in eg like Get-EXRUsers which will retrieve all the user objects in the Azure Directory eg
 
 ![](https://gscales.github.io/Exch-Rest/GetttingStarted/get-users.PNG)
 
@@ -114,16 +114,16 @@ Cmdlets that don't connect to a specific Mailbox don't need the Mailboxname pass
 
 ### Exporting the Contacts Folder of a Mailbox to CSV ###
 
-To Export the contacts in a user Contacts folder you can use the Export-EXRContactFolderToCSV cmdlet
+To Export the contacts in a user's Contacts folder you can use the Export-EXRContactFolderToCSV cmdlet
 
     Export-EXRContactFolderToCSV -mailboxname mec@datarumble.com -FileName c:\temp\MailboxContacts.csv
 
 
-### Showing the Meeting Rooms in your Tennant ###
+### Showing the Meeting Rooms in your Tenant ###
 
     Find-EXRRooms
 
-### Create a new user created folder in a Mailbox`s Inbox Folder ###
+### Create a new user created folder in a Mailbox's Inbox Folder ###
 
     New-EXRFolder -MailboxName gscales@datarumble.com -ParentFolderPath '\Inbox' -DisplayName "My New Folder for Processing"
 
@@ -134,7 +134,7 @@ To Export the contacts in a user Contacts folder you can use the Export-EXRConta
 
 ## Reporting ##
 
-The Microsoft graph API provides access to the Office 365 usage reports for tennants and the module allows access to these reports eg getting the Mailbox Sizes and usage for the last 7 days
+The Microsoft graph API provides access to the Office 365 usage reports for tenants and the module allows access to these reports eg getting the Mailbox Sizes and usage for the last 7 days
 
 
 ![](https://gscales.github.io/Exch-Rest/GetttingStarted/get-MailboxUsages.PNG)
