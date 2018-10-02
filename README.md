@@ -82,7 +82,7 @@ Once the default Application has been set the console menu will no longer show w
 
     Connect-EXRMailbox -Mailbox gscales@datarumble.com -ShowMenu
 
-#Using the Module
+# Using the Module
 
 Once you have succesfully authenticated and your token has been cached locally you can start using the cmdlets defined in the module.
 
