@@ -30,7 +30,10 @@ function Get-EXRKnownProperty
                 $SentimentProp = Get-EXRNamedProperty -DataType "String" -Id "EntityExtraction/Sentiment1.0" -Type String -Guid "00062008-0000-0000-C000-000000000046"
                 $PropList += $SentimentProp 
             }
-                 
+            "LastActiveParentEntryId" {
+                $LastActiveParentEntryId = Get-EXRTaggedProperty -DataType "Binary" -Id "0x348A"  
+                $PropList += $LastActiveParentEntryId
+            }
         }
         return $PropList
     }

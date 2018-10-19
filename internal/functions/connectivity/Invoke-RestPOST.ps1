@@ -29,7 +29,7 @@ function Invoke-RestPOST
 		[Parameter(Position = 6, Mandatory = $false)]
 		[System.Management.Automation.PSCredential]$Credentials,
 
-		[Parameter(Position = 7, Mandatory = $true)]
+		[Parameter(Position = 7, Mandatory = $false)]
 		[string]
 		$TimeZone
 	

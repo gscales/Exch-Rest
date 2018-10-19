@@ -29,6 +29,9 @@
                         $StartTime = [DateTime]::FromFileTime($fileTime)
                         Add-Member -InputObject $Item -NotePropertyName "PR_START_DATE_ETC" -NotePropertyValue $StartTime
                     }
+                    "Binary 0x348A"{                            
+                        Add-Member  -InputObject $Item -NotePropertyName "LastActiveParentEntryId" -NotePropertyValue ([System.BitConverter]::ToString([Convert]::FromBase64String($Prop.Value)).Replace("-",""))
+                    }
                     "Integer 0x301D" {
                         Add-Member -InputObject $Item -NotePropertyName "PR_RETENTION_FLAGS" -NotePropertyValue $Prop.Value
                     }

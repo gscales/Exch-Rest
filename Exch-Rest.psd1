@@ -204,6 +204,8 @@
 		'Get-EXRGroupMembers',
 		'Get-EXRTeamsToken',
 		'Get-EXRSchedule',
+		'Get-EXRRetainedDeletedFolderItems',
+		'Get-EXRDeletedItems',
 		'New-EXRCalendarEvent',
 		'Invoke-EXRConvertId',
 		'Invoke-EXRCreateSelfSignedCert',

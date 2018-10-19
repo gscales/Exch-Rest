@@ -24,8 +24,9 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=18, Mandatory=$false)] [switch]$BatchReturnItems,
         [Parameter(Position=19, Mandatory=$false)] [switch]$ReturnInternetMessageHeaders,
         [Parameter(Position=20, Mandatory=$false)] [switch]$ProcessAntiSPAMHeaders,
+        [Parameter(Position=21, Mandatory=$false)] [switch]$ReturnLastActiveParentEntryId,
         [Parameter(Position=22, Mandatory=$false)] [switch]$Todays,
-        [Parameter(Position=21, Mandatory=$false)] [Int32]$MessageCount
+        [Parameter(Position=23, Mandatory=$false)] [Int32]$MessageCount
         
     )
     Begin{
@@ -106,6 +107,9 @@ function Get-EXRWellKnownFolderItems{
             }
             if($ReturnEntryId.IsPresent){
                 $PropList = Get-EXRKnownProperty -PropList $PropList -PropertyName "PR_ENTRYID"
+            }
+            if($ReturnLastActiveParentEntryId.IsPresent){
+                $PropList = Get-EXRKnownProperty -PropList $PropList -PropertyName "LastActiveParentEntryId"
             }
             $RequestURL += $Filter + $Search + $OrderBy
             if($PropList -ne $null){
