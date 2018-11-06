@@ -33,9 +33,9 @@ function Get-EXRBatchItems {
 
         [Parameter(Position = 8, Mandatory = $false)] 
         [switch]
-		$RestrictProps,
+        $RestrictProps,
 		
-		[Parameter(Position = 9, Mandatory = $false)] 
+        [Parameter(Position = 9, Mandatory = $false)] 
         [switch]
         $ChildFolders
 
@@ -56,10 +56,10 @@ function Get-EXRBatchItems {
         $RequestContent = "{`r`n`"requests`": ["
         $itemCount = 1
         foreach ($Item in $Items) {
-			$ItemURI = $URLString + "('" + $Item.Id + "')"
-			if($ChildFolders.IsPresent){
-				$ItemURI +=  "/childfolders/?`$Top=1000"
-			}
+            $ItemURI = $URLString + "('" + $Item.Id + "')"
+            if ($ChildFolders.IsPresent) {
+                $ItemURI += "/childfolders/?`$Top=1000"
+            }
             $boolSelectProp = $false
             if ($RestrictProps.IsPresent) {
                 if (![String]::IsNullOrEmpty($SelectProperties)) {
@@ -73,13 +73,13 @@ function Get-EXRBatchItems {
                     $ItemURI += "`&"
                 }
                 else {
-					if(!$ItemURI.Contains("/?")){
-						$ItemURI += "/?"
-					}                    
-				}
-				if($ChildFolders.IsPresent){
-					$ItemURI += "`&"
-				}
+                    if (!$ItemURI.Contains("/?")) {
+                        $ItemURI += "/?"
+                    }                    
+                }
+                if ($ChildFolders.IsPresent) {
+                    $ItemURI += "`&"
+                }
                 $ItemURI += "`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
             if ($itemCount -ne 1) {$RequestContent += ",`r`n"}  

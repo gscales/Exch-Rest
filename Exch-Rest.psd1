@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.16.0'
+	ModuleVersion	   = '3.17.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -73,6 +73,7 @@
 	FunctionsToExport  = @(
 		'Connect-EXRMailbox',
 		'Connect-EXRManagementAPI',
+		'Connect-EXRSK4B',
 		'Copy-EXRMessage',
 		'Copy-EXROneDriveItem',
 		'Export-EXRContactFolderToCSV',
@@ -206,6 +207,13 @@
 		'Get-EXRSchedule',
 		'Get-EXRRetainedDeletedFolderItems',
 		'Get-EXRDeletedItems',
+		'Get-EXRInsights',
+		'Get-EXRSK4BPresence',
+		'Get-EXRUnifedGroups',
+		'Get-EXRGroupConversationThreads',
+		'Get-EXRGroupThreads',
+		'Get-EXRGroupThreadPosts',
+		'Get-EXRGroupThreadPost',
 		'New-EXRCalendarEvent',
 		'Invoke-EXRConvertId',
 		'Invoke-EXRCreateSelfSignedCert',
@@ -230,6 +238,10 @@
 		'Invoke-EXRParseEmailBody',
 		'Invoke-EXRParseEmailBodyLinks',
 		'Invoke-EXRMStopSubscription',
+		'Invoke-EXRGetUCWAEvents',
+		'Invoke-EXRSK4BReportMyActivity',
+		'Invoke-EXRCreateAppTokenCertificate',
+		'Invoke-EXRPostExtension',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
 		'New-EXRCalendarEvent',
@@ -259,8 +271,10 @@
 		'Send-EXRSimpleMeetingRequest',
 		'Send-EXRVoteEmail',
 		'Send-EXRAdaptiveCard',
+		'Send-EXRSK4BMessage',
 		'Search-EXRMessage',
- 		'Search-EXRContacts',
+		'Search-EXRContacts',
+		'Search-EXRSK4BPeople',
 		'Set-EXRCalendarEvent',
 		'Set-EXRFolderRetentionTag',
 		'Set-EXRInboxRule',
@@ -271,6 +285,7 @@
 		'Set-EXRContact',
 		'Set-EXRContactPhoto',
 		'Set-EXRItemCategory',	
+		'Set-EXRSK4BPresence',
 		'Start-EXRMailClient',
 		'Update-EXRFolder',
 		'Update-EXRFolderClass',

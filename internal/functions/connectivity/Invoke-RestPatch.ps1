@@ -44,7 +44,7 @@ function Invoke-RestPatch
 		{
 			if ($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::Created)
 			{
-				write-Host ($ClientResult.Result)
+				Write-Output ($ClientResult.Result)
 			}
 			if ($ClientResult.Result.Content -ne $null)
 			{

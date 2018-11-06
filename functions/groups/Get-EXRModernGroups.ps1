@@ -12,7 +12,11 @@ function Get-EXRModernGroups
 		
 		[Parameter(Position = 2, Mandatory = $false)]
 		[string]
-		$GroupName
+		$GroupName,
+
+		[Parameter(Position = 3, Mandatory = $false)]
+		[string]
+		$mail
 	)
 	Begin
 	{
@@ -32,6 +36,9 @@ function Get-EXRModernGroups
 		if (![String]::IsNullOrEmpty($GroupName))
 		{
 			$RequestURL = Get-EndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=displayName eq '$GroupName'"
+		}
+		if($mail){
+			$RequestURL = Get-EndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=mail eq '$mail'"
 		}
 		do
 		{

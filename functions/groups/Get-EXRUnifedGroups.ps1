@@ -1,4 +1,4 @@
-function Get-EXRGroupConversations
+function Get-EXRUnifedGroups
 {
 	[CmdletBinding()]
 	param (
@@ -11,11 +11,17 @@ function Get-EXRGroupConversations
 		$AccessToken,
 		
 		[Parameter(Position = 2, Mandatory = $false)]
-		[psobject]
-		$Group
+		[string]
+		$GroupName,
+
+		[Parameter(Position = 3, Mandatory = $false)]
+		[string]
+		$mail
+
 	)
 	Begin
 	{
+		
 		if($AccessToken -eq $null)
 		{
 			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
@@ -27,8 +33,14 @@ function Get-EXRGroupConversations
 			$MailboxName = $AccessToken.mailbox
 		}  
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
-		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "groups"
-		$RequestURL = $EndPoint + "('" + $Group.Id + "')/threads?`$Top=1000"
+		$RequestURL = Get-EndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=groupTypes/any(c:c+eq+'Unified')"
+		if (![String]::IsNullOrEmpty($GroupName))
+		{
+			$RequestURL = Get-EndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=displayName eq '$GroupName'"
+		}
+		if($mail){
+			$RequestURL = Get-EndPoint -AccessToken $AccessToken -Segment "/groups?`$filter=mail eq '$mail'"
+		}
 		do
 		{
 			$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
@@ -38,6 +50,7 @@ function Get-EXRGroupConversations
 			}
 			$RequestURL = $JSONOutput.'@odata.nextLink'
 		}
-		while (![String]::IsNullOrEmpty($RequestURL))	
+		while (![String]::IsNullOrEmpty($RequestURL))
+		
 	}
 }

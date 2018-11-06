@@ -12,9 +12,14 @@ function Update-EXRItem {
 		[string]
 		$ItemURI,
 		
-		[Parameter(Position = 3, Mandatory = $true)]
+		[Parameter(Position = 3, Mandatory = $false)]
 		[string]
-		$details
+		$details,
+
+		[Parameter(Position = 4, Mandatory = $false)]
+		[psobject]
+		$PropList
+
 	)
 	Begin {
 		if($AccessToken -eq $null)
@@ -26,6 +31,52 @@ function Update-EXRItem {
 		}
 		if([String]::IsNullOrEmpty($MailboxName)){
 			$MailboxName = $AccessToken.mailbox
+		}
+		if ($PropList -ne $null)
+		{
+			$details = "{"			
+			$details += "`"SingleValueExtendedProperties`": [" + "`r`n"
+			$propCount = 0
+			$PropName = "PropertyId"
+			if ($AccessToken.resource -eq "https://graph.microsoft.com")
+			{
+				$PropName = "Id"
+			}
+			foreach ($Property in $PropList)
+			{
+				if ($propCount -eq 0)
+				{
+					$details += "{" + "`r`n"
+				}
+				else
+				{
+					$NewMesdetailssage += ",{" + "`r`n"
+				}
+				if ($Property.PropertyType -eq "Tagged")
+				{
+					$details += "`"$PropName`":`"" + $Property.DataType + " " + $Property.Id + "`", " + "`r`n"
+				}
+				else
+				{
+					if ($Property.Type -eq "String")
+					{
+						$details += "`"$PropName`":`"" + $Property.DataType + " " + $Property.Guid + " Name " + $Property.Id + "`", " + "`r`n"
+					}
+					else
+					{
+						$details += "`"$PropName`":`"" + $Property.DataType + " " + $Property.Guid + " Id " + $Property.Id + "`", " + "`r`n"
+					}
+				}
+				if($Property.Value -eq "null"){
+					$details += "`"Value`":null" + "`r`n"
+				}
+				else{
+					$details += "`"Value`":`"" + $Property.Value + "`"" + "`r`n"
+				}				
+				$details += " } " + "`r`n"
+				$propCount++
+			}
+			$details += "]}" + "`r`n"
 		}
 		$HttpClient = Get-HTTPClient($MailboxName)
 		$RequestURL = $ItemURI

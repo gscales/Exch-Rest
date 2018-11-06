@@ -1,4 +1,4 @@
-function Get-EXRGroupConversations {
+function Get-EXRGroupConversationThreads {
     [CmdletBinding()]
     param (
         [Parameter(Position = 0, Mandatory = $false)]
@@ -8,14 +8,14 @@ function Get-EXRGroupConversations {
         [Parameter(Position = 1, Mandatory = $false)]
         [psobject]
         $AccessToken,
-		
-        [Parameter(Position = 2, Mandatory = $false)]
-        [psobject]
-        $Group,
 
+        [Parameter(Position = 2, Mandatory = $false)]
+		[psobject]
+		$Group,
+		
         [Parameter(Position = 3, Mandatory = $false)]
-        [DateTime]
-        $lastDeliveredDateTime
+        [psobject]
+        $ThreadId
     )
     Begin {
         if ($AccessToken -eq $null) {
@@ -29,19 +29,11 @@ function Get-EXRGroupConversations {
         }  
         $HttpClient = Get-HTTPClient -MailboxName $MailboxName
         $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "groups"
-        $RequestURL = $EndPoint + "('" + $Group.Id + "')/conversations?`$Top=10"
-		
+        $RequestURL = $EndPoint + "('" + $Group.Id + "')/conversations('" + $ThreadId + "')/threads"
         do {
             $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
             foreach ($Message in $JSONOutput.Value) {
-                if ($lastDeliveredDateTime) {
-                    if (([DateTime]$Message.lastDeliveredDateTime) -gt $lastDeliveredDateTime) {
-						 Write-Output $Message
-                    }
-                }else{
-					Write-Output $Message
-				}
-				
+                Write-Output $Message
             }
             $RequestURL = $JSONOutput.'@odata.nextLink'
         }

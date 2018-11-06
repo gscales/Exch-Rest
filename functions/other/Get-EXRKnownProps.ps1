@@ -22,6 +22,10 @@ function Get-EXRKnownProperty
                 $prEntryId = Get-EXRTaggedProperty -DataType "Binary" -Id "0x0FFF"  
                 $PropList += $prEntryId
             }
+            "PR_BODY_HTML" {
+                $prEntryId = Get-EXRTaggedProperty -DataType "Binary" -Id "0x1013"  
+                $PropList += $prEntryId
+            }
             "MessageSize"{
                 $PidTagMessageSize = Get-EXRTaggedProperty -DataType "Integer" -Id "0x0E08"
                 $PropList += $PidTagMessageSize 

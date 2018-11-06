@@ -33,7 +33,15 @@ function Get-EXRAppOnlyToken
 		
 		[Parameter(Mandatory = $true)]
 		[Security.SecureString]
-		$password
+		$password, 
+
+		[Parameter(Position = 10, Mandatory = $false)]
+		[string]
+		$MailboxName,
+
+		[Parameter(Position = 11, Mandatory = $false)]
+		[switch]
+		$NoCache
 		
 	)
 	Begin
@@ -80,12 +88,31 @@ function Get-EXRAppOnlyToken
 		}
 		Add-Member -InputObject $JsonObject -NotePropertyName tenantid -NotePropertyValue $TenantId
 		Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
-                Add-Member -InputObject $JsonObject -NotePropertyName mailbox -NotePropertyValue $MailboxName
+        Add-Member -InputObject $JsonObject -NotePropertyName mailbox -NotePropertyValue $MailboxName
 		Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
 		if ($Beta.IsPresent)
 		{
 			Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue True
 		}
+		if(!$NoCache.IsPresent)		
+		{
+			if($MailboxName){
+				if(!$Script:TokenCache.ContainsKey($ResourceURL)){	
+					$ResourceTokens = @{}		
+					$Script:TokenCache.Add($ResourceURL,$ResourceTokens)
+				}
+				Add-Member -InputObject $JsonObject -NotePropertyName Cached -NotePropertyValue $true				
+				$HostDomain = (New-Object system.net.Mail.MailAddress($MailboxName)).Host.ToLower()
+				if(!$Script:TokenCache[$ResourceURL].ContainsKey($HostDomain)){			
+					$Script:TokenCache[$ResourceURL].Add($HostDomain,$JsonObject)
+				}
+				else{
+					$Script:TokenCache[$ResourceURL][$HostDomain] = $JsonObject
+				}
+				write-host ("Cached Token for " + $ResourceURL + " " + $HostDomain)
+			}
+		}
+
 		return $JsonObject
 	}
 }
