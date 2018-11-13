@@ -19,7 +19,7 @@ function Get-EXRUnifedGroups
 		$mail
 
 	)
-	Begin
+	Process
 	{
 		
 		if($AccessToken -eq $null)

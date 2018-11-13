@@ -35,7 +35,7 @@ function Get-EXRGroupThreadPosts {
 
 
     )
-    Begin {
+    Process {
         if ($AccessToken -eq $null) {
             $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
             if ($AccessToken -eq $null) {

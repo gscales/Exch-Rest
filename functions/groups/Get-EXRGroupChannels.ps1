@@ -6,7 +6,7 @@ function Get-EXRGroupChannels{
         [Parameter(Position=2, Mandatory=$false)] [psobject]$Group,
         [Parameter(Position=3, Mandatory=$false)] [psobject]$ChannelName
     )
-    Begin{
+    Process{
 		if($AccessToken -eq $null)
 		{
 			$AccessToken = Get-ProfiledToken -MailboxName $MailboxName  

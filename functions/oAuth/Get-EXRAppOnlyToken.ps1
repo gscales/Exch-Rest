@@ -3,7 +3,7 @@ function Get-EXRAppOnlyToken
 	[CmdletBinding()]
 	param (
 		
-		[Parameter(Position = 1, Mandatory = $true)]
+		[Parameter(Position = 1, Mandatory = $false)]
 		[string]
 		$CertFileName,
 		
@@ -31,7 +31,7 @@ function Get-EXRAppOnlyToken
 		[switch]
 		$Beta,
 		
-		[Parameter(Mandatory = $true)]
+		[Parameter(Mandatory = $false)]
 		[Security.SecureString]
 		$password, 
 
@@ -41,7 +41,11 @@ function Get-EXRAppOnlyToken
 
 		[Parameter(Position = 11, Mandatory = $false)]
 		[switch]
-		$NoCache
+		$NoCache,
+		
+		[Parameter(Position = 12, Mandatory = $false)]
+		[System.Security.Cryptography.X509Certificates.X509Certificate2]
+		$Certificate
 		
 	)
 	Begin
@@ -67,7 +71,11 @@ function Get-EXRAppOnlyToken
 		{
 			$ResourceURL = $AppSetting.ResourceURL
 		}
-		$JWTToken = New-EXRJWTToken -CertFileName $CertFileName -password $password -TenantId $TenantId -ClientId $ClientId -ValidateForMinutes $ValidateForMinutes
+		if(![String]::IsNullOrEmpty($CertFileName)){
+			$JWTToken = New-EXRJWTToken -CertFileName $CertFileName -password $password -TenantId $TenantId -ClientId $ClientId -ValidateForMinutes $ValidateForMinutes
+		}else{
+			$JWTToken = New-EXRJWTToken -Certificate $Certificate -TenantId $TenantId -ClientId $ClientId -ValidateForMinutes $ValidateForMinutes
+		}		
 		Add-Type -AssemblyName System.Web
 		$HttpClient = Get-HTTPClient -MailboxName " "
 		$AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&client_assertion_type=urn%3Aietf%3Aparams%3Aoauth%3Aclient-assertion-type%3Ajwt-bearer&client_assertion=$JWTToken&grant_type=client_credentials&redirect_uri=$redirectUrl"

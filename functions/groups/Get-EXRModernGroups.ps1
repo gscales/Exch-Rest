@@ -18,7 +18,7 @@ function Get-EXRModernGroups
 		[string]
 		$mail
 	)
-	Begin
+	Process
 	{
 		
 		if($AccessToken -eq $null)

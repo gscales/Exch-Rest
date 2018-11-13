@@ -1,4 +1,4 @@
-function Get-EXRGroupMembers {
+function Get-EXRGroupThread {
     [CmdletBinding()]
     param (
         [Parameter(Position = 0, Mandatory = $false)]
@@ -8,17 +8,13 @@ function Get-EXRGroupMembers {
         [Parameter(Position = 1, Mandatory = $false)]
         [psobject]
         $AccessToken,
-        
+				
         [Parameter(Position = 2, Mandatory = $false)]
         [psobject]
-        $GroupId
+        $ThreadURI
 
-
-
-		
     )
     Process {
-		
         if ($AccessToken -eq $null) {
             $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
             if ($AccessToken -eq $null) {
@@ -27,12 +23,12 @@ function Get-EXRGroupMembers {
         }
         if ([String]::IsNullOrEmpty($MailboxName)) {
             $MailboxName = $AccessToken.mailbox
-        } 
-
-        $HttpClient = Get-HTTPClient -MailboxName $MailboxName
-        $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "groups" 
-        $RequestURL = $EndPoint + "/" + $GroupId + "/members"
-        $Result = Invoke-RestGET -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
-        return $Result.value
+        }  
+        $HttpClient = Get-HTTPClient -MailboxName $MailboxName       
+        $RequestURL = $ThreadURI
+        $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+        add-Member -InputObject $JSONOutput -NotePropertyName ItemURI -NotePropertyValue $ThreadURI
+        return $JSONOutput
+	
     }
 }

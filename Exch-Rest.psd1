@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.17.0'
+	ModuleVersion	   = '3.22.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -214,6 +214,9 @@
 		'Get-EXRGroupThreads',
 		'Get-EXRGroupThreadPosts',
 		'Get-EXRGroupThreadPost',
+		'Get-EXRSubscriptions',
+		'Get-EXRGroupThread',
+		'Get-EXRCredentialType',
 		'New-EXRCalendarEvent',
 		'Invoke-EXRConvertId',
 		'Invoke-EXRCreateSelfSignedCert',
@@ -242,6 +245,7 @@
 		'Invoke-EXRSK4BReportMyActivity',
 		'Invoke-EXRCreateAppTokenCertificate',
 		'Invoke-EXRPostExtension',
+		'Invoke-EXRDeleteSubscription',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
 		'New-EXRCalendarEvent',
@@ -263,6 +267,7 @@
 		'New-EXRMSubscription',
 		'New-EXRAdaptiveCard',
 		'New-EXRMessageCard',
+		'New-EXRSubscription',
 		'Remove-EXRInboxRule',
 		'Remove-EXRDefaultAppRegistration',
 		'Rename-EXRFolder',

@@ -1,4 +1,4 @@
-function Get-MessageJSONFormat
+function Get-PostJSONFormat
 {
 	[CmdletBinding()]
 	param (
