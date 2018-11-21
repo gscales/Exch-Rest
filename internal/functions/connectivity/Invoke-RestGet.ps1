@@ -48,9 +48,14 @@ function Invoke-RestGet {
         [String]
         $TimeZone,
  
-       [Parameter(Position = 10, Mandatory = $false)]
+       [Parameter(Position = 11, Mandatory = $false)]
         [String]
-        $BodyFormat
+        $BodyFormat,
+
+        [Parameter(Position = 12, Mandatory = $false)]
+        [switch]
+        $IdToken
+
     )
     process {
         if ($BasicAuthentication.IsPresent) {
@@ -92,7 +97,12 @@ function Invoke-RestGet {
             if ($Script:TraceRequest) {
                 write-host $RequestURL
             }
-            $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
+            if($IdToken.IsPresent){
+                $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.id_token));
+            }else{
+                $HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));
+            }
+            
         }
         if([String]::IsNullOrEmpty($TimeZone)){
             $TimeZone = [TimeZoneInfo]::Local.Id;

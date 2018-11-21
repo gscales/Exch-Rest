@@ -38,6 +38,10 @@ function Get-EXRKnownProperty
                 $LastActiveParentEntryId = Get-EXRTaggedProperty -DataType "Binary" -Id "0x348A"  
                 $PropList += $LastActiveParentEntryId
             }
+            "AppointmentDuration"{
+                $AppointmentDuration = Get-EXRNamedProperty -DataType "Integer" -Id "0x8213" -Type Id -Guid "00062002-0000-0000-C000-000000000046"
+                $PropList += $AppointmentDuration
+            }
         }
         return $PropList
     }

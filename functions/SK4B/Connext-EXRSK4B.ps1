@@ -69,6 +69,7 @@ function Connect-EXRSK4B {
         $HttpClient.DefaultRequestHeaders.Add('X-MS-RequiresMinResourceVersion', '2')
         $ClientResult = $HttpClient.PostAsync([Uri]$DiscoveryResult._links.applications.href, $PostJson)        
         $EndPointResult = ConvertFrom-Json  $ClientResult.Result.Content.ReadAsStringAsync().Result
+        $Script:SK4BApplication = $EndPointResult
         $Script:SK4BServerName = $adURI2.host
         $Script:SK4BMailboxName = $MailboxName
         $Script:SK4BNextEvent = $EndPointResult._links.events.href       

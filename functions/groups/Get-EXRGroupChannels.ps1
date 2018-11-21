@@ -18,7 +18,7 @@ function Get-EXRGroupChannels{
 			$MailboxName = $AccessToken.mailbox
 		}   
         $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
-        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "groups"
+        $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "teams" -beta
         if([String]::IsNullOrEmpty($ChannelName)){
             $RequestURL =   $EndPoint + "('" + $Group.Id + "')/channels?`$Top=1000"
         }

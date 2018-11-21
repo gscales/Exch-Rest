@@ -8,7 +8,10 @@ function Get-EXRUserPhoto
 		
 		[Parameter(Position = 1, Mandatory = $false)]
 		[psobject]
-		$AccessToken
+		$AccessToken,
+		[Parameter(Position = 2, Mandatory = $false)]
+		[psobject]
+		$TargetUser
 		
 	)
 	Begin
@@ -26,8 +29,11 @@ function Get-EXRUserPhoto
         } 
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
-		$RequestURL = $EndPoint + "/" + $MailboxName + "/photo/`$value"
+		$RequestURL = $EndPoint + "('" + [uri]::EscapeDataString($TargetUser) + "')/photo/`$value"
 		$Result = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
-		Write-Output $Result.ReadAsByteArrayAsync().Result
+		if($Result){
+			Write-Output $Result.ReadAsByteArrayAsync().Result
+		}
+		
 	}
 }

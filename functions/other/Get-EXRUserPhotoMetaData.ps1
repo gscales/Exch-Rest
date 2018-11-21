@@ -8,7 +8,11 @@ function Get-EXRUserPhotoMetaData
 		
 		[Parameter(Position = 1, Mandatory = $false)]
 		[psobject]
-		$AccessToken
+		$AccessToken,
+
+		[Parameter(Position = 2, Mandatory = $false)]
+		[psobject]
+		$TargetUser
 	)
 	Begin
 	{
@@ -25,7 +29,7 @@ function Get-EXRUserPhotoMetaData
         } 
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
-		$RequestURL = $EndPoint + "/" + $MailboxName + "/photo"
+		$RequestURL = $EndPoint + "('" +  [uri]::EscapeDataString($TargetUser) + "')/photo"
 		$JsonObject = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
 		Write-Output $JsonObject
 	}

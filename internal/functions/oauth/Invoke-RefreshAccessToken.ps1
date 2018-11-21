@@ -30,7 +30,11 @@ function Invoke-RefreshAccessToken {
             $AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&refresh_token=$RefreshToken&grant_type=refresh_token&redirect_uri=$redirectUrl"            
         }
         $content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
-        $ClientResult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"), $content)
+        $apEndPoint = "https://login.windows.net/common/oauth2/token"
+        if($AccessToken.TenantId){
+            $apEndPoint = "https://login.windows.net/" + $AccessToken.TenantId + "/oauth2/token"
+        }
+        $ClientResult = $HttpClient.PostAsync([Uri]($apEndPoint), $content)
         if (!$ClientResult.Result.IsSuccessStatusCode) {
             Write-Output ("Error making REST POST " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
             Write-Output $ClientResult.Result

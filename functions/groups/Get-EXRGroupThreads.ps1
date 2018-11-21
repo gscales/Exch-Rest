@@ -23,7 +23,11 @@ function Get-EXRGroupThreads {
 
         [Parameter(Position = 5, Mandatory = $false)]
         [string]
-        $ThreadURI
+        $ThreadURI,
+
+        [Parameter(Position = 6, Mandatory = $false)]
+        [switch]
+        $TopOnly
     )
     Process {
         if ($AccessToken -eq $null) {
@@ -57,6 +61,6 @@ function Get-EXRGroupThreads {
             }
             $RequestURL = $JSONOutput.'@odata.nextLink'
         }
-        while (![String]::IsNullOrEmpty($RequestURL))	
+        while (![String]::IsNullOrEmpty($RequestURL) -band (!$TopOnly.IsPresent))	
     }
 }

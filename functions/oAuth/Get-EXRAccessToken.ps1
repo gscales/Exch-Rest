@@ -32,7 +32,11 @@ function Get-EXRAccessToken
 
 		[Parameter(Position = 7, Mandatory = $false)]
 		[switch]
-		$CacheCredentials
+		$CacheCredentials,
+
+		[Parameter(Position = 8, Mandatory = $false)]
+		[string]
+		$TenantId
 		
 	)
 	Begin
@@ -71,8 +75,12 @@ function Get-EXRAccessToken
 			{
 				$Prompt = "refresh_session"
 			}
+			if([String]::IsNullOrEmpty($TenantId)){
+				$Phase1auth = Show-OAuthWindow -Url "https://login.microsoftonline.com/common/oauth2/authorize?resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&response_type=code&redirect_uri=$redirectUrl&prompt=$Prompt"
+			}else{
+				$Phase1auth = Show-OAuthWindow -Url "https://login.microsoftonline.com/$TenantId/oauth2/authorize?resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&response_type=code&redirect_uri=$redirectUrl&prompt=$Prompt"
+			}
 			
-			$Phase1auth = Show-OAuthWindow -Url "https://login.microsoftonline.com/common/oauth2/authorize?resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&response_type=code&redirect_uri=$redirectUrl&prompt=$Prompt"
 			$code = $Phase1auth["code"]
 			$AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&grant_type=authorization_code&code=$code&redirect_uri=$redirectUrl"
 			if (![String]::IsNullOrEmpty($ClientSecret))
@@ -97,6 +105,9 @@ function Get-EXRAccessToken
 			Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
 			Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
 			Add-Member -InputObject $JsonObject -NotePropertyName mailbox -NotePropertyValue $MailboxName
+			if(![String]::IsNullOrEmpty($TenantId)){
+				Add-Member -InputObject $JsonObject -NotePropertyName TenantId -NotePropertyValue $TenantId
+			}
 			if ($Beta.IsPresent)
 			{
 				Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue $True

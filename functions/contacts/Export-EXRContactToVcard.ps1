@@ -56,11 +56,11 @@ function Export-EXRContactToVcard {
         if ($Contact.homePhones) {
             add-content -path $ufilename ("TEL;HOME;VOICE:" + $Contact.homePhones)
         }
-        if ($Contact.homePhones) {
-            add-content -path $ufilename ("TEL;WORK;VOICE:" + $Contact.homePhones)
+        if ($Contact.businessPhones) {
+            add-content -path $ufilename ("TEL;WORK;VOICE:" + $Contact.businessPhones)
         }
         if ($Contact.businessPhones) {
-            add-content -path $ufilename ("TEL;WORK;FAX:" + $Contact.businessPhones)
+            add-content -path $ufilename ("TEL;WORK;FAX:" + $Contact.businessFaxs)
         }
         if ($Contact.businessHomePage -ne $null) {
             add-content -path $ufilename ("URL;WORK:" + $Contact.businessHomePage)

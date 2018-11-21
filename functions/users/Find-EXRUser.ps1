@@ -1,16 +1,10 @@
-function Get-EXRUsers {
+function Find-EXRUser {
     [CmdletBinding()]
     param( 
         [Parameter(Position = 0, Mandatory = $false)] [string]$MailboxName,
         [Parameter(Position = 1, Mandatory = $false)] [psobject]$AccessToken,
-        [Parameter(Position = 2, Mandatory = $false)] [psobject]$filter,
-        [Parameter(Position = 3, Mandatory = $false)]
-        [int]
-        $Top=999,
-
-        [Parameter(Position = 4, Mandatory = $false)]
-        [switch]
-        $TopOnly
+        [Parameter(Position = 2, Mandatory = $false)] [string]$mail,
+        [Parameter(Position = 3, Mandatory = $false)] [string]$upn
     )
     Begin {
         if ($AccessToken -eq $null) {
@@ -25,11 +19,11 @@ function Get-EXRUsers {
         $HttpClient = Get-HTTPClient -MailboxName $MailboxName
         $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
         $RequestURL = $EndPoint
-        if (![String]::IsNullOrEmpty($filter)) {
-            $RequestURL = $EndPoint + "?`$Top=$Top&`$filter=" + $filter
-        }        
-        else {
-            $RequestURL = $EndPoint + "?`$Top=$Top"
+        if(![String]::IsNullOrEmpty($mail)){
+            $RequestURL += "?`$filter=mail eq '" + [uri]::EscapeDataString($mail) + "'"
+        }
+        if(![String]::IsNullOrEmpty($upn)){
+            $RequestURL += "?`$filter=userPrincipalName eq '" + [uri]::EscapeDataString($upn) + "'"
         }
         #write-host $RequestURL           
         do {

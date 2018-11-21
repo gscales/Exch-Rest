@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.22.0'
+	ModuleVersion	   = '3.23.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -79,6 +79,8 @@
 		'Export-EXRContactFolderToCSV',
 		'Export-EXRContactToVcard',
 		'Export-EXRDirectoryContactToVcard',
+		'Export-EXRUserToVcard',
+		'Export-EXRUserToCSV',
 		'Find-EXRMeetingTimes',
 		'Find-EXRRooms',
 		'Find-EXRMessageFromMessageId',
@@ -217,7 +219,14 @@
 		'Get-EXRSubscriptions',
 		'Get-EXRGroupThread',
 		'Get-EXRCredentialType',
+		'Get-EXRMe',
+		'Get-EXRMemberOf',
+		'Get-EXRGuestUsers',
+		'Get-EXRUserInfo',
+		'Get-EXRGroupFiles',		
 		'New-EXRCalendarEvent',
+		'Get-EXRGroupCalendar',
+		'Find-ExrUser'
 		'Invoke-EXRConvertId',
 		'Invoke-EXRCreateSelfSignedCert',
 		'Invoke-EXRDecodeToken',

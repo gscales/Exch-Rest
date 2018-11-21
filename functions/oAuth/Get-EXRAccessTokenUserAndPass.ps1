@@ -24,7 +24,11 @@ function Get-EXRAccessTokenUserAndPass
 		
 		[Parameter(Position = 7, Mandatory = $false)]
 		[switch]
-		$CacheCredentials
+		$CacheCredentials,
+
+		[Parameter(Position = 8, Mandatory = $false)]
+		[string]
+		$TenantId
 		
 	)
 	Begin
@@ -45,7 +49,11 @@ function Get-EXRAccessTokenUserAndPass
 		$password = $Credentials.GetNetworkCredential().password.ToString()
 		$AuthorizationPostRequest = "resource=https%3A%2F%2F$ResourceURL&client_id=$ClientId&grant_type=password&username=$username&password=$password"
 		$content = New-Object System.Net.Http.StringContent($AuthorizationPostRequest, [System.Text.Encoding]::UTF8, "application/x-www-form-urlencoded")
-		$ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"), $content)
+		if([String]::IsNullOrEmpty($TenantId)){
+			$ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/common/oauth2/token"), $content)
+		}else{
+			$ClientReesult = $HttpClient.PostAsync([Uri]("https://login.windows.net/$TenantId/oauth2/token"), $content)
+		}		
 		$JsonObject = ConvertFrom-Json -InputObject $ClientReesult.Result.Content.ReadAsStringAsync().Result
 		if ([bool]($JsonObject.PSobject.Properties.name -match "refresh_token"))
 		{
@@ -62,6 +70,9 @@ function Get-EXRAccessTokenUserAndPass
 		Add-Member -InputObject $JsonObject -NotePropertyName clientid -NotePropertyValue $ClientId
 		Add-Member -InputObject $JsonObject -NotePropertyName redirectUrl -NotePropertyValue $redirectUrl
 		Add-Member -InputObject $JsonObject -NotePropertyName mailbox -NotePropertyValue $MailboxName
+		if(![String]::IsNullOrEmpty($TenantId)){
+			Add-Member -InputObject $JsonObject -NotePropertyName TenantId -NotePropertyValue $TenantId
+		}
 		if ($Beta.IsPresent)
 		{
 			Add-Member -InputObject $JsonObject -NotePropertyName Beta -NotePropertyValue $True

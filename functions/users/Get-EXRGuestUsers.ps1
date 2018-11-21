@@ -1,16 +1,9 @@
-function Get-EXRUsers {
+function Get-EXRGuestUsers {
     [CmdletBinding()]
     param( 
         [Parameter(Position = 0, Mandatory = $false)] [string]$MailboxName,
         [Parameter(Position = 1, Mandatory = $false)] [psobject]$AccessToken,
-        [Parameter(Position = 2, Mandatory = $false)] [psobject]$filter,
-        [Parameter(Position = 3, Mandatory = $false)]
-        [int]
-        $Top=999,
-
-        [Parameter(Position = 4, Mandatory = $false)]
-        [switch]
-        $TopOnly
+        [Parameter(Position = 2, Mandatory = $false)] [psobject]$filter
     )
     Begin {
         if ($AccessToken -eq $null) {
@@ -26,10 +19,10 @@ function Get-EXRUsers {
         $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
         $RequestURL = $EndPoint
         if (![String]::IsNullOrEmpty($filter)) {
-            $RequestURL = $EndPoint + "?`$Top=$Top&`$filter=" + $filter
+            $RequestURL = $EndPoint + "?`$Top=999&`$filter=userType eq 'guest' and " + $filter
         }        
         else {
-            $RequestURL = $EndPoint + "?`$Top=$Top"
+            $RequestURL = $EndPoint + "?`$Top=999`&`$filter=userType eq 'guest'"
         }
         #write-host $RequestURL           
         do {
@@ -38,7 +31,7 @@ function Get-EXRUsers {
                 Write-Output $Message
             }           
             $RequestURL = $JSONOutput.'@odata.nextLink'
-        }while (![String]::IsNullOrEmpty($RequestURL) -band (!$TopOnly.IsPresent))       
+        }while (![String]::IsNullOrEmpty($RequestURL))       
         
         
     }

@@ -15,7 +15,15 @@ function Get-EXRGroupConversations {
 
         [Parameter(Position = 3, Mandatory = $false)]
         [DateTime]
-        $lastDeliveredDateTime
+        $lastDeliveredDateTime,
+
+        [Parameter(Position = 4, Mandatory = $false)]
+        [int]
+        $Top=10,
+
+        [Parameter(Position = 5, Mandatory = $false)]
+        [switch]
+        $TopOnly
     )
     Process{
         if ($AccessToken -eq $null) {
@@ -29,7 +37,7 @@ function Get-EXRGroupConversations {
         }  
         $HttpClient = Get-HTTPClient -MailboxName $MailboxName
         $EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "groups"
-        $RequestURL = $EndPoint + "('" + $Group.Id + "')/conversations?`$Top=10"
+        $RequestURL = $EndPoint + "('" + $Group.Id + "')/conversations?`$Top=$Top"
 		
         do {
             $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
@@ -45,6 +53,6 @@ function Get-EXRGroupConversations {
             }
             $RequestURL = $JSONOutput.'@odata.nextLink'
         }
-        while (![String]::IsNullOrEmpty($RequestURL))	
+        while (![String]::IsNullOrEmpty($RequestURL) -band (!$TopOnly.IsPresent))	
     }
 }
