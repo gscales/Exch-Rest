@@ -75,13 +75,13 @@ function Connect-EXRMailbox {
         if (![String]::IsNullOrEmpty($GuestDomain)) {
             $TenantId = Get-EXRTenantId -DomainName $GuestDomain
         }
-        if (!$ResourceURL) {
-            $ResourceURL = "Graph.Microsoft.com"
-        }
         if ($ManagementAPI.IsPresent) {
             if ([String]::IsNullOrEmpty($ResourceURL)) {
                 $ResourceURL = "manage.office.com"
             }
+        }
+        if (!$ResourceURL) {
+            $ResourceURL = "Graph.Microsoft.com"
         }
         if ($AdalToken) {
             $Resource = "graph.microsoft.com"			 

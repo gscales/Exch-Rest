@@ -26,7 +26,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=20, Mandatory=$false)] [switch]$ProcessAntiSPAMHeaders,
         [Parameter(Position=21, Mandatory=$false)] [switch]$ReturnLastActiveParentEntryId,
         [Parameter(Position=22, Mandatory=$false)] [switch]$Todays,
-        [Parameter(Position=23, Mandatory=$false)] [Int32]$MessageCount
+        [Parameter(Position=23, Mandatory=$false)] [switch]$ReturnBody,
+        [Parameter(Position=24, Mandatory=$false)] [Int32]$MessageCount
         
     )
     Begin{
@@ -59,8 +60,13 @@ function Get-EXRWellKnownFolderItems{
             $TopOnly = $false
         }
         $restrictProps = $false
-        if([String]::IsNullorEmpty($SelectProperties)){            
-            $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,InternetMessageId,parentFolderId,hasAttachments,webLink"
+        if([String]::IsNullorEmpty($SelectProperties)){    
+            if($ReturnBody.IsPresent){
+                $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,InternetMessageId,parentFolderId,hasAttachments,webLink,body"
+            }else{
+                $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,InternetMessageId,parentFolderId,hasAttachments,webLink"
+            }        
+           
         }
         else{
             $restrictProps = $true
