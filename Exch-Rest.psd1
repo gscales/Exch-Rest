@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.23.0'
+	ModuleVersion	   = '3.24.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -226,6 +226,7 @@
 		'Get-EXRGroupFiles',		
 		'New-EXRCalendarEvent',
 		'Get-EXRGroupCalendar',
+		'Get-EXRReminders',
 		'Find-ExrUser'
 		'Invoke-EXRConvertId',
 		'Invoke-EXRCreateSelfSignedCert',

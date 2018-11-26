@@ -1,6 +1,5 @@
-﻿function Unprotect-String
-{
-<#
+﻿function Unprotect-String {
+    <#
 	.SYNOPSIS
 		Uses DPAPI to decrypt strings.
 	
@@ -16,25 +15,29 @@
 	
 		Decrypts the content stored in $secret and returns it.
 #>
-	[CmdletBinding()]
-	Param (
-		[Parameter(ValueFromPipeline = $true)]
-		[System.Security.SecureString[]]
-		$String
-	)
+    [CmdletBinding()]
+    Param (
+        [Parameter(ValueFromPipeline = $true)]
+        [System.Security.SecureString[]]
+        $String
+    )
 	
-	begin
-	{
-		Add-Type -AssemblyName System.Security -ErrorAction Stop
-	}
-	process
-	{
-		foreach ($item in $String)
-		{
-			$cred = New-Object PSCredential("irrelevant", $item)
-			$stringBytes = [System.Convert]::FromBase64String($cred.GetNetworkCredential().Password)
-			$decodedBytes = [System.Security.Cryptography.ProtectedData]::Unprotect($stringBytes, $null, 'CurrentUser')
-			[Text.Encoding]::UTF8.GetString($decodedBytes)
-		}
-	}
+    begin {
+        Add-Type -AssemblyName System.Security -ErrorAction Stop
+    }
+    process {
+        if ($PSVersion.PSEdition -eq "Core") {
+			$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($String)			
+			$Token = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)			
+			return, $Token
+        }
+        else {
+            foreach ($item in $String) {
+                $cred = New-Object PSCredential("irrelevant", $item)
+                $stringBytes = [System.Convert]::FromBase64String($cred.GetNetworkCredential().Password)
+                $decodedBytes = [System.Security.Cryptography.ProtectedData]::Unprotect($stringBytes, $null, 'CurrentUser')
+                [Text.Encoding]::UTF8.GetString($decodedBytes)
+            }
+        }
+    }
 }
