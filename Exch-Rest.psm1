@@ -19,19 +19,19 @@ if ((Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\WindowsPowerShell\Exch-Res
 if ((Get-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\WindowsPowerShell\Exch-Rest\System" -Name "DoDotSource" -ErrorAction Ignore).DoDotSource) { $script:doDotSource = $true }
 
 # Execute Preimport actions
-. Import-ModuleFile -Path "$ModuleRoot\internal\scripts\preimport.ps1"
+. Import-ModuleFile -Path "$ModuleRoot/internal/scripts/preimport.ps1"
 
 # Import all internal functions
-foreach ($function in (Get-ChildItem "$ModuleRoot\internal\functions\*\*.ps1" -ErrorAction SilentlyContinue))
+foreach ($function in (Get-ChildItem "$ModuleRoot/internal/functions/*/*.ps1" -ErrorAction SilentlyContinue))
 {
 	. Import-ModuleFile -Path $function.FullName
 }
 
 # Import all public functions
-foreach ($function in (Get-ChildItem "$ModuleRoot\functions\*\*.ps1"))
+foreach ($function in (Get-ChildItem "$ModuleRoot/functions/*/*.ps1"))
 {
 	. Import-ModuleFile -Path $function.FullName
 }
 
 # Execute Postimport actions
-. Import-ModuleFile -Path "$ModuleRoot\internal\scripts\postimport.ps1"
+. Import-ModuleFile -Path "$ModuleRoot/internal/scripts/postimport.ps1"

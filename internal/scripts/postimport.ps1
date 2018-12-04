@@ -9,4 +9,4 @@
 # foreach ($file in (Get-ChildItem "$ModuleRoot\internal\tepp\*.ps1")) {
 # 	. Import-ModuleFile -Path $file.FullName
 # }
-. Import-ModuleFile -Path "$ModuleRoot\internal\scripts\tokenCache.ps1"
+. Import-ModuleFile -Path "$ModuleRoot/internal/scripts/tokenCache.ps1"
