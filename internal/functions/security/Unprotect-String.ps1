@@ -26,10 +26,14 @@
         Add-Type -AssemblyName System.Security -ErrorAction Stop
     }
     process {
-        if ($PSVersion.PSEdition -eq "Core") {
-			$BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($String)			
-			$Token = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)			
-			return, $Token
+        if ($PSVersionTable.PSEdition -eq "Core") {        
+            foreach ($item in $String) {
+                $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($item)			
+                $EncyptedToken = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
+                $DcyptedToken = ConvertTo-SecureString -String $EncyptedToken -Key $Script:EncKey
+                $BSTR1 = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($DcyptedToken)
+                [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR1)
+            }
         }
         else {
             foreach ($item in $String) {

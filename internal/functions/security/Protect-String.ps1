@@ -29,15 +29,9 @@
 	}
 	process
 	{
-		if($PSVersion.PSEdition -eq "Core"){
-			$SecureString = New-Object System.Security.SecureString	 	
-			for ($i = 0; $i -lt $String.length; $i++)	 		
-			{	 		
-				$SecureString.AppendChar($PlainToken[$i])	 			
-			}	 		
-			$EncryptedToken = ConvertFrom-SecureString -SecureString $SecureString	 		
-			$SecureEncryptedToken = ConvertTo-SecureString -String $EncryptedToken
-			return $SecureEncryptedToken
+		if($PSVersionTable.PSEdition -eq "Core"){
+			$EncryptedToken = ConvertFrom-SecureString -key $Script:EncKey -SecureString ($String | ConvertTo-SecureString -AsPlainText -Force)
+			$EncryptedToken | ConvertTo-SecureString -AsPlainText -Force
 		}else{
 			foreach ($item in $String)
 			{
