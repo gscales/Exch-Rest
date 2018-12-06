@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.31.0'
+	ModuleVersion	   = '3.33.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -326,7 +326,14 @@
 	# ModuleList = @()
 	
 	# List of all files packaged with this module
-	FileList		   = 'Exch-Rest.psm1'
+	FileList		   =  'Exch-Rest.psm1',
+						  'Microsoft.IdentityModel.Clients.ActiveDirectory.dll', 
+						  'Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll', 
+					      'Newtonsoft.Json.dll', 
+					      'Microsoft.IdentityModel.Clients.ActiveDirectory.xml', 
+					      'Newtonsoft.Json.xml'
+   
+
 	
 	# Private data to pass to the module specified in RootModule/ModuleToProcess. This may also contain a PSData hashtable with additional module metadata used by PowerShell.
 	PrivateData	       = @{
@@ -339,7 +346,6 @@
 			# A URL to the license for this module.
 			LicenseUri    = 'https://github.com/gscales/Exch-Rest/blob/master/LICENSE.txt'
 			
-			# A URL to the main website for this project.
 			ProjectUri    = 'https://github.com/gscales/Exch-Rest'
 			
 			# A URL to an icon representing this module.
