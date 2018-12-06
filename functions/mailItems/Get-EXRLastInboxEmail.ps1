@@ -10,7 +10,8 @@ function Get-EXRLastInboxEmail {
         [Parameter(Position = 7, Mandatory = $false)] [switch]$ReturnSize,
         [Parameter(Position = 8, Mandatory = $false)] [switch]$ReturnAttachments,
         [Parameter(Position = 9, Mandatory = $false)] [switch]$ReturnBody,
-        [Parameter(Position=10, Mandatory=$false)] [switch]$ReturnSentiment
+        [Parameter(Position=10, Mandatory=$false)] [switch]$ReturnSentiment,
+        [Parameter(Position = 11, Mandatory = $false)] [String]$BodyFormat
 
     )
     Process {
@@ -50,6 +51,6 @@ function Get-EXRLastInboxEmail {
             $ClientFilterTop = $First 
             $First = 100;
         }
-        Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder Inbox -TopOnly:$true -Top $First -Filter $Filter -ClientFilter $ClientFilter -ClientFilterTop $ClientFilterTop -ReturnAttachments:$ReturnAttachments.IsPresent -ReturnSize:$ReturnSize.IsPresent -ReturnSentiment:$ReturnSentiment.IsPresent -returnBody:$ReturnBody.IsPresent
+        Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder Inbox -TopOnly:$true -Top $First -Filter $Filter -ClientFilter $ClientFilter -ClientFilterTop $ClientFilterTop -ReturnAttachments:$ReturnAttachments.IsPresent -ReturnSize:$ReturnSize.IsPresent -ReturnSentiment:$ReturnSentiment.IsPresent -returnBody:$ReturnBody.IsPresent -BodyFormat $BodyFormat
     }
 }

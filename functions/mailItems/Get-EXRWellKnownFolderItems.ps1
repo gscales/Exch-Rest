@@ -27,7 +27,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=21, Mandatory=$false)] [switch]$ReturnLastActiveParentEntryId,
         [Parameter(Position=22, Mandatory=$false)] [switch]$Todays,
         [Parameter(Position=23, Mandatory=$false)] [switch]$ReturnBody,
-        [Parameter(Position=24, Mandatory=$false)] [Int32]$MessageCount
+        [Parameter(Position=24, Mandatory=$false)] [Int32]$MessageCount,
+        [Parameter(Position=25, Mandatory=$false)] [string]$BodyFormat
         
     )
     Begin{
@@ -126,7 +127,7 @@ function Get-EXRWellKnownFolderItems{
             $clientReturnCount = 0;
             $BatchItems = @()
             do{
-                $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+                $JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -BodyFormat $BodyFormat
                 foreach ($Message in $JSONOutput.Value) {
                     $returnCount++
                     if($BatchReturn){
