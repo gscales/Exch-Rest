@@ -67,11 +67,34 @@ function Connect-EXRMailbox {
 
         [Parameter(Position = 14, Mandatory = $false)]
         [string]
-        $GuestDomain
+        $GuestDomain,
+
+        [Parameter(Position = 15, Mandatory = $false)]
+        [switch]
+        $useADAL,
+
+        [Parameter(Position = 16, Mandatory = $false)]
+        [switch]
+        $useLoggedOnCredentials,
+
+        [Parameter(Position = 17, Mandatory = $false)]
+        [String]
+        $AADUserName
 
 		
     )
     Begin {
+        if($useADAL.IsPresent){
+            $adal = Join-Path $script:ModuleRoot "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
+            $adalforms = Join-Path $script:ModuleRoot "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
+            if([System.IO.File]::Exists($adal)){ 
+                [System.Reflection.Assembly]::LoadFrom($adal) | Out-Null 
+            }
+            if([System.IO.File]::Exists($adalforms)){ 
+                [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
+            }           
+            
+        }
         if (![String]::IsNullOrEmpty($GuestDomain)) {
             $TenantId = Get-EXRTenantId -DomainName $GuestDomain
         }
@@ -128,8 +151,13 @@ function Connect-EXRMailbox {
                 if ([String]::IsNullOrEmpty($ClientId)) {
                     $redirectUrl = "urn:ietf:wg:oauth:2.0:oob"
                     $defaultAppReg = Get-EXRDefaultAppRegistration
+                    if($PSVersionTable.PSEdition -eq "Core"){
+                        if(!$Credential){
+                            $Credential = Get-Credential
+                        }
+                    }
                     if($GuestDomain){
-			$defaultAppReg = "" | Select ClientId,RedirectUrl
+			            $defaultAppReg = "" | Select ClientId,RedirectUrl
                         $defaultAppReg.ClientId = "d3590ed6-52b3-4102-aeff-aad2292ab01c"
                         $defaultAppReg.RedirectUrl = "urn:ietf:wg:oauth:2.0:oob"
                     }
@@ -137,17 +165,18 @@ function Connect-EXRMailbox {
                         $ProceedOkay = $false
                         Do {
                             Write-Host "
-					---Default ClientId Selection ----------
-					1 = Mailbox Access Only
-					2 = Mailbox Contacts Access Only
-					3 = Full Access to all Graph API functions
-					4 = Reporting Access Only
-                                        5 = Management API Access Only
-                                        6 = Default Office AppId
-					7 = Set Default Application Registration
-					8 = Delete Default Application Registration
-					9 = Exit
-					--------------------------"
+                            ---Default ClientId Selection ----------
+                            1 = Mailbox Access Only
+                            2 = Mailbox Contacts Access Only
+                            3 = Full Access to all Graph API functions
+                            4 = Reporting Access Only
+                            5 = Management API Access Only
+                            6 = Default Office AppId
+                            7 = Set Default Application Registration
+                            8 = Delete Default Application Registration
+                            9 = Exit
+                            Or just hit enter to use the default Office AppId
+                            --------------------------"
                             $choice1 = read-host -prompt "Select number & press enter"
                             switch ($choice1) {
                                 "1" {
@@ -188,6 +217,10 @@ function Connect-EXRMailbox {
                                     $ProceedOkay = $true
                                 }
                                 "9" {return}
+                                default {
+                                    $ProceedOkay = $true
+                                    $ClientId = "d3590ed6-52b3-4102-aeff-aad2292ab01c"
+                                }
 							
 
                             }
@@ -208,7 +241,7 @@ function Connect-EXRMailbox {
                     }
                     if ($EnableTracing.IsPresent) {
                         $Script:TraceRequest = $true
-                    }
+                    }                    
                     if ($beta.IsPresent) {
                         $tkn = Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId  -redirectUrl $redirectUrl   -ResourceURL $Resource -beta -Prompt $Prompt -CacheCredentials -TenantId $TenantId                
                     }
@@ -217,7 +250,12 @@ function Connect-EXRMailbox {
                             $tkn = Get-EXRAccessTokenUserAndPass -ClientId $ClientId -MailboxName $MailboxName -ResourceURL $ResourceURL -CacheCredentials -Credentials $Credential  -TenantId $TenantId
                         }
                         else {
-                            $tkn = Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $Resource -Prompt $Prompt -CacheCredentials -TenantId $TenantId
+                            if($useADAL.IsPresent){
+                                $tkn = Get-EXRAccessTokenADAL -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $Resource -Prompt $Prompt -CacheCredentials -TenantId $TenantId -useLoggedOnCredentials:$useLoggedOnCredentials.IsPresent -AADUserName $AADUserName
+                            }else{
+                                $tkn = Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $Resource -Prompt $Prompt -CacheCredentials -TenantId $TenantId
+
+                            }
                         }
 				  
                     }
@@ -227,7 +265,11 @@ function Connect-EXRMailbox {
                         $tkn = Get-EXRAccessTokenUserAndPass -ClientId $ClientId -MailboxName $MailboxName  -ResourceURL $ResourceURL -CacheCredentials -Credentials $Credential  -TenantId $TenantId
                     }
                     else {
-                        $tkn = Get-EXRAccessToken -ClientId $ClientId -MailboxName $MailboxName -redirectUrl $redirectUrl -ClientSecret $ClientSecret -ResourceURL $ResourceURL -Beta:$beta.IsPresent -prompt $Prompt -CacheCredentials -TenantId $TenantId
+                        if($useADAL.IsPresent){
+                            $tkn = Get-EXRAccessTokenADAL -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $Resource -Prompt $Prompt -CacheCredentials -TenantId $TenantId -useLoggedOnCredentials:$useLoggedOnCredentials.IsPresent -AADUserName $AADUserName
+                        }else{
+                            $tkn = Get-EXRAccessToken -ClientId $ClientId -MailboxName $MailboxName -redirectUrl $redirectUrl -ClientSecret $ClientSecret -ResourceURL $ResourceURL -Beta:$beta.IsPresent -prompt $Prompt -CacheCredentials -TenantId $TenantId
+                        }
                     }
 			
                 }

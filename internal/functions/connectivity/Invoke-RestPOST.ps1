@@ -58,7 +58,39 @@ function Invoke-RestPOST
 				}
 				else
 				{
-					throw "App Token has expired a new access token is required rerun get-apptoken"
+					if ($AccessToken.ADAL) {
+                        if($AccessToken.ExpiresOn.DateTime -le [DateTime]::Now.ToUniversalTime().AddMinutes(10)) {
+                            $Context = New-Object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext($AccessToken.Authority)
+                            $token = ($Context.AcquireTokenSilentAsync($AccessToken.resource,$AccessToken.clientid)).Result
+                            if($token.AccessToken -ne $AccessToken.AccessToken){
+                                write-host "Refreshed Token ADAL"
+                                if ([bool]($token.PSobject.Properties.name -match "AccessToken")) {
+                                    #$AdalToken.access_token = 
+                                    Add-Member -InputObject $token -NotePropertyName access_token -NotePropertyValue (Get-ProtectedToken -PlainToken $AccessToken.AccessToken) -Force
+                                }
+                                Add-Member -InputObject $token -NotePropertyName clientid -NotePropertyValue $AccessToken.clientid
+                                Add-Member -InputObject $token -NotePropertyName ADAL -NotePropertyValue $True
+                                Add-Member -InputObject $token -NotePropertyName redirectUrl -NotePropertyValue $AccessToken.redirectUrl
+                                Add-Member -InputObject $token -NotePropertyName resource -NotePropertyValue $AccessToken.resource
+                                Add-Member -InputObject $token -NotePropertyName mailbox -NotePropertyValue $AccessToken.mailbox
+                                Add-Member -InputObject $token -NotePropertyName resourceCache -NotePropertyValue $AccessToken.resourceCache
+                                if(![String]::IsNullOrEmpty($AccessToken.TenantId)){
+                                    Add-Member -InputObject $token -NotePropertyName TenantId -NotePropertyValue $AccessToken.TenantId
+                                }
+                                Add-Member -InputObject $token -NotePropertyName Cached -NotePropertyValue $true
+                                $HostDomain = (New-Object system.net.Mail.MailAddress($AccessToken.mailbox)).Host.ToLower()
+                                if(!$Script:TokenCache[$AccessToken.resourceCache].ContainsKey($HostDomain)){			
+                                    $Script:TokenCache[$AccessToken.resourceCache].Add($HostDomain,$token)
+                                }
+                                else{
+                                    $Script:TokenCache[$AccessToken.resourceCache][$HostDomain] = $token
+                                }
+                                $AccessToken = $token
+                            }
+                        }
+                    }else{
+                        throw "App Token has expired"
+                    }
 				}
 			}
 			$HttpClient.DefaultRequestHeaders.Authorization = New-Object System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", (ConvertFrom-SecureStringCustom -SecureToken $AccessToken.access_token));

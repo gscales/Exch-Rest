@@ -227,6 +227,7 @@
 		'New-EXRCalendarEvent',
 		'Get-EXRGroupCalendar',
 		'Get-EXRReminders',
+		'Get-EXRAccessTokenADAL',
 		'Find-ExrUser'
 		'Invoke-EXRConvertId',
 		'Invoke-EXRCreateSelfSignedCert',
