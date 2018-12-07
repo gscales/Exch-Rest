@@ -86,9 +86,13 @@ function Connect-EXRMailbox {
     Begin {
         if($useADAL.IsPresent){
             $adal = Join-Path $script:ModuleRoot "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
+            $adalforms = Join-Path $script:ModuleRoot "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
             if([System.IO.File]::Exists($adal)){ 
-                Import-Module $adal -Force 
-            }    
+                Import-Module $adal -Force
+            }
+            if([System.IO.File]::Exists($adalforms)){ 
+               Import-Module $adalforms -Force
+            }           
             
         }
         if (![String]::IsNullOrEmpty($GuestDomain)) {
@@ -247,7 +251,7 @@ function Connect-EXRMailbox {
                         }
                         else {
                             if($useADAL.IsPresent){
-                                $tkn = Get-EXRAccessTokenADAL -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $Resource -Prompt $Prompt -CacheCredentials -TenantId $TenantId -useLoggedOnCredentials:$useLoggedOnCredentials.IsPresent -AADUserName $AADUserName
+                                $tkn = Get-EXRAccessTokenADAL -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $ResourceURL -Prompt $Prompt -CacheCredentials -TenantId $TenantId -useLoggedOnCredentials:$useLoggedOnCredentials.IsPresent -AADUserName $AADUserName
                             }else{
                                 $tkn = Get-EXRAccessToken -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $Resource -Prompt $Prompt -CacheCredentials -TenantId $TenantId
 
@@ -262,7 +266,7 @@ function Connect-EXRMailbox {
                     }
                     else {
                         if($useADAL.IsPresent){
-                            $tkn = Get-EXRAccessTokenADAL -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $Resource -Prompt $Prompt -CacheCredentials -TenantId $TenantId -useLoggedOnCredentials:$useLoggedOnCredentials.IsPresent -AADUserName $AADUserName
+                            $tkn = Get-EXRAccessTokenADAL -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $ResourceURL -Prompt $Prompt -CacheCredentials -TenantId $TenantId -useLoggedOnCredentials:$useLoggedOnCredentials.IsPresent -AADUserName $AADUserName
                         }else{
                             $tkn = Get-EXRAccessToken -ClientId $ClientId -MailboxName $MailboxName -redirectUrl $redirectUrl -ClientSecret $ClientSecret -ResourceURL $ResourceURL -Beta:$beta.IsPresent -prompt $Prompt -CacheCredentials -TenantId $TenantId
                         }

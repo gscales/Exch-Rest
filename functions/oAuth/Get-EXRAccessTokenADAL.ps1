@@ -47,6 +47,7 @@ function Get-EXRAccessTokenADAL {
 		
     )
     Begin {
+		Add-Type -AssemblyName System.Web
         if ([String]::IsNullOrEmpty($Prompt)) {
             $Prompt = "RefreshSession"
         }
