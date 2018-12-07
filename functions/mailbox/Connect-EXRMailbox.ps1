@@ -86,13 +86,9 @@ function Connect-EXRMailbox {
     Begin {
         if($useADAL.IsPresent){
             $adal = Join-Path $script:ModuleRoot "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
-            $adalforms = Join-Path $script:ModuleRoot "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
             if([System.IO.File]::Exists($adal)){ 
-                Import-Module $adal -Force
-            }
-            if([System.IO.File]::Exists($adalforms)){ 
-               Import-Module $adalforms -Force
-            }           
+                Import-Module $adal -Force 
+            }    
             
         }
         if (![String]::IsNullOrEmpty($GuestDomain)) {

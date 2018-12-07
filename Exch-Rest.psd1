@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.33.0'
+	ModuleVersion	   = '3.35.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -330,7 +330,9 @@
 					      'Microsoft.IdentityModel.Clients.ActiveDirectory.dll', 
 					      'Newtonsoft.Json.dll', 
 					      'Microsoft.IdentityModel.Clients.ActiveDirectory.xml', 
-					      'Newtonsoft.Json.xml'
+					      'Newtonsoft.Json.xml',
+					      'Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll',
+					      'Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.xml'
    
 
 	

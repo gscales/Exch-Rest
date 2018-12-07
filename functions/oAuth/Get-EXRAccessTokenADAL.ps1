@@ -59,7 +59,7 @@ function Get-EXRAccessTokenADAL {
         }
         $ResourceURI = "https://" + $ResourceURL
         $DomainName = $MailboxName.Split('@')[1]
-        $EndpointUri = 'https://login.windows.net/' + (Get-EXRTenantId -DomainName $DomainName)
+        $EndpointUri = 'https://login.microsoftonline.com/' + (Get-EXRTenantId -DomainName $DomainName)
         $Context = New-Object Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContext($EndpointUri)
         $Script:ADALContext = $EndpointUri
         if ($useLoggedOnCredentials.IsPresent) {
