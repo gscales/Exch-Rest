@@ -327,8 +327,7 @@
 	
 	# List of all files packaged with this module
 	FileList		   =  'Exch-Rest.psm1',
-						  'Microsoft.IdentityModel.Clients.ActiveDirectory.dll', 
-						  'Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll', 
+					      'Microsoft.IdentityModel.Clients.ActiveDirectory.dll', 
 					      'Newtonsoft.Json.dll', 
 					      'Microsoft.IdentityModel.Clients.ActiveDirectory.xml', 
 					      'Newtonsoft.Json.xml'

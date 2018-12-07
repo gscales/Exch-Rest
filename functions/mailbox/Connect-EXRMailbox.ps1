@@ -88,10 +88,10 @@ function Connect-EXRMailbox {
             $adal = Join-Path $script:ModuleRoot "Microsoft.IdentityModel.Clients.ActiveDirectory.dll"
             $adalforms = Join-Path $script:ModuleRoot "Microsoft.IdentityModel.Clients.ActiveDirectory.Platform.dll"
             if([System.IO.File]::Exists($adal)){ 
-                [System.Reflection.Assembly]::LoadFrom($adal)  | Out-Null
+                Import-Module $adal -Force
             }
             if([System.IO.File]::Exists($adalforms)){ 
-                [System.Reflection.Assembly]::LoadFrom($adalforms) | Out-Null
+               Import-Module $adalforms -Force
             }           
             
         }

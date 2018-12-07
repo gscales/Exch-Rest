@@ -64,10 +64,22 @@ function Get-EXRAccessTokenADAL {
         $Script:ADALContext = $EndpointUri
         if ($useLoggedOnCredentials.IsPresent) {
             $AADCredential = New-Object "Microsoft.IdentityModel.Clients.ActiveDirectory.UserCredential" -ArgumentList $AADUserName
-            $token = ($authContext.AcquireToken($ResourceURI, $ClientId, $AADCredential)).Result
+            $authResult = [Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationContextIntegratedAuthExtensions]::AcquireTokenAsync($Context, $ResourceURI, $ClientId, $AADcredential)
+            if ($authResult.Result.AccessToken) {
+                $token = $authResult.Result
+            }
+            elseif ($authResult.Exception) {    
+                throw "An error occured getting access token: $($authResult.Exception.InnerException)"    
+            }
         }
         else {
-            $token = ($Context.AcquireTokenAsync($ResourceURI, $ClientId, $redirectUrl, $PromptBehavior)).Result
+			$authResult = $Context.AcquireTokenAsync($ResourceURI, $ClientId, $redirectUrl, $PromptBehavior)
+			if ($authResult.Result.AccessToken) {
+                $token = $authResult.Result
+            }
+            elseif ($authResult.Exception) {    
+                throw "An error occured getting access token: $($authResult.Exception.InnerException)"    
+            }
         }
         if ($token) {
             if ([bool]($token.PSobject.Properties.name -match "AccessToken")) {
