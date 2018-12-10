@@ -257,6 +257,7 @@
 		'Invoke-EXRCreateAppTokenCertificate',
 		'Invoke-EXRPostExtension',
 		'Invoke-EXRDeleteSubscription',
+		'Invoke-EXRMarkEmailAsRead',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
 		'New-EXRCalendarEvent',

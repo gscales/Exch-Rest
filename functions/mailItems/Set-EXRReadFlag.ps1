@@ -20,7 +20,7 @@ function Set-EXRReadFlag
 	)
 	Process
 	{
-		Write-Host $Item
+		
 		if($AccessToken -eq $null)
         {
             $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
