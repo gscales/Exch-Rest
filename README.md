@@ -5,7 +5,7 @@ The Exch-Rest module is a PowerShell module for the Office 365 and Exchange 2016
 
 #### Module installation
 
-The Module is available from the PowerShell Gallery at https://www.powershellgallery.com/packages/Exch-Rest and can be installed on Windows 10 and Windows 8 using 
+The Module is available from the PowerShell Gallery at https://www.powershellgallery.com/packages/Exch-Rest and can be installed on Windows, Azure Cloud Shell or Linux where PowerShell Core has been installed
 
         Install-Module Exch-Rest
 
@@ -40,7 +40,16 @@ Or you can use the following steps to download and install the module from the G
 
 To connect to a Mailbox which will start the authentication process that will allow you to then use the cmdlets defined in the module use the following 
 
-    Connect-EXRMailbox -Mailbox gscales@datarumble.com
+**Windows**
+
+    Connect-EXRMailbox -MailboxName gscales@datarumble.com
+
+**Linux and Azure Cloud Shell**
+
+    $Cred = Get-Credential -UserName username@domain.com
+    Connect-EXRMailbox -MailboxName mailbox@domain -Credential $Cred
+
+## Authentication Options ##
 
 
 #### Application registration
