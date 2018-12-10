@@ -35,7 +35,7 @@ function Invoke-RefreshAccessToken {
             $apEndPoint = "https://login.windows.net/" + $AccessToken.TenantId + "/oauth2/token"
         }
         $ClientResult = $HttpClient.PostAsync([Uri]($apEndPoint), $content)
-        if (!$ClientResult.Result.IsSuccessStatusCode) {
+        if ($ClientResult.Result.StatusCode -ne [System.Net.HttpStatusCode]::OK) {
             Write-Output ("Error making REST POST " + $ClientResult.Result.StatusCode + " : " + $ClientResult.Result.ReasonPhrase)
             Write-Output $ClientResult.Result
             if ($ClientResult.Content -ne $null) {

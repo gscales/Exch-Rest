@@ -31,6 +31,11 @@ function Connect-EXRSK4B {
         $HttpClient = Get-HTTPClient -MailboxName $MailboxName
         $ClientResult = $HttpClient.GetAsync([Uri]$URL)
         $QueryResult = ConvertFrom-Json  $ClientResult.Result.Content.ReadAsStringAsync().Result
+        if($QueryResult._links.redirect){            
+            $HttpClient = Get-HTTPClient -MailboxName $MailboxName
+            $ClientResult = $HttpClient.GetAsync([Uri]$QueryResult._links.redirect.href)
+            $QueryResult = ConvertFrom-Json  $ClientResult.Result.Content.ReadAsStringAsync().Result
+        }
         $adURI = [URI]$QueryResult._links.user.href
         if ($certificateFileName) {
             $TenantId = Get-EXRTenantId -DomainName $MailboxName.Split('@')[1]
