@@ -49,6 +49,24 @@ To connect to a Mailbox which will start the authentication process that will al
     $Cred = Get-Credential -UserName username@domain.com
     Connect-EXRMailbox -MailboxName mailbox@domain -Credential $Cred
 
+**Using the ADAL Authentication Library**
+
+By Default the Module uses its own Native Script based oAuth Authenticity however to support a greater range of Authentication scenarios the ADAL library is also distributed with the Module and available for use
+
+To use the ADAL libraries for Logon use the following 
+
+    connect-exrmailbox -MailboxName gscales@datarumble.com -useADAL
+
+To use the Never Prompt to use the ADAL Cache
+
+    connect-exrmailbox -MailboxName gscales@datarumble.com -useADAL -Prompt Never
+
+For connecting using the currently logged on credentials use
+
+    connect-exrmailbox -MailboxName gscales@datarumble.com -useADAL -useLoggedOnCredentials -AADUserName gscales@datarumble.com
+
+(The -AADUserName variable is optional but usually required read the [GitHub](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-powershell-core-on-linux?view=powershell-6) link in the second bullet point)
+
 ## Authentication Options ##
 
 
