@@ -5,7 +5,7 @@ The Exch-Rest module is a PowerShell module for the Office 365 and Exchange 2016
 
 #### Module installation
 
-The Module is available from the PowerShell Gallery at https://www.powershellgallery.com/packages/Exch-Rest and can be installed on Windows, Azure Cloud Shell or Linux where PowerShell Core has been installed
+The Module is available from the PowerShell Gallery at https://www.powershellgallery.com/packages/Exch-Rest and can be installed on Windows, Azure Cloud Shell or Linux where Power Shell Core has been installed
 
         Install-Module Exch-Rest
 
@@ -49,9 +49,12 @@ To connect to a Mailbox which will start the authentication process that will al
     $Cred = Get-Credential -UserName username@domain.com
     Connect-EXRMailbox -MailboxName mailbox@domain -Credential $Cred
 
+
+## Authentication Options ##
+
 **Using the ADAL Authentication Library**
 
-By Default the Module uses its own Native Script based oAuth Authenticity however to support a greater range of Authentication scenarios the ADAL library is also distributed with the Module and available for use
+By Default the Module uses its own Native Script based oAuth Authentication scripts however to support a greater range of Authentication scenarios the ADAL library is also distributed with the Module and available for use
 
 To use the ADAL libraries for Logon use the following 
 
@@ -67,8 +70,7 @@ For connecting using the currently logged on credentials use
 
 (The -AADUserName variable is optional but usually required read the [GitHub](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-powershell-core-on-linux?view=powershell-6) link in the second bullet point)
 
-## Authentication Options ##
-
+Certificate Authentication - If you wish to use App Only token using certificate based Authentication then see the certificate Authentication document
 
 #### Application registration
 The Office 365 / Exchange 2016 REST API uses OAuth 2.0 to authenticate users. This means that people using an application that use this API do not need to give you their username/password. Instead, they authenticate against a central authentication system (e.g. Azure AD, Active Directory) and you get back a token which is then passed to the API endpoint for authentication. You can then give your application permission to use that token to do a limited number of things for a specific period of time.
@@ -112,6 +114,11 @@ Once the default Application has been set the console menu will no longer show w
 # Using the Module
 
 Once you have succesfully authenticated and your token has been cached locally you can start using the cmdlets defined in the module.
+
+**How Can I Examples**
+
+Because this module has a large number of cmldets to help simplify every day tasks to make the documentation more useful I've created a How Can I page which simple lists a one word question and one line example taking into account that you have authenticated with a Application registration that has sufficient rights. see 
+
 
 ## The -MailboxName parameter ##
 
