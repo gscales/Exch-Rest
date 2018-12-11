@@ -70,7 +70,7 @@ For connecting using the currently logged on credentials use
 
 (The -AADUserName variable is optional but usually required read the [GitHub](https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-powershell-core-on-linux?view=powershell-6) link in the second bullet point)
 
-Certificate Authentication - If you wish to use App Only token using certificate based Authentication then see the certificate Authentication document
+Certificate Authentication - If you wish to use App Only token using certificate based Authentication then see the [certificate Authentication document](https://github.com/gscales/Exch-Rest/blob/master/CertificateAuthentication.md) 
 
 #### Application registration
 The Office 365 / Exchange 2016 REST API uses OAuth 2.0 to authenticate users. This means that people using an application that use this API do not need to give you their username/password. Instead, they authenticate against a central authentication system (e.g. Azure AD, Active Directory) and you get back a token which is then passed to the API endpoint for authentication. You can then give your application permission to use that token to do a limited number of things for a specific period of time.
@@ -115,9 +115,9 @@ Once the default Application has been set the console menu will no longer show w
 
 Once you have succesfully authenticated and your token has been cached locally you can start using the cmdlets defined in the module.
 
-**How Can I Examples**
+# **How Can I Examples** #
 
-Because this module has a large number of cmldets to help simplify every day tasks to make the documentation more useful I've created a How Can I page which simple lists a one word question and one line example taking into account that you have authenticated with a Application registration that has sufficient rights. see 
+Because this module has a large number of cmldets to help simplify every day tasks to make the documentation more useful I've created a How Can I page which simple lists a one word question and one/two line example taking into account that you have authenticated with a Application registration that has sufficient rights. see [How Can I examples](https://github.com/gscales/Exch-Rest/blob/master/HowCanIExamples.md)
 
 
 ## The -MailboxName parameter ##
