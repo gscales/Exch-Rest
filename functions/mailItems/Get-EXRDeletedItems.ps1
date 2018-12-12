@@ -7,7 +7,9 @@ function Get-EXRDeletedItems{
         [Parameter(Position=3, Mandatory=$false)] [switch]$Archive,
         [Parameter(Position=16, Mandatory=$false)] [switch]$ReturnSentiment,
         [Parameter(Position=19, Mandatory=$false)] [switch]$ReturnInternetMessageHeaders,
-        [Parameter(Position=20, Mandatory=$false)] [switch]$ProcessAntiSPAMHeaders
+        [Parameter(Position=20, Mandatory=$false)] [switch]$ProcessAntiSPAMHeaders,
+        [Parameter(Position=7, Mandatory=$false)] [Int32]$MessageCount
+ 
        
     )
     Begin{
@@ -20,7 +22,7 @@ function Get-EXRDeletedItems{
         }
          if([String]::IsNullOrEmpty($MailboxName)){
             $MailboxName = $AccessToken.mailbox
-        } 
+        }         
         $PR_POLICY_TAG = Get-EXRTaggedProperty -DataType "Binary" -Id "0x3019"  
         $PR_RETENTION_FLAGS =  Get-EXRTaggedProperty -DataType "Integer" -Id "0x301D" 
         $PR_RETENTION_PERIOD = Get-EXRTaggedProperty -DataType "Integer" -Id "0x301A"   
@@ -44,9 +46,9 @@ function Get-EXRDeletedItems{
             }
         } 
         if($Archive.IsPresent){
-            $Items = Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder archivedeleteditems -PropList $Props -ReturnLastActiveParentEntryId -ReturnSentiment:$ReturnSentiment.IsPresent -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
+            $Items = Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder archivedeleteditems -PropList $Props -ReturnLastActiveParentEntryId -ReturnSentiment:$ReturnSentiment.IsPresent -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent -MessageCount $MessageCount
         }else{
-            $Items = Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder deleteditems -PropList $Props -ReturnLastActiveParentEntryId -ReturnSentiment:$ReturnSentiment.IsPresent -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
+            $Items = Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder deleteditems -PropList $Props -ReturnLastActiveParentEntryId -ReturnSentiment:$ReturnSentiment.IsPresent -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent -MessageCount $MessageCount 
         }        
         if($ReturnLastActiveParentFolderPath.IsPresent){
             foreach($Item in $Items){

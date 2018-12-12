@@ -56,4 +56,13 @@ How can I get a Report of Mailbox sizes
     
     Get-EXRMailboxUsage
 	
+How can I get the last 10 deleted Items in a Mailbox and show the Folder they where deleted From (utilizes the LAPFID)
+
+    Get-EXRDeletedItems -MessageCount 10 -ReturnLastActiveParentFolderPath | Select LastActiveParentFolderPath,SenderEmailAddress,Subject
+
+How can I show the SPF,DKIM,DMARC on the last 10 messages in the JunkEmail Folder
+
+     Get-EXRWellKnownFolderItems -WellKnownFolder JunkEmail -MessageCount 10 -ReturnInternetMessageHeaders -ProcessAntiSPAMHeaders | Select Subject,SPF,DKIM,DMARC | fl
+
+
    

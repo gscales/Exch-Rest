@@ -56,6 +56,11 @@ function Get-EXRWellKnownFolderItems{
             if($Top -lt 1000){
                 $TopValue =$top
             }           
+        }
+        if($MessageCount){
+            if($MessageCount -lt 1000){
+                $TopValue = $MessageCount
+            }            
         }      
         if(![String]::IsNullOrEmpty($ClientFilterTop)){
             $TopOnly = $false
