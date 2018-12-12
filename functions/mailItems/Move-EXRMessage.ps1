@@ -2,11 +2,14 @@ function Move-EXRMessage
 {
 	[CmdletBinding()]
 	param (
+		[parameter(ValueFromPipeline = $True)]
+		[psobject[]]$Item,
+		
 		[Parameter(Position = 0, Mandatory = $false)]
 		[string]
 		$MailboxName,
 		
-		[Parameter(Position = 1, Mandatory = $true)]
+		[Parameter(Position = 1, Mandatory = $false)]
 		[string]
 		$ItemURI,
 		
@@ -24,6 +27,10 @@ function Move-EXRMessage
 	)
 	Begin
 	{
+		if($Item){
+			$ItemURI = $Item.ItemRESTURI
+			Write-Host $ItemURI
+		}
 		if($AccessToken -eq $null)
         {
             $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  

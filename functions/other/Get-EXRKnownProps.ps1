@@ -30,6 +30,10 @@ function Get-EXRKnownProperty
                 $PidTagMessageSize = Get-EXRTaggedProperty -DataType "Integer" -Id "0x0E08"
                 $PropList += $PidTagMessageSize 
             }
+            "FolderSize"{
+                $FolderSizeProp = Get-EXRTaggedProperty -DataType "Long" -Id "0x66B3"
+                $PropList += $FolderSizeProp 
+            }
             "Sentiment"{
                 $SentimentProp = Get-EXRNamedProperty -DataType "String" -Id "EntityExtraction/Sentiment1.0" -Type String -Guid "00062008-0000-0000-C000-000000000046"
                 $PropList += $SentimentProp 

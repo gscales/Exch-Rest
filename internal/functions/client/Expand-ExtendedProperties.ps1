@@ -53,6 +53,9 @@
                     "Integer 0xe08" {
                         Add-Member -InputObject $Item -NotePropertyName "Size" -NotePropertyValue $Prop.Value
                     }
+                    "Long 0x66B3" {
+                        Add-Member -InputObject $Item -NotePropertyName "FolderSize" -NotePropertyValue $Prop.Value
+                    }
 		            "String 0x7d" {
                         Add-Member -InputObject $Item -NotePropertyName "PR_TRANSPORT_MESSAGE_HEADERS" -NotePropertyValue $Prop.Value
                     }
