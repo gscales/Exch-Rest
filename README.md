@@ -1,5 +1,5 @@
 # Exch-Rest Getting Started Guide
-The Exch-Rest module is a PowerShell module for the Office 365 and Exchange 2016 REST API that allows you to access the functionality provided by the [Graph API](https://developer.microsoft.com/en-us/graph) To jump to the How Can I one liner QandA samples see [this](https://github.com/gscales/Exch-Rest/blob/master/HowCanIExamples.md) (Make sure you have connected to the mailbox first before running) 
+The Exch-Rest module is a PowerShell module for the Office 365 and Exchange 2016 REST API that allows you to access the functionality provided by the [Graph API](https://developer.microsoft.com/en-us/graph) <span style="color:Red">** <u>**New** ** To jump to the How Can I one-liner QandA samples see [this](https://github.com/gscales/Exch-Rest/blob/master/HowCanIExamples.md) (Make sure you have connected to the mailbox first before running)</u></span>
 
 ## Setup
 
