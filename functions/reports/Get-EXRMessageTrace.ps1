@@ -1,13 +1,12 @@
-function Get-EXRMessageTrace
-{
-	[CmdletBinding()]
-	param (
+function Get-EXRMessageTrace {
+    [CmdletBinding()]
+    param (
 		
-		[Parameter(Position = 1, Mandatory = $true)]
-		[String]
-		$MailboxName,		
+        [Parameter(Position = 1, Mandatory = $false)]
+        [String]
+        $MailboxName,		
 		
-		[Parameter(Position = 6, Mandatory = $true)]
+        [Parameter(Position = 6, Mandatory = $true)]
         [System.Management.Automation.PSCredential]$Credentials,
         
         [Parameter(Position = 7, Mandatory = $false)]
@@ -26,38 +25,65 @@ function Get-EXRMessageTrace
         [String]$Status,
 
         [Parameter(Position = 12, Mandatory = $false)]
-        [switch]$TraceDetail
-	)
-	process
-	{
-        if($Start -eq $null){$Start = (Get-Date).AddDays(-7)}
-        if($End -eq $null){$End = (Get-Date)}
-        $HttpClient = Get-HTTPClient -MailboxName $MailboxName
+        [switch]$TraceDetail,
+
+        [Parameter(Position = 13, Mandatory = $false)]
+        [String]$extraQueryOptions,
+
+        [Parameter(Position = 14, Mandatory = $false)]
+        [String]$MessageId,
+
+        [Parameter(Position = 15, Mandatory = $false)]
+        [String]$ClientFilter
+    )
+    process {
+        if ($Start -eq $null) {$Start = (Get-Date).AddDays(-7)}
+        if ($End -eq $null) {$End = (Get-Date)}
+        $HttpClient = Get-HTTPClient -MailboxName $Credentials.UserName
         $OdataOptions = "";
         $OdataOptions = "?`$filter=StartDate eq datetime'" + ($Start.ToString("s") + "Z") + "' and EndDate eq datetime'" + ($End.ToString("s") + "Z") + "'";
-        if(![String]::IsNullOrEmpty($ToAddress)){
-                $OdataOptions += " and RecipientAddress eq '" + $ToAddress + "'"
+        if (![String]::IsNullOrEmpty($ToAddress)) {
+            $OdataOptions += " and RecipientAddress eq '" + $ToAddress + "'"
         }
-        if(![String]::IsNullOrEmpty($SenderAddress)){
-                $OdataOptions += " and SenderAddress eq '" + $SenderAddress + "'"
+        if (![String]::IsNullOrEmpty($SenderAddress)) {
+            $OdataOptions += " and SenderAddress eq '" + $SenderAddress + "'"
         }
-        if(![String]::IsNullOrEmpty($Status)){
-                $OdataOptions += " and Status eq '" + $Status + "'"
+        if (![String]::IsNullOrEmpty($Status)) {
+            $OdataOptions += " and Status eq '" + $Status + "'"
+        }
+        if(![String]::IsNullOrEmpty($MessageId)){
+            $OdataOptions += " and MessageId eq '" + $MessageId + "'"     
+        }
+        if (![String]::IsNullOrEmpty($extraQueryOptions)) {
+            $OdataOptions += " and " + $extraQueryOptions
+            Write-Host $OdataOptions
         }
         $ReportingURI = ("https://reports.office365.com/ecp/reportingwebservice/reporting.svc/MessageTrace" + $OdataOptions);
-        do{
-            $RequestURI = $ReportingURI.Replace("../../","https://reports.office365.com/ecp/")
+        do {
+            $RequestURI = $ReportingURI.Replace("../../", "https://reports.office365.com/ecp/")
             $ReportingURI = ""
-            $JSONOutput =  Invoke-RestGet -RequestURL $RequestURI -HttpClient $HttpClient -BasicAuthentication -Credentials $Credentials -MailboxName $MailboxName
+            $JSONOutput = Invoke-RestGet -RequestURL $RequestURI -HttpClient $HttpClient -BasicAuthentication -Credentials $Credentials -MailboxName $Credentials.UserName
             $ReportingURI = $JSONOutput.'odata.nextLink'
-            foreach($Message in $JSONOutput.Value){
-                if($TraceDetail.IsPresent){
-                   $Details =  Get-EXRMessageTraceDetail -MailboxName $MailboxName -MessageTraceId $Message.MessageTraceId -SenderAddress $Message.SenderAddress -ToAddress $Message.RecipientAddress -Start $Start -End $End -Credentials $Credentials
-                   Add-Member -InputObject $Message -NotePropertyName TraceDetails -NotePropertyValue $Details
+            foreach ($Message in $JSONOutput.Value) {
+                $ProcessTrace = $true
+                if (![String]::IsNullOrEmpty($ClientFilter)) {
+                        $ProcessTrace = $false
+                        $Val =  $Message | Where-Object ([scriptblock]::Create($ClientFilter))
+                        if($Val){
+                                $ProcessTrace = $true
+                        }                       
+                        
                 }
-                Write-Output $Message
+                if ($ProcessTrace) {
+                    if ($TraceDetail.IsPresent) {
+
+                        $Details = Get-EXRMessageTraceDetail -MailboxName $Credentials.UserName -MessageTraceId $Message.MessageTraceId -SenderAddress $Message.SenderAddress -ToAddress $Message.RecipientAddress -Start $Start -End $End -Credentials $Credentials
+                        Add-Member -InputObject $Message -NotePropertyName TraceDetails -NotePropertyValue $Details
+                    }
+                    Write-Output $Message
+                }               
             }
-        }while(![String]::IsNullOrEmpty($ReportingURI))
+        }while (![String]::IsNullOrEmpty($ReportingURI))
 
     }
 }
