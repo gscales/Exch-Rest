@@ -151,7 +151,7 @@ function Search-EXRMessage
 			$DetailedStats.TotalFolders = 0
 			$DetailedStats.FolderStats =  New-Object 'system.collections.generic.dictionary[[string],[Int32]]'
 			if([String]::IsNullOrEmpty($FolderPath)){
-				Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder -ReturnSize:$true -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats  -ReturnAttachments:$ReturnAttachments.IsPresent -ReturnInternetMessageHeaders -ProcessAntiSPAMHeaders | ForEach-Object{
+				Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder -ReturnSize:$true -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats  -ReturnAttachments:$ReturnAttachments.IsPresent -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent | ForEach-Object{
 					$DetailedStats.TotalItems++
 					$DetailedStats.TotalSize += $_.Size 
 				}
@@ -160,10 +160,10 @@ function Search-EXRMessage
 		}
 		else{
 			if([String]::IsNullOrEmpty($FolderPath)){
-				Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats -ReturnAttachments:$ReturnAttachments.IsPresent -ReturnInternetMessageHeaders -ProcessAntiSPAMHeaders
+				Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnFolderPath -ReturnStats -ReturnAttachments:$ReturnAttachments.IsPresent -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
 			}
 			else{
-				Get-EXRFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -FolderPath $FolderPath -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnAttachments:$ReturnAttachments.IsPresent -ReturnInternetMessageHeaders -ProcessAntiSPAMHeaders
+				Get-EXRFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -FolderPath $FolderPath -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Search $Search -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly -PropList $PropList -ReturnAttachments:$ReturnAttachments.IsPresent -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
 			}
 		}
 		

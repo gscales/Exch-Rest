@@ -64,5 +64,29 @@ How can I show the SPF,DKIM,DMARC on the last 10 messages in the JunkEmail Folde
 
      Get-EXRWellKnownFolderItems -WellKnownFolder JunkEmail -MessageCount 10 -ReturnInternetMessageHeaders -ProcessAntiSPAMHeaders | Select Subject,SPF,DKIM,DMARC | fl
 
+How can I do Message Trace on a particular Message using the MessageId (requires basic credentials to access the office365 Management API (legacy)
+
+     Get-EXRMessageTrace -MessageId '<b5f53tdbf56c0qaub95fzbyq26sg04.2748185.8760@mta860.xx.x.com>' -TraceDetail
+
+How can I do a Message Trace for Today to show which messages where Delivered as Spam (to the Junk Email Folder)
+
+    Get-EXRMessageTrace -Start (Get-Date).AddDays(-1) -Status FilteredAsSpam -Credentials $cred
+
+How can I search the Mailbox for a Message with a particular Subject (you know the full subject)
+
+    Search-EXRMessage -Subject 'Sunrise for December 13, 2018 at 05:38AM'
+
+How can I search the Mailbox for a Message with a particular Subject (partial match)
+
+    Search-EXRMessage -SubjectKQL 'Sunrise for December'
+
+How can I get a Message where I know the Internet MessageId
+
+	Find-EXRMessageFromMessageId -MessageId '<565f3a83450d3_47e3b4d1243953b@7fbad285-7b4b-4ecd-8927-5894e21a211e.mail>'
+
+To Return the Internet Headers and Process the Antispam headers the above message using the MessageId
+
+    Find-EXRMessageFromMessageId -MessageId '<565f3a83450d3_47e3b4d1243953b@7fbad285-7b4b-4ecd-8927-5894e21a211e.mail>' -ReturnInternetMessageHeaders -ProcessAntiSPAMHeaders
+
 
    
