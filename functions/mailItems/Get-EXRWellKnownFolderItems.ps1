@@ -28,7 +28,8 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=22, Mandatory=$false)] [switch]$Todays,
         [Parameter(Position=23, Mandatory=$false)] [switch]$ReturnBody,
         [Parameter(Position=24, Mandatory=$false)] [Int32]$MessageCount,
-        [Parameter(Position=25, Mandatory=$false)] [string]$BodyFormat
+        [Parameter(Position=25, Mandatory=$false)] [string]$BodyFormat,
+        [Parameter(Position=26, Mandatory=$false)] [string]$AdditionalProperties
         
     )
     Begin{
@@ -72,7 +73,9 @@ function Get-EXRWellKnownFolderItems{
             }else{
                 $SelectProperties = "`$select=ReceivedDateTime,Sender,Subject,IsRead,inferenceClassification,InternetMessageId,parentFolderId,hasAttachments,webLink"
             }        
-           
+            if(![String]::IsNullOrEmpty($AdditionalProperties)){
+                $SelectProperties += "," + $AdditionalProperties
+            }
         }
         else{
             $restrictProps = $true

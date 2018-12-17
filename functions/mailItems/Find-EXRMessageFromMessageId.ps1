@@ -29,7 +29,7 @@ function Find-EXRMessageFromMessageId
 		if($InReplyTo.IsPresent){
 			$Filter = "SingleValueExtendedProperties/Any(ep: ep/Id eq 'String 0x1042' and ep/Value eq '" + $MessageId + "')"
 		}
-		Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly.IsPresent -PropList $PropList -ReturnFolderPath -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
+		Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems  -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly.IsPresent -PropList $PropList -ReturnFolderPath -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
 		
 		
 	}

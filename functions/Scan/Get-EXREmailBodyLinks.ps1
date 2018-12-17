@@ -6,7 +6,8 @@ function Get-EXREmailBodyLinks {
         [Parameter(Position = 2, Mandatory = $false)] [string]$WellKnownFolder,
         [Parameter(Position = 2, Mandatory = $false)] [psobject]$Folder,
         [Parameter(Position = 3, Mandatory = $false)] [String]$FolderPath,
-        [Parameter(Position = 4, Mandatory = $false)] [String]$MessageCount
+        [Parameter(Position = 4, Mandatory = $false)] [String]$MessageCount,
+        [Parameter(Position = 5, Mandatory = $false)] [String]$InternetMessageId
 
     )
 	
@@ -14,9 +15,18 @@ function Get-EXREmailBodyLinks {
         $Props = @()
         $PR_BODY_HTML = Get-EXRTaggedProperty -DataType Binary -Id 0x1013
         $Props += $PR_BODY_HTML
-        Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder -Folder $Folder -FolderPath $FolderPath -MessageCount $MessageCount -BatchReturnItems -SelectProperties Subject -PropList $Props | ForEach-Object{
-            Invoke-EXRParseEmailBodyLinks -Item $_ -UseExtendedProperty
-            Write-Output $_
+        if (![String]::IsNullOrEmpty($InternetMessageId)) {
+            $Filter = "internetMessageId eq '" + $InternetMessageId + "'"
+            $Item = Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems  -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly.IsPresent -PropList $PropList   
+            $BodyItem =  Get-exremail -ItemRESTURI  $Item.ItemRESTURI -PropList $Props
+            Invoke-EXRParseEmailBodyLinks -Item $BodyItem -UseExtendedProperty
+            Write-Output $BodyItem
+        }
+        else {
+            Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder -Folder $Folder -FolderPath $FolderPath -MessageCount $MessageCount -BatchReturnItems -SelectProperties Subject -PropList $Props | ForEach-Object {
+                Invoke-EXRParseEmailBodyLinks -Item $_ -UseExtendedProperty
+                Write-Output $_
+            }
         }
        
        
