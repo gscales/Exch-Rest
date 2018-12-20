@@ -28,9 +28,9 @@ function Invoke-EXRDeleteItem {
 			$MailboxName = $AccessToken.mailbox
 		}  
 		if ($confirmation -ne 'y') {
-			$confirmation = Read-Host "Are you Sure You Want To proceed with deleting the Item"
+			$confirmation = Read-Host "Are you Sure You Want To proceed with deleting the Item (Y/N)"
 		}
-		if ($confirmation -eq 'y') {
+		if ($confirmation.tolower() -eq 'y') {
 			$HttpClient = Get-HTTPClient($MailboxName)
 			$RequestURL = $ItemURI
 			$results = & Invoke-RestDELETE -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName

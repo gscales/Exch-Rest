@@ -10,8 +10,9 @@ function Find-EXRMessageFromMessageId
 		[Parameter(Position=6, Mandatory=$false)] [string]$MessageId,
 		[Parameter(Position=7, Mandatory=$false)] [switch]$InReplyTo,
 		[Parameter(Position=10, Mandatory=$false)] [PSCustomObject]$PropList,
-		[Parameter(Position=27, Mandatory=$false)] [switch]$ReturnInternetMessageHeaders,
-        [Parameter(Position=28, Mandatory=$false)] [switch]$ProcessAntiSPAMHeaders     
+		[Parameter(Position=11, Mandatory=$false)] [switch]$ReturnInternetMessageHeaders,
+		[Parameter(Position=12, Mandatory=$false)] [switch]$SearchDumpster,
+        [Parameter(Position=13, Mandatory=$false)] [switch]$ProcessAntiSPAMHeaders     
 	)
 	Process
 	{
@@ -24,12 +25,18 @@ function Find-EXRMessageFromMessageId
 		}
 		if([String]::IsNullOrEmpty($MailboxName)){
 			$MailboxName = $AccessToken.mailbox
-		}  
+		} 
+		if([String]::IsNullOrEmpty($WellKnownFolder)){
+			$WellKnownFolder = "AllItems"
+			if($SearchDumpster.IsPresent){
+				$WellKnownFolder = "RecoverableItemsDeletions"
+			}
+		} 
 		$Filter = "internetMessageId eq '" + $MessageId + "'"
 		if($InReplyTo.IsPresent){
 			$Filter = "SingleValueExtendedProperties/Any(ep: ep/Id eq 'String 0x1042' and ep/Value eq '" + $MessageId + "')"
 		}
-		Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems  -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly.IsPresent -PropList $PropList -ReturnFolderPath -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
+		Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder  -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly.IsPresent -PropList $PropList -ReturnFolderPath -ReturnInternetMessageHeaders:$ReturnInternetMessageHeaders.IsPresent -ProcessAntiSPAMHeaders:$ProcessAntiSPAMHeaders.IsPresent
 		
 		
 	}

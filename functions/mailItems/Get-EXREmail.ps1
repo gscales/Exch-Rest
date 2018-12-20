@@ -17,9 +17,16 @@ function Get-EXREmail
 		[Parameter(Position = 3, Mandatory = $false)]
 		[psobject]
 		$PropList,
-		[Parameter(Position = 4, Mandatory = $false)]
+		[Parameter(Position = 4, Mandatory = $false)]		
 		[switch]
-		$ReturnSentiment
+		$ReturnSentiment,
+
+		[Parameter(Position = 5, Mandatory = $false)]
+		[String]
+		$BodyFormat
+		
+
+		
 	)
 	Process
 	{
@@ -50,8 +57,8 @@ function Get-EXREmail
                $Props = Get-EXRExtendedPropList -PropertyList $PropList -AccessToken $AccessToken
                $RequestURL += "?`&`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
 		}
-
-		$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName
+		
+		$JSONOutput = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -BodyFormat $BodyFormat
 		Add-Member -InputObject $JSONOutput -NotePropertyName ItemRESTURI -NotePropertyValue $ItemRESTURI
 		Expand-ExtendedProperties -Item $JSONOutput
 		Expand-MessageProperties -Item $JSONOutput

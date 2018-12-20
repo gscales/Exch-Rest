@@ -7,17 +7,23 @@ function Get-EXREmailBodyLinks {
         [Parameter(Position = 2, Mandatory = $false)] [psobject]$Folder,
         [Parameter(Position = 3, Mandatory = $false)] [String]$FolderPath,
         [Parameter(Position = 4, Mandatory = $false)] [String]$MessageCount,
-        [Parameter(Position = 5, Mandatory = $false)] [String]$InternetMessageId
-
+        [Parameter(Position = 5, Mandatory = $false)] [String]$InternetMessageId,
+        [Parameter(Position=6, Mandatory=$false)] [switch]$SearchDumpster
     )
 	
     process {
         $Props = @()
         $PR_BODY_HTML = Get-EXRTaggedProperty -DataType Binary -Id 0x1013
         $Props += $PR_BODY_HTML
+        if([String]::IsNullOrEmpty($WellKnownFolder)){
+			$WellKnownFolder = "AllItems"
+			if($SearchDumpster.IsPresent){
+				$WellKnownFolder = "RecoverableItemsDeletions"
+			}
+		} 
         if (![String]::IsNullOrEmpty($InternetMessageId)) {
             $Filter = "internetMessageId eq '" + $InternetMessageId + "'"
-            $Item = Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder AllItems  -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly.IsPresent -PropList $PropList   
+            $Item = Get-EXRWellKnownFolderItems -MailboxName $MailboxName -AccessToken $AccessToken -WellKnownFolder $WellKnownFolder  -ReturnSize:$ReturnSize.IsPresent -SelectProperties $SelectProperties -Filter $Filter -Top $Top -OrderBy $OrderBy -TopOnly:$TopOnly.IsPresent -PropList $PropList   
             $BodyItem =  Get-exremail -ItemRESTURI  $Item.ItemRESTURI -PropList $Props
             Invoke-EXRParseEmailBodyLinks -Item $BodyItem -UseExtendedProperty
             Write-Output $BodyItem

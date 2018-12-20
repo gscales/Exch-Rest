@@ -41,7 +41,7 @@ function Get-EXRMessageTrace {
         if ($End -eq $null) {$End = (Get-Date)}
         $HttpClient = Get-HTTPClient -MailboxName $Credentials.UserName
         $OdataOptions = "";
-        $OdataOptions = "?`$filter=StartDate eq datetime'" + ($Start.ToString("s") + "Z") + "' and EndDate eq datetime'" + ($End.ToString("s") + "Z") + "'";
+        $OdataOptions = "?`$filter=StartDate eq datetime'" + ($Start.ToUniversalTime().ToString("s") + "Z") + "' and EndDate eq datetime'" + ($End.ToUniversalTime().ToString("s") + "Z") + "'";
         if (![String]::IsNullOrEmpty($ToAddress)) {
             $OdataOptions += " and RecipientAddress eq '" + $ToAddress + "'"
         }
