@@ -26,6 +26,14 @@ function Get-EXRKnownProperty
                 $prEntryId = Get-EXRTaggedProperty -DataType "Binary" -Id "0x1013"  
                 $PropList += $prEntryId
             }
+            "PR_LAST_VERB_EXECUTED" {
+                $prEntryId = Get-EXRTaggedProperty -DataType "Integer" -Id "0x1081"  
+                $PropList += $prEntryId
+            }
+            "PR_LAST_VERB_EXECUTION_TIME" {
+                $prEntryId = Get-EXRTaggedProperty -DataType "SystemTime" -Id "0x1082"  
+                $PropList += $prEntryId
+            }
             "MessageSize"{
                 $PidTagMessageSize = Get-EXRTaggedProperty -DataType "Integer" -Id "0x0E08"
                 $PropList += $PidTagMessageSize 

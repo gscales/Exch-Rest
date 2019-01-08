@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.39.0'
+	ModuleVersion	   = '3.40.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -229,6 +229,7 @@
 		'Get-EXRReminders',
 		'Get-EXRAccessTokenADAL',
 		'Get-EXRZapStatistics',
+		'Get-EXRDeliveryReport',
 		'Find-ExrUser'
 		'Invoke-EXRConvertId',
 		'Invoke-EXRCreateSelfSignedCert',
@@ -259,6 +260,7 @@
 		'Invoke-EXRPostExtension',
 		'Invoke-EXRDeleteSubscription',
 		'Invoke-EXRMarkEmailAsRead',
+		'Invoke-EXRTranslateExchangeIds',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
 		'New-EXRCalendarEvent',

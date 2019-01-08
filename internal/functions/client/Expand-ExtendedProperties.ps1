@@ -77,6 +77,17 @@
                     "Integer 0x6638"{
                           Add-Member -InputObject $Item -NotePropertyName "PR_FOLDER_CHILD_COUNT" -NotePropertyValue $Prop.Value -Force
                     }
+                    "Integer 0x1081"{
+                        Add-Member -InputObject $Item -NotePropertyName "PR_LAST_VERB_EXECUTED" -NotePropertyValue $Prop.Value -Force
+                        $verbHash = Get-LASTVERBEXECUTEDHash;
+                        if($verbHash.ContainsKey($Prop.Value)){
+                            Add-Member -InputObject $Item -NotePropertyName "PR_LAST_VERB_EXECUTED_DisplayName" -NotePropertyValue $verbHash[$Prop.Value]
+                        } 
+                    }   
+                    "SystemTime 0x1082"{
+                        Add-Member -InputObject $Item -NotePropertyName "PR_LAST_VERB_EXECUTION_TIME" -NotePropertyValue ([DateTime]::Parse($Prop.Value))
+                    }    
+                                 
                     "String {00062008-0000-0000-C000-000000000046} Name EntityExtraction/Sentiment1.0" {
                           Invoke-EXRProcessSentiment -Item $Item -JSONData $Prop.Value
                     }
@@ -88,4 +99,68 @@
             }
         }
     }
+}
+
+function Get-LASTVERBEXECUTEDHash(){
+    $repHash = @{}
+    $repHash.Add("0","open")
+    $repHash.Add("102","ReplyToSender")
+    $repHash.Add("103","ReplyToAll")
+    $repHash.Add("104","Forward")
+    $repHash.Add("105","Print")
+    $repHash.Add("106","Save as")
+    $repHash.Add("108","ReplyToFolder")
+    $repHash.Add("500","Save")
+    $repHash.Add("510","Properties")
+    $repHash.Add("511","Followup")
+    $repHash.Add("512","Accept")
+    $repHash.Add("513","Tentative")
+    $repHash.Add("514","Reject")
+    $repHash.Add("515","Decline")
+    $repHash.Add("516","Invite")
+    $repHash.Add("517","Update")
+    $repHash.Add("518","Cancel")
+    $repHash.Add("519","SilentInvite")
+    $repHash.Add("520","SilentCancel")
+    $repHash.Add("521","RecallMessage")
+    $repHash.Add("522","ForwardResponse")
+    $repHash.Add("523","ForwardCancel")
+    $repHash.Add("524","FollowupClear")
+    $repHash.Add("525","ForwardAppointment")
+    $repHash.Add("526","OpenResend")
+    $repHash.Add("527","StatusReport")
+    $repHash.Add("528","JournalOpen")
+    $repHash.Add("529","JournalOpenLink")
+    $repHash.Add("530","ComposeReplace")
+    $repHash.Add("531","Edit")
+    $repHash.Add("532","DeleteProcess")
+    $repHash.Add("533","TentativeAppointmentTime")
+    $repHash.Add("534","EditTemplate")
+    $repHash.Add("535","FindInCalendar")
+    $repHash.Add("536","ForwardAsFile")
+    $repHash.Add("537","ChangeAttendees")
+    $repHash.Add("538","RecalculateTitle")
+    $repHash.Add("539","PropertyChange")
+    $repHash.Add("540","ForwardAsVcal")
+    $repHash.Add("541","ForwardAsIcal")
+    $repHash.Add("542","ForwardAsBusinessCard")
+    $repHash.Add("543","DeclineAppointmentTime")
+    $repHash.Add("544","Process")
+    $repHash.Add("545","OpenWithWord")
+    $repHash.Add("546","OpenInstanceOfSeries")
+    $repHash.Add("547","FilloutThisForm")
+    $repHash.Add("548","FollowupDefault")
+    $repHash.Add("549","ReplyWithMail")
+    $repHash.Add("566","ToDoToday")
+    $repHash.Add("567","ToDoTomorrow")
+    $repHash.Add("568","ToDoThisWeek")
+    $repHash.Add("569","ToDoNextWeek")
+    $repHash.Add("570","ToDoThisMonth")
+    $repHash.Add("571","ToDoNextMonth")
+    $repHash.Add("572","ToDoNoDate")
+    $repHash.Add("573","FollowupComplete")
+    $repHash.Add("574","CopyToPostFolder")
+    $repHash.Add("579","SeriesInvitationUpdateToPartialAttendeeList")
+    $repHash.Add("580","SeriesCancellationUpdateToPartialAttendeeList")
+    return $repHash
 }
