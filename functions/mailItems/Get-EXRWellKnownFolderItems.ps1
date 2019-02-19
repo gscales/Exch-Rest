@@ -27,9 +27,10 @@ function Get-EXRWellKnownFolderItems{
         [Parameter(Position=21, Mandatory=$false)] [switch]$ReturnLastActiveParentEntryId,
         [Parameter(Position=22, Mandatory=$false)] [switch]$Todays,
         [Parameter(Position=23, Mandatory=$false)] [switch]$ReturnBody,
-        [Parameter(Position=24, Mandatory=$false)] [Int32]$MessageCount,
-        [Parameter(Position=25, Mandatory=$false)] [string]$BodyFormat,
-        [Parameter(Position=26, Mandatory=$false)] [string]$AdditionalProperties
+        [Parameter(Position=24, Mandatory=$false)] [switch]$ReturnUnsubscribeData,
+        [Parameter(Position=25, Mandatory=$false)] [Int32]$MessageCount,
+        [Parameter(Position=26, Mandatory=$false)] [string]$BodyFormat,
+        [Parameter(Position=27, Mandatory=$false)] [string]$AdditionalProperties
         
     )
     Begin{
@@ -95,8 +96,12 @@ function Get-EXRWellKnownFolderItems{
         $stats = "" | Select TotalItems
         $stats.TotalItems = 0;
         $FolderOkay = $true
-        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
+        $HttpClient =  Get-HTTPClient -MailboxName $MailboxName        
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users"
+        if($ReturnUnsubscribeData.IsPresent){
+            $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "users" -beta
+            $SelectProperties += ",unsubscribeEnabled,unsubscribeData"
+        }
         if(![String]::IsNullOrEmpty($WellKnownFolder))
         {
             $RequestURL =  $EndPoint + "('" + $MailboxName + "')/MailFolders/" + $WellKnownFolder + "/messages/?" +  $SelectProperties + "`&`$Top=" + $TopValue 

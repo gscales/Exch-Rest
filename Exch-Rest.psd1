@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.40.0'
+	ModuleVersion	   = '3.42.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -261,6 +261,7 @@
 		'Invoke-EXRDeleteSubscription',
 		'Invoke-EXRMarkEmailAsRead',
 		'Invoke-EXRTranslateExchangeIds',
+		'Invoke-EXRUnsubscribeEmail',
 		'Move-EXRMessage',
 		'New-EXRAttendee',
 		'New-EXRCalendarEvent',
