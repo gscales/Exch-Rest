@@ -36,11 +36,18 @@ function Get-EXRAccessToken
 
 		[Parameter(Position = 8, Mandatory = $false)]
 		[string]
-		$TenantId
+		$TenantId,
+		
+		[Parameter(Position = 9, Mandatory = $false)]
+		[switch]
+		$DumpCache
 		
 	)
 	Begin
 	{
+		#if($DumpCache.IsPresent){
+	    #		write-output $Script:TokenCache
+	    #	}
 		Add-Type -AssemblyName System.Web
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$AppSetting = Get-AppSettings

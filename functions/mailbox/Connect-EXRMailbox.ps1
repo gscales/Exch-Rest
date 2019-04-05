@@ -266,7 +266,7 @@ function Connect-EXRMailbox {
                     }
                     else {
                         if($useADAL.IsPresent){
-                            $tkn = Get-EXRAccessTokenADAL -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl  -ResourceURL $ResourceURL -Prompt $Prompt -CacheCredentials -TenantId $TenantId -useLoggedOnCredentials:$useLoggedOnCredentials.IsPresent -AADUserName $AADUserName
+                            $tkn = Get-EXRAccessTokenADAL -MailboxName $MailboxName -ClientId $ClientId -redirectUrl $redirectUrl -ClientSecret $ClientSecret  -ResourceURL $ResourceURL -Prompt $Prompt -CacheCredentials -TenantId $TenantId -useLoggedOnCredentials:$useLoggedOnCredentials.IsPresent -AADUserName $AADUserName
                         }else{
                             $tkn = Get-EXRAccessToken -ClientId $ClientId -MailboxName $MailboxName -redirectUrl $redirectUrl -ClientSecret $ClientSecret -ResourceURL $ResourceURL -Beta:$beta.IsPresent -prompt $Prompt -CacheCredentials -TenantId $TenantId
                         }

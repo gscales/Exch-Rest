@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.42.0'
+	ModuleVersion	   = '3.43.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -230,6 +230,8 @@
 		'Get-EXRAccessTokenADAL',
 		'Get-EXRZapStatistics',
 		'Get-EXRDeliveryReport',
+		'Get-EXRTeamsPrivateChatMessages',
+		'Get-EXRGroups',
 		'Find-ExrUser'
 		'Invoke-EXRConvertId',
 		'Invoke-EXRCreateSelfSignedCert',

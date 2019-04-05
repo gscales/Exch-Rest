@@ -55,9 +55,6 @@ function Get-EXRAccessTokenADAL {
         if ([String]::IsNullOrEmpty($redirectUrl)) {
             $redirectUrl = [System.Web.HttpUtility]::UrlEncode("urn:ietf:wg:oauth:2.0:oob")
         }
-        if ([String]::IsNullOrEmpty(($ClientSecret))) {
-            $ClientSecret = $AppSetting.ClientSecret
-        }
         $ResourceURI = "https://" + $ResourceURL
         $DomainName = $MailboxName.Split('@')[1]
         $EndpointUri = 'https://login.microsoftonline.com/' + (Get-EXRTenantId -DomainName $DomainName)
@@ -74,7 +71,14 @@ function Get-EXRAccessTokenADAL {
             }
         }
         else {
-			$authResult = $Context.AcquireTokenAsync($ResourceURI, $ClientId, $redirectUrl, $PromptBehavior)
+            if (![String]::IsNullOrEmpty(($ClientSecret))) {
+                $ClientCredentails = new-object Microsoft.IdentityModel.Clients.ActiveDirectory.ClientCredential -ArgumentList $ClientId,$ClientSecret
+                $authResult = $Context.AcquireTokenAsync($ResourceURI, $ClientCredentails)
+                
+            }else{
+			    $authResult = $Context.AcquireTokenAsync($ResourceURI, $ClientId, $redirectUrl, $PromptBehavior)
+            }
+
 			if ($authResult.Result.AccessToken) {
                 $token = $authResult.Result
             }
@@ -93,6 +97,11 @@ function Get-EXRAccessTokenADAL {
             Add-Member -InputObject $token -NotePropertyName resource -NotePropertyValue $ResourceURI
             Add-Member -InputObject $token -NotePropertyName resourceCache -NotePropertyValue $ResourceURL
             Add-Member -InputObject $token -NotePropertyName mailbox -NotePropertyValue $MailboxName
+            if (![String]::IsNullOrEmpty(($ClientSecret))) {
+                Add-Member -InputObject $token -NotePropertyName refresh -NotePropertyValue $false
+            }else{
+                 Add-Member -InputObject $token -NotePropertyName refresh -NotePropertyValue $true
+            }
             if (![String]::IsNullOrEmpty($TenantId)) {
                 Add-Member -InputObject $token -NotePropertyName TenantId -NotePropertyValue $TenantId
             }
