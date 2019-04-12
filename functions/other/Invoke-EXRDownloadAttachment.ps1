@@ -12,7 +12,11 @@ function Invoke-EXRDownloadAttachment
 		
 		[Parameter(Position = 2, Mandatory = $false)]
 		[psobject]
-		$AccessToken
+		$AccessToken,
+
+		[Parameter(Position = 3, Mandatory = $false)]
+		[String]
+		$DownloadPath
 	)
 	Begin
 	{
@@ -29,6 +33,12 @@ function Invoke-EXRDownloadAttachment
 		$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 		$AttachmentURI = $AttachmentURI + "?`$expand"
 		$AttachmentObj = Invoke-RestGet -RequestURL $AttachmentURI -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -TrackStatus:$true
-		return $AttachmentObj
+		if([String]::IsNullOrEmpty($DownloadPath)){
+			return $AttachmentObj
+		}else{
+			 $attachBytes = [System.Convert]::FromBase64String($AttachmentObj.ContentBytes)
+			 [System.IO.File]::WriteAllBytes($DownloadPath,$attachBytes) 
+		}
+
 	}
 }
