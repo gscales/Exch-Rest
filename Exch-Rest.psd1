@@ -295,6 +295,7 @@
 		'Send-EXRVoteEmail',
 		'Send-EXRAdaptiveCard',
 		'Send-EXRSK4BMessage',
+		'Send-EXRVoiceMail',
 		'Search-EXRMessage',
 		'Search-EXRContacts',
 		'Search-EXRSK4BPeople',
