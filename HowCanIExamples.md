@@ -1,10 +1,10 @@
 # How Can I Examples #
 
-How can I can the last Email in my Mailbox ?
+How can I get the last Email in my Mailbox ?
 
     Get-EXRLastInboxEmail
 
-How can I can I get the Last Email in a Shared Mailbox ?
+How can I get the Last Email in a Shared Mailbox ?
 
     Get-EXRLastInboxEmail -MailboxName mailbox@domain.com
 
@@ -26,7 +26,7 @@ How can I get the Size of the Inbox
     Get-EXRWellKnownFolder -FolderName Inbox | Select displayName,totalItemCount,FolderSize
     
 
-How can I Mark the last email in the Focused Inbox as Read
+How can I mark the last email in the Focused Inbox as Read
 
     Get-EXRLastInboxEmail -Focused | Invoke-EXRMarkEmailAsRead
 
