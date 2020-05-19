@@ -13,7 +13,7 @@
 	
 	
 	# Version number of this module.
-	ModuleVersion	   = '3.44.0'
+	ModuleVersion	   = '3.47.0'
 	
 	# Supported PSEditions
 	# CompatiblePSEditions = @()
@@ -178,6 +178,7 @@
 		'Get-EXREmailAppUsageVersionsUserCounts',
 		'Get-EXREmailAppUsageUserCounts',
 		'Get-EXREmailAppUsageAppsUserCounts',
+		'Get-EXREmailActivityCounts',
 		'Get-EXREmailLinkReport',
 		'Get-EXRNonIPMSubTreeRootFolder',
 		'Get-EXRChildFolders',

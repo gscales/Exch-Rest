@@ -1,4 +1,4 @@
-function  Get-EXREmailActivityUserCounts{
+function  Get-EXREmailActivityCounts{
     [CmdletBinding()]
     param(
         [Parameter(Position=0, Mandatory=$false)] [string]$MailboxName,
@@ -19,7 +19,7 @@ function  Get-EXREmailActivityUserCounts{
 		}         
         $HttpClient =  Get-HTTPClient -MailboxName $MailboxName
         $EndPoint =  Get-EndPoint -AccessToken $AccessToken -Segment "reports"
-        $RequestURL =  $EndPoint + "/getEmailActivityUserCounts(period='$PeriodType')`?`$format=text/csv"
+        $RequestURL =  $EndPoint + "/getEmailActivityCounts(period='$PeriodType')`?`$format=text/csv"
         Write-Host $RequestURL
         $Output = Invoke-RestGet -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -NoJSON
         $OutPutStream = $Output.ReadAsStreamAsync().Result
