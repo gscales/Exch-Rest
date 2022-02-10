@@ -94,7 +94,10 @@
                     "Integer {00062002-0000-0000-c000-000000000046} Id 0x8213" {
                         Add-Member -InputObject $Item -NotePropertyName "AppointmentDuration" -NotePropertyValue $Prop.Value -Force
                     }
-                    default {Write-Host $Prop.Id}
+                    "Boolean {41f28f13-83f4-4114-a584-eedb5a6b0bff} Name IsExternalSender" {
+                        Add-Member -InputObject $Item -NotePropertyName "IsExternalSender" -NotePropertyValue $Prop.Value -Force
+                    }
+                    default {Write-Host $Prop.Id + " " + $Prop.Value}
                 }
             }
         }

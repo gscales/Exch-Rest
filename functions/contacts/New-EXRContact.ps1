@@ -199,7 +199,7 @@ function New-EXRContact
 	)
 	Begin
 	{
-
+		write-verbose ("using "+  $ContactsFolder)
 		if($AccessToken -eq $null)
         {
             $AccessToken = Get-ProfiledToken -MailboxName $MailboxName  
@@ -213,13 +213,18 @@ function New-EXRContact
 		$HttpClient = Get-HTTPClient($MailboxName)
 		$EndPoint = Get-EndPoint -AccessToken $AccessToken -Segment "users"
 
-		if($ContactsFolder -eq $null){
+		if([String]::IsNullOrEmpty($ContactsFolder)){
 			$RequestURL = $EndPoint + "('$MailboxName')/Contacts/"
 		}
-		else{
+		else{			
 			$cntFolder = Get-EXRContactsFolder -MailboxName $MailboxName -FolderName $ContactsFolder
-			$RequestURL = $EndPoint + "('$MailboxName')/contactFolders('" + $cntFolder.Id + "')/Contacts/"
+			if($cntFolder){
+				$RequestURL = $EndPoint + "('$MailboxName')/contactFolders('" + $cntFolder.Id + "')/Contacts/"
+			}else{
+				throw "Target Contact folder not found"
+			}			
 		}
+		write-verbose($RequestURL)
 		$NewMessage = "{" + "`r`n"
 		if(![String]::IsNullOrEmpty($FirstName)){
 			if ($NewMessage.Length -gt 5) { $NewMessage += "," }

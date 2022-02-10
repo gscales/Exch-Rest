@@ -1,5 +1,4 @@
-function New-EXRJWTToken
-{
+function New-EXRJWTToken {
 	[CmdletBinding()]
 	param (
 		[Parameter(Position = 1, Mandatory = $false)]
@@ -26,8 +25,7 @@ function New-EXRJWTToken
 		[Security.SecureString]
 		$password
 	)
-	Begin
-	{
+	Begin {
 		
 		$date1 = Get-Date -Date "01/01/1970"
 		$date2 = (Get-Date).ToUniversalTime().AddMinutes($ValidateForMinutes)
@@ -35,7 +33,7 @@ function New-EXRJWTToken
 		$exp = [Math]::Round((New-TimeSpan -Start $date1 -End $date2).TotalSeconds, 0)
 		$nbf = [Math]::Round((New-TimeSpan -Start $date1 -End $date3).TotalSeconds, 0)
 		$exVal = [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable
-		if(![String]::IsNullOrEmpty($CertFileName)){
+		if (![String]::IsNullOrEmpty($CertFileName)) {
 			$Certificate = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2 -ArgumentList $CertFileName, $password, $exVal
 		}		
 		$x5t = [System.Convert]::ToBase64String($Certificate.GetCertHash())

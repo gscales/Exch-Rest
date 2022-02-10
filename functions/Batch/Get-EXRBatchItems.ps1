@@ -83,7 +83,11 @@ function Get-EXRBatchItems {
                 $ItemURI += "`$expand=SingleValueExtendedProperties(`$filter=" + $Props + ")"
             }
             if ($itemCount -ne 1) {$RequestContent += ",`r`n"}  
-            $RequestContent += "{`r`n`"id`": `"" + $itemCount + "`",`r`n`"method`": `"GET`","
+            if($itemCount -eq 1){
+                $RequestContent += "{`r`n`"id`": `"" + $itemCount + "`",`r`n`"method`": `"GET`","
+            }else{
+                $RequestContent += "{`r`n`"id`": `"" + $itemCount + "`",`r`n`"dependsOn`": [ `"" + ($itemCount-1) +"`" ],`r`n`"method`": `"GET`","
+            }
             $RequestContent += "`"url`": `"" + $ItemURI + "`"`r`n }"
             $itemCount++
         }
