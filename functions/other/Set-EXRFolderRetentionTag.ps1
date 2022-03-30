@@ -48,11 +48,10 @@ function Set-EXRFolderRetentionTag
 			$HttpClient = Get-HTTPClient -MailboxName $MailboxName
 			$RequestURL = $Folder.FolderRestURI
 			$FolderPostValue = "{`"SingleValueExtendedProperties`": [`r`n"
-			$FolderPostValue += "`t{`"PropertyId`":`"Binary 0x3019`",`"Value`":`"" + $PolicyTagBase64 + "`"},`r`n"
-			$FolderPostValue += "`t{`"PropertyId`":`"Integer 0x301D`",`"Value`":`"" + $RetentionFlagsValue + "`"},`r`n"
-			$FolderPostValue += "`t{`"PropertyId`":`"Integer 0x301A`",`"Value`":`"" + $RetentionPeriodValue + "`"}`r`n"
-			$FolderPostValue += "]}"
-			Write-Host $FolderPostValue
+			$FolderPostValue += "`t{`"Id`":`"Binary 0x3019`",`"Value`":`"" + $PolicyTagBase64 + "`"},`r`n"
+			$FolderPostValue += "`t{`"Id`":`"Integer 0x301D`",`"Value`":`"" + $RetentionFlagsValue + "`"},`r`n"
+			$FolderPostValue += "`t{`"Id`":`"Integer 0x301A`",`"Value`":`"" + $RetentionPeriodValue + "`"}`r`n"
+			$FolderPostValue += "]}"			
 			return Invoke-RestPatch -RequestURL $RequestURL -HttpClient $HttpClient -AccessToken $AccessToken -MailboxName $MailboxName -Content $FolderPostValue
 		}
 	}
